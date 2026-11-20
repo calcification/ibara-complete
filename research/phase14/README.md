@@ -16,13 +16,17 @@ keeps the arcade's enemy type numbering: BL's and PS2's logs use the same type n
 
 * **Same layout.** Every type appears in the same order and nearly the same counts; PS2 runs ~62 frames ahead
   throughout BL's 7,143-frame stage 1 (543 BL vs 517 PS2 spawns).
-* **Subtype data differs.** For types 13, 9, 18, 19, 12, 15, 14, 47 PS2 spawns carry a set bit (`0x10`, also
-  `0x08`/`0x18`) where BL has `0`. It is identical in NORMAL and HARDER, so it is stage data, not mode. The
-  enemy routines branch on exact subtype values (e.g. `0x0018D3B0`: `subtype < 32`, equality tests), so the
-  subtype selects a movement/attack variant: **BL's stage 1 asks the same enemy code for other variants**.
+* ~~Subtype data differs~~ **Correction (same day): not a BL difference.** The subtype is also the enemy's own
+  state counter (enemy routines do `subtype += 8/16`, e.g. `0x0018DD10`, `0x00196E88`). In BL too a type-13
+  plane goes `0 → 0x10 → 0x11` over its first frames (`research/phase13/subtype_history.lua`); the PS2 logger
+  first sees each part one update later than the MAME logger. Subtypes therefore match.
 * **Spawn spacing differs slightly** (type 13: BL every 50 frames per pair vs PS2 47; type 15: 57 vs 53).
 * **HP scales with mode/rank** (PS2 HARDER > NORMAL > BL's run), so HP differences are not a fixed BL table.
 * **Boss phase** (types 55, 8) spawns more in BL; likely fight length, to be measured with equal damage.
 
-**Next:** locate PS2's stage-1 spawn script (where type/subtype/time come from; the allocator `0x00127F80` has
-181 callers) and rewrite its subtype values and timings to BL's, then re-log and diff to zero.
+**Conclusion so far:** BL stage 1 places the same enemies as PS2 Arcade; its differences must be in what those
+enemies *do* (the ~288 changed enemy routines: bullets, movement, timing) and in HP/rank scaling.
+
+**Next:** log enemy *bullets* per enemy type (count, speed, angle) in both games to find which types behave
+differently, then port those routines. (Earlier idea: locate PS2's stage-1 spawn script (where type/subtype/time come from; the allocator `0x00127F80` has
+181 callers) and rewrite its subtype values and timings to BL's, then re-log and diff to zero — not needed for stage 1.)
