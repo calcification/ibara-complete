@@ -2,12 +2,14 @@
 
 # Verified status and roadblocks (November 2026)
 
+On one physical PS2 setup, the controller probe returned to Ibara and `240p_cave_beta` matched the published Cave beta's scrolling quality. Signal measurements and results from other hardware setups are pending. [Hardware report](../tests/manual/M03_LAUNCHER_VIDEO.md#physical-ps2-report)
+
 | Area | Present evidence | Unverified / missing |
 |---|---|---|
 | Original ISO | ISO9660 structure, 1,130 resource entries, original checksums | None for this exact reference image |
 | Boot test | Separate ISO file injection verified offline; menu-triggered ELF runs in PCSX2 | Direct-boot B01 procedure and console safety |
 | Retail-boot test | Original `SLPM_663.01` location/bytes preserved in injected ISO | Actual retail boot/navigation in modified ISO |
-| Menu | Five retail branches traced and [a sixth test row launches an interactive homebrew ELF and returns to the retail title in PCSX2](../tests/manual/M02_INTERACTIVE_ELF_PROBE.md) | Hardware validation and integration with a compatible gameplay executable |
+| Menu | Five retail branches traced. The sixth test row launches an interactive homebrew ELF and returns to the retail title in [PCSX2](../tests/manual/M02_INTERACTIVE_ELF_PROBE.md) and on [one physical PS2 setup](../tests/manual/M03_LAUNCHER_VIDEO.md) | Other hardware setups and integration with a compatible gameplay executable |
 | New art | Phase 4 button indexes altered only within 112x48 alpha-clear slot | Correct hardware texture behavior; new button draw call |
 | Kuro | Public Xbox 360/PC SH-3 recompilation source used as reference; 64 MiB VRAM model demands redesign for PS2 | Ported Kuro game code, data streaming, native graphics, timing, authentic sound and gameplay |
 | Gameplay analysis | Native EE score/rank/pickup/cancellation/rose-merge instruction anchors | Dynamic branch conditions, complete bomb/Hadou IDs, parity against Kuro |

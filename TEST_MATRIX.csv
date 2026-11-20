@@ -25,9 +25,11 @@ B02,Retail boot with injected extra ELF (ISO-only fallback; PCSX2-first route do
 B03,Dormant Black Label texture only (ISO-only fallback; PCSX2-first route does not require it),PCSX2,OPTIONAL_DEFERRED,tests/manual/B03_ASSET_ONLY.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode asset --out outputs",Five original menu buttons; no sixth visible
 B04,Original retail menu debug trace,PCSX2,PASS,tests/manual/B04_MENU_DEBUGGER.md;tests/manual/RESULTS_P00_B04.md,See manual checklist,Verified breakpoint execution for five branches
 H01,Retail injection on real PS2,HARDWARE,BLOCKED,tests/manual/H01_REAL_PS2.md,See manual checklist,Only after emulator passes
+H02,Launcher round trip and published Cave 240p scrolling quality on real PS2,HARDWARE,PASS,tests/manual/M03_LAUNCHER_VIDEO.md,Compare the PAD TEST builds on the same PS2 setup,Controller probe returns to retail and scrolling quality matches the published Cave beta
 M01,Sixth menu row launches and returns from homebrew ELF,PCSX2,PASS,tests/manual/M01_MENU_ELF_PROBE.md,See manual checklist,Disc probe executes and retail title reloads with all five original frontend choices intact
 M02,Interactive controller probe and return with a saved card,PCSX2,PASS,tests/manual/M02_INTERACTIVE_ELF_PROBE.md,See manual checklist,Controller input and deliberate return work repeatedly and the test save remains intact
 M03,Launcher round trip with built-in progressive video,PCSX2,PASS,tests/manual/M03_LAUNCHER_VIDEO.md,Build each progressive profile with the interactive probe,Payload executes and retail stays progressive after reloading
+M04,Standalone ELF reads companion files from the launcher disc and returns,PCSX2,PASS,tests/manual/M04_COMPANION_FILES.md,Build the companion file probe and select FILE TEST,Payload verifies both files and retail resumes in progressive mode
 S14,Synthetic EE memory allocation and cache smoke test,PCSX2,PASS,research/phase05/README.md,Build with PS2DEV and boot the smoke ELF,Tile and cache checks pass while the reserved buffers are live
 F01,Visible sixth BLACK LABEL option,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires new menu hook/descriptors/loader
 F02,Playable arcade-accurate Kuro on PS2,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires working Kuro port + assets and validation
