@@ -9,7 +9,7 @@ for r in rows:
  for name in r['instructions_or_file'].split(';'):
   assert (R/name.strip()).is_file(),(r['id'],name)
  assert r['test'] and r['command'] and r['pass_condition'],r
- assert r['status'] in ('READY','OPTIONAL','OPTIONAL_DEFERRED','PENDING','BLOCKED','NOT_IMPLEMENTED'),r
+ assert r['status'] in ('PASS','READY','OPTIONAL','OPTIONAL_DEFERRED','PENDING','BLOCKED','NOT_IMPLEMENTED'),r
 assert set(f'P{i:02d}' for i in range(8)).issubset({r['id'] for r in rows})
 assert (R/'pnach/SLPM-66301_420C7FAB.pnach').exists()
 print('PASS:',len(rows),'PCSX2-first and legacy test records and referenced files are present')

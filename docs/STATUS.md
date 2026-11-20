@@ -12,8 +12,8 @@
 | Kuro | Public Xbox 360/PC SH-3 recompilation source used as reference; 64 MiB VRAM model demands redesign for PS2 | Ported Kuro game code, data streaming, native graphics, timing, authentic sound and gameplay |
 | Gameplay analysis | Native EE score/rank/pickup/cancellation/rose-merge instruction anchors | Dynamic branch conditions, complete bomb/Hadou IDs, parity against Kuro |
 | BL delta (Phase 11) | arcade Ibara ↔ BL routine match: 745 identical, 161 literal-only, 326 changed, 138 BL-only; ~27.8k-insn delta; 14/15 documented anchors agree | PS2 counterparts of changed routines (Phase 12, needs ELF) |
-| EE code injection | r5900 C toolchain, register-safe hook stubs, cave linker, PNACH emitter, offline tests; C00 profile | C00 run in PCSX2; cave free at runtime |
-| BL features on PS2 | XTC graze (K01) written from spec, build-only | PS2 player x/y, camera, pad, bullet fields (savestate protocol in C00) |
+| EE code injection | **C00 PASS in PCSX2 v1.7.4000** (headless, attract demo): hook runs every frame, gameplay identical to baseline, cave free at runtime | real-hardware test |
+| BL features on PS2 | K01 XTC graze runs in PCSX2 (demo); player/bullet/input fields located statically | frame-exact scoring check in real play; HUD counter; other BL systems |
 | 240p | Separate `cave-ps2-240p` release | Any integrated, tested 240p + extra-ELF + Kuro build |
 
 **Do not claim:** a playable Black Label port, an inserted third menu entry, tested extra ELF boot, arcade-accurate mechanics, authentic Kuro assets on the disc, or the PS2 reaching full Kuro framerate.

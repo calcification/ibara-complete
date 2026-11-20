@@ -1,6 +1,6 @@
 # Black Label on PS2 Ibara — port plan (November 2026)
 
-**Status:** planning + tooling. No BL behaviour has run on a PS2 or in PCSX2 yet.
+**Status (2026-11-20):** M0 done (C00 PASS in PCSX2), M1 done statically, M2 (K01 XTC) running in the attract demo. See `tests/results/2026-11-20_RUNTIME.md`.
 
 ## Is it possible?
 

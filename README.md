@@ -6,7 +6,7 @@
 > **Black Label port (new, Nov 2026):** the plan, the measured arcade→BL delta and the first EE code-injection test are in
 > [`docs/BLACK_LABEL_PORT_PLAN.md`](docs/BLACK_LABEL_PORT_PLAN.md), [`docs/BLACK_LABEL_FEATURES.md`](docs/BLACK_LABEL_FEATURES.md),
 > [`research/phase11/`](research/phase11/README.md) and [`tests/manual/C00_CODE_INJECTION.md`](tests/manual/C00_CODE_INJECTION.md).
-> Still **no BL behaviour has run** in PCSX2.
+> **Runtime (2026-11-20, headless PCSX2 v1.7.4000):** C00 code injection **PASS**; K01 Black Label XTC graze runs in the attract demo (partial evidence). See [`tests/results/2026-11-20_RUNTIME.md`](tests/results/2026-11-20_RUNTIME.md).
 
 ## Start here: 60-second PCSX2 setup
 
