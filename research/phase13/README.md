@@ -77,3 +77,19 @@ medal `0x0012F7B0` Arrange branch `harder(level << 17)`; rose `0x0012F680` Arran
 `easier(table[level] × 1024)` with table `0x0020BFD0` = 0x100/0x200/0x300/0x400 (Arcade uses the same table
 unscaled as *harder*). Some BL rose writes (±0x180000, negatives) are unexplained (merged roses or the
 easy-end cap?) and are left open.
+
+## Enemy/stage delta: first look (2026-11-20)
+
+* Of Phase 11's 161 "literal-only" BL routines, **109 differ only by record layout** (player stride
+  0x280→0x2A0 and shifted fields, item record 0x54→0x60). Of the other 52, ~30 share one change
+  `0x40 → 0x44` (a field of BL's enemy object moved by 4) and others are buffer sizes (`0x340→0x680`,
+  `0x5400→0x6000`). Real rule changes found there: the **score cap 99,999,999 → 999,999,999**
+  (`0x5F5E0FF→0x3B9AC9FF`, BL `0C065890` / arcade `0C053E90`) and a few small counts (`3→2`, `0xA6→0xA5`) still
+  to be identified. Literal patching is therefore *not* a route to BL's enemy behaviour.
+* `enemy_records.lua` samples live BL enemy parts in stage 1 and dumps their `+0x10` records (sprite-animation
+  lists: pointer, duration, flags). 10 of 11 have a structural match in the PS2 ELF (BL pointers ↔ PS2 pointers,
+  scalars equal), but the lists repeat, so matches are not unique. They show the same data types, not BL behaviour.
+
+**Implication:** BL's enemy changes live in ~290 *structurally changed* routines (Phase 11). They need per-routine
+porting (MAME to observe, BL code to read, PS2 counterpart to patch or replace), stage by stage, starting with
+stage 1. Measuring which enemy types and scripts stage 1 uses in BL vs the PS2 Arcade mode is the next step.
