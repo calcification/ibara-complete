@@ -62,7 +62,12 @@ def main(argv=None):
             if not build_pnach.ELF_BASE <= ptab < end - 16 * ENTRIES:
                 review.append(f"type {t}: PS2 table {ptab:08X} outside the executable image")
                 continue
-            prec = [(ps2_word(elf, ptab + 16 * k + 4), ps2_word(elf, ptab + 16 * k + 12)) for k in range(ENTRIES)]
+            prec = []
+            for k in range(ENTRIES):  # a record starts with a pointer into the image; stop at the first that doesn't
+                if not build_pnach.ELF_BASE <= ps2_word(elf, ptab + 16 * k) < 0x00502000:
+                    break
+                prec.append((ps2_word(elf, ptab + 16 * k + 4), ps2_word(elf, ptab + 16 * k + 12)))
+            prec += [(0, 0)] * (ENTRIES - len(prec))
             best, score = None, -1
             for btab, brec in bl.get(t, {}).items():
                 s = sum(1 for k in range(ENTRIES) if brec[k] and brec[k][0] == prec[k][0] and prec[k][0])
@@ -73,7 +78,9 @@ def main(argv=None):
                 continue
             brec = bl[t][best]
             n = 0
-            for k in range(ENTRIES):
+            nrec = next((k for k in range(ENTRIES) if not build_pnach.ELF_BASE <= ps2_word(elf, ptab + 16 * k) < 0x00502000),
+                        ENTRIES)
+            for k in range(nrec):
                 if not brec[k]:
                     continue
                 pscore, pword = prec[k]
@@ -85,13 +92,15 @@ def main(argv=None):
                     if pscore and bscore:
                         review.append(f"type {t} table {ptab:08X} entry {k:02X}: score PS2 {pscore} vs BL {bscore}")
                     continue
-                if php != bhp:
+                if php != bhp and not (0 <= php <= 4000 and 0 <= bhp <= 4000):
+                    review.append(f"type {t} table {ptab:08X} entry {k:02X}: implausible HP PS2 {php} vs BL {bhp}")
+                elif php != bhp:
                     addr = ptab + 16 * k + 12
                     patches[f"{addr:08X}"] = {"orig": f"{pword:08X}",
                                               "new": f"{(pword & 0xFFFF0000) | (bhp & 0xFFFF):08X}",
                                               "type": t, "entry": k, "ps2_hp": php, "bl_hp": bhp}
                     n += 1
-            print(f"type {t:3d} PS2 {ptab:08X} ~ BL {best} ({score} matching scores): {n} HP differences")
+            print(f"type {t:3d} PS2 {ptab:08X} ({nrec} records) ~ BL {best} ({score} matching scores): {n} HP differences")
     for r in review:
         print("REVIEW:", r)
     for addr, p in sorted(patches.items()):
