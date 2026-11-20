@@ -37,3 +37,15 @@ the ship byte; the PS2 byte is side·4 + type), BL's spread shot routine `0C0770
 translated to the PS2 shot system, the spread speeds, and a select step. Next: trace `0C077030` vs
 `0C077060` and the tables they read, then map them onto PS2's shooter (`0x0013B2F0` / projectile writer
 `0x0011A580`).
+
+## Straight/spread = the arcade pilots' mechanics (2026-11-20)
+
+* BL's per-ship, per-level shot tables (`0C17F388` → 8 × 7 patterns; pattern = shot count + 24-byte records,
+  flags `C8000000`, angle, 16.16 offsets) were dumped with `dump_shot_patterns.lua` and compared, word for
+  word, with the PS2 table at **`0x00212E50`** (same format, little-endian): **BL straight A–D = Bond A–D and
+  BL spread A–D = Dyne A–D, 7/7 levels each** (both share one table for type B/C of the second set).
+* BL's per-ship speeds (`0C1740D0`: 2.75/2.5/3.0/3.5, 2.25/2.125/2.375/2.5) are the PS2 table at
+  **`0x00205F50`**, Bond then Dyne.
+* So BL indexes the arcade mechanics by ship-kind·4 + type instead of side·4 + type: the pilot is cosmetic and
+  straight/spread picks the shot set and speed. The PS2 data already holds both sets; nothing new to port for
+  shots or speeds. A BL-faithful select only needs the mechanics index decoupled from the pilot graphics.
