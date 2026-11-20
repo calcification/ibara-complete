@@ -1,5 +1,5 @@
 id,test,environment,status,instructions_or_file,command,pass_condition
-P00,Unmodified baseline (no PNACH write),PCSX2,PENDING,pnach/profiles/baseline/SLPM-66301_420C7FAB.pnach,Copy baseline file to PCSX2 cheats and cold boot,Normal 5-entry retail frontend and both Arcade and Arrange
+P00,Unmodified baseline (no PNACH write),PCSX2,PASS,pnach/profiles/baseline/SLPM-66301_420C7FAB.pnach;tests/manual/RESULTS_P00_B04.md,Cold boot with cheats disabled or use the baseline profile,Normal 5-entry retail frontend and both Arcade and Arrange
 P01,14-edit PCSX2 240p nearest crop,PCSX2,PENDING,pnach/profiles/240p_core/SLPM-66301_420C7FAB.pnach,Enable only 240p_core group or copy its profile,Compare display mode + shimmer against P00
 P02,18-edit PCSX2 240p half-pixel variant,PCSX2,PENDING,pnach/profiles/240p_halfpixel/SLPM-66301_420C7FAB.pnach,Enable only 240p_halfpixel group or copy its profile,Compare half-pixel registration + shimmer against P01
 P03,Player 1 score marker 1000000,PCSX2,PENDING,pnach/profiles/score_marker/SLPM-66301_420C7FAB.pnach,Enable only score_marker; temporary card; watch EE 0044C600,EE score word becomes 000F4240 every vsync
@@ -23,7 +23,7 @@ S13,Optional Kuro arcade ZIP revision,OFFLINE,OPTIONAL,research/phase05/src/chec
 B01,Direct secondary ELF boot probe (ISO-only fallback; PCSX2-first route does not require it),PCSX2,OPTIONAL_DEFERRED,tests/manual/B01_BOOT_PROBE.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode probe --out outputs","EE PC = 0x00100018, magenta if GS enabled"
 B02,Retail boot with injected extra ELF (ISO-only fallback; PCSX2-first route does not require it),PCSX2,OPTIONAL_DEFERRED,tests/manual/B02_RETAIL_BOOT.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode inject --out outputs",All five original menu branches and two games work
 B03,Dormant Black Label texture only (ISO-only fallback; PCSX2-first route does not require it),PCSX2,OPTIONAL_DEFERRED,tests/manual/B03_ASSET_ONLY.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode asset --out outputs",Five original menu buttons; no sixth visible
-B04,Original retail menu debug trace,PCSX2,PENDING,tests/manual/B04_MENU_DEBUGGER.md,See manual checklist,Verified breakpoint execution for five branches
+B04,Original retail menu debug trace,PCSX2,PASS,tests/manual/B04_MENU_DEBUGGER.md;tests/manual/RESULTS_P00_B04.md,See manual checklist,Verified breakpoint execution for five branches
 H01,Retail injection on real PS2,HARDWARE,BLOCKED,tests/manual/H01_REAL_PS2.md,See manual checklist,Only after emulator passes
 F01,Visible sixth BLACK LABEL option,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires new menu hook/descriptors/loader
 F02,Playable arcade-accurate Kuro on PS2,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires working Kuro port + assets and validation

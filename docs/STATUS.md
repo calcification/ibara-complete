@@ -1,4 +1,4 @@
-**Current recommended method:** small PCSX2 `.pnach` experiments P00–P06 on the original ISO/CHD. See [PCSX2_FIRST](PCSX2_FIRST.md). **Offline syntax/preimage checks PASSED; emulator runtime not tested.** The legacy multi-gigabyte test ISO builders remain optional.
+**Current recommended method:** small PCSX2 `.pnach` experiments on the original ISO/CHD. The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. P01–P06 have passed offline checks and await emulator runs. See [PCSX2_FIRST](PCSX2_FIRST.md) for the procedures.
 
 # Verified status and roadblocks (November 2026)
 

@@ -17,7 +17,7 @@
 
 | ID | Patch experiment | Type | Game runtime evidence |
 |---|---|---|---|
-| P00 | No-write baseline | `pnach/profiles/baseline/` | Not yet recorded |
+| P00 | No-write baseline | `pnach/profiles/baseline/` | [Passed in PCSX2 2.8.2](tests/manual/RESULTS_P00_B04.md) |
 | P01 | 14-edit native 240p + nearest/crop | `.pnach` named group | Not yet recorded; residual shimmer known in separate disc patch |
 | P02 | 18-edit 240p + four half-pixel coordinates | `.pnach` named group | Not yet recorded as PNACH |
 | P03 | Player 1 score marker (1,000,000) | `.pnach` named group | Awaiting PCSX2 |

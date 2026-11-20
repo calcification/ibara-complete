@@ -46,7 +46,9 @@ Optional Kuro ROM metadata/payload verifier (not a gameplay test):
 python3 research/phase05/src/check_kuro_roms.py /path/to/ibarablk.zip --verify-payload
 ```
 
-## Runtime boot tests — all PENDING
+## Runtime boot and menu tests
+
+The [P00 and B04 results](../tests/manual/RESULTS_P00_B04.md) cover the unmodified retail frontend. Disc tests B01–B03 are pending.
 
 **Test B01 / `BOOT PROBE`:** Build from original:
 
