@@ -1,0 +1,12 @@
+{
+  "complete_iso_byte_comparison": true,
+  "source_and_output_bytes": 3932848128,
+  "changed_bytes": 5376,
+  "allowed_slot_bytes": 5376,
+  "changes_outside_allowlist": 0,
+  "first_diff_byte_offset": 3736498352,
+  "last_diff_byte_offset": 3736510495,
+  "all_original_files_except_IBARAR_PDM_byte_identical": true,
+  "ISO_9660_extent_metadata_preserved": true,
+  "execution_test": "NOT RUN - asset-only patch not referenced by retail code"
+}

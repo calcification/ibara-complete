@@ -1,0 +1,247 @@
+{
+  "source": "Ibara (Japan).iso",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "iso_disc_boot_extent": {
+    "name": "SLPM_663.01;1",
+    "lba": 1919173,
+    "bytes": 2329648,
+    "directory": false,
+    "record_length": 60,
+    "path": "/SLPM_663.01;1"
+  },
+  "mode_selector": {
+    "sites": {
+      "front_end_caller": {
+        "ee_address": "0x00113634",
+        "file_offset": "0x00136B4",
+        "word": "0x0C072500"
+      },
+      "initial_menu_state": {
+        "ee_address": "0x001CA2C8",
+        "file_offset": "0x00CA348",
+        "word": "0x0C04A7C0"
+      },
+      "selector_start": {
+        "ee_address": "0x001CA42C",
+        "file_offset": "0x00CA4AC",
+        "word": "0x32420001"
+      },
+      "move_down_limit": {
+        "ee_address": "0x001CA44C",
+        "file_offset": "0x00CA4CC",
+        "word": "0x28410005"
+      },
+      "animation_loop_limit": {
+        "ee_address": "0x001CA494",
+        "file_offset": "0x00CA514",
+        "word": "0x29020005"
+      },
+      "label_render_limit": {
+        "ee_address": "0x001CA56C",
+        "file_offset": "0x00CA5EC",
+        "word": "0x28880005"
+      },
+      "label_render_entry": {
+        "ee_address": "0x001CA5EC",
+        "file_offset": "0x00CA66C",
+        "word": "0x8F829794"
+      },
+      "sprite_loop_limit": {
+        "ee_address": "0x001CA6DC",
+        "file_offset": "0x00CA75C",
+        "word": "0x2A020005"
+      },
+      "move_up_wrap_to_last": {
+        "ee_address": "0x001CA720",
+        "file_offset": "0x00CA7A0",
+        "word": "0x24020004"
+      },
+      "move_down_wrap_to_first": {
+        "ee_address": "0x001CA72C",
+        "file_offset": "0x00CA7AC",
+        "word": "0x1000FF4A"
+      },
+      "accept_dispatch_start": {
+        "ee_address": "0x001CA798",
+        "file_offset": "0x00CA818",
+        "word": "0x8F829794"
+      },
+      "arcade_entry": {
+        "ee_address": "0x001CA800",
+        "file_offset": "0x00CA880",
+        "word": "0x24020002"
+      },
+      "arrange_entry": {
+        "ee_address": "0x001CA824",
+        "file_offset": "0x00CA8A4",
+        "word": "0x24020009"
+      },
+      "gallery_entry": {
+        "ee_address": "0x001CA848",
+        "file_offset": "0x00CA8C8",
+        "word": "0xAFA20250"
+      },
+      "options_entry": {
+        "ee_address": "0x001CA860",
+        "file_offset": "0x00CA8E0",
+        "word": "0x2402000D"
+      },
+      "exit_entry": {
+        "ee_address": "0x001CA7E4",
+        "file_offset": "0x00CA864",
+        "word": "0x24020001"
+      },
+      "top_level_return": {
+        "ee_address": "0x001CE780",
+        "file_offset": "0x00CE800",
+        "word": "0xDFBF0090"
+      }
+    },
+    "limits": [
+      {
+        "ee_address": "0x001CA44C",
+        "old_word": "0x28410005",
+        "possible_six_entries_word": "0x28410006",
+        "status": "DO NOT APPLY alone: other code/data changes required"
+      },
+      {
+        "ee_address": "0x001CA494",
+        "old_word": "0x29020005",
+        "possible_six_entries_word": "0x29020006",
+        "status": "DO NOT APPLY alone: other code/data changes required"
+      },
+      {
+        "ee_address": "0x001CA56C",
+        "old_word": "0x28880005",
+        "possible_six_entries_word": "0x28880006",
+        "status": "DO NOT APPLY alone: other code/data changes required"
+      },
+      {
+        "ee_address": "0x001CA6DC",
+        "old_word": "0x2A020005",
+        "possible_six_entries_word": "0x2A020006",
+        "status": "DO NOT APPLY alone: other code/data changes required"
+      }
+    ],
+    "anchor_values": [
+      216,
+      184,
+      152,
+      120,
+      88
+    ],
+    "candidate_sixth_anchor": 56,
+    "draw_pairs": [
+      {
+        "index": 0,
+        "first": "0x002A8EF0",
+        "second": "0x002A8F00"
+      },
+      {
+        "index": 1,
+        "first": "0x002A8F10",
+        "second": "0x002A8F20"
+      },
+      {
+        "index": 2,
+        "first": "0x002A8F30",
+        "second": "0x002A8F40"
+      },
+      {
+        "index": 3,
+        "first": "0x002A8F50",
+        "second": "0x002A8F60"
+      },
+      {
+        "index": 4,
+        "first": "0x002A8F70",
+        "second": "0x00000000"
+      }
+    ],
+    "bytes_after_draw_pairs": [
+      "0x00000000",
+      "0x00000000",
+      "0x00301D50",
+      "0x00301D70"
+    ],
+    "sixth_pointer_pair_addresses": [
+      "0x002A90D8",
+      "0x002A90DC"
+    ],
+    "sixth_pointer_pair_original_values": [
+      "0x00000000",
+      "0x00000000"
+    ],
+    "note": "The zero pointer-pair fits before an unrelated table at 0x002A90E0; a new graphics descriptor still needs allocation",
+    "state_dispatch": [
+      {
+        "index": 0,
+        "label": "ARCADE MODE",
+        "address": "0x001CA800",
+        "result": "frontend state 2 (Arcade submenu)"
+      },
+      {
+        "index": 1,
+        "label": "ARRANGE MODE",
+        "address": "0x001CA824",
+        "result": "frontend state 9 (Arrange submenu)"
+      },
+      {
+        "index": 2,
+        "label": "GALLERY",
+        "address": "0x001CA848",
+        "result": "return value 2 (Gallery request to caller)"
+      },
+      {
+        "index": 3,
+        "label": "OPTION",
+        "address": "0x001CA860",
+        "result": "frontend state 13 (Option)"
+      },
+      {
+        "index": 4,
+        "label": "EXIT",
+        "address": "0x001CA7E4",
+        "result": "return value 1 (Exit request)"
+      }
+    ],
+    "array_bases": {
+      "five_pair_draw_table": "0x002A90B0",
+      "first_animation_array": "0x00500620",
+      "second_animation_array": "0x00500640",
+      "fade_array": "0x00500660"
+    },
+    "hypothetical_6th_positions": {
+      "first": "0x00500634",
+      "second": "0x00500654",
+      "fade": "0x00500674"
+    }
+  },
+  "model": "Static verification only; runtime not yet tested",
+  "safety": [
+    "No data in source was modified",
+    "A sixth item may fill two zero pointer slots; it still requires new graphics descriptors and a guarded dispatch hook",
+    "Four loop-bound changes alone are NOT a functioning menu patch",
+    "Full Black Label graphics and code do not exist in this retail ISO"
+  ],
+  "resource_index": [
+    {
+      "id": 945,
+      "pdm_offset": "0x2D20800",
+      "tim2_header_present": true,
+      "width": 256,
+      "height": 256,
+      "image_type": 5,
+      "palette_type": 3
+    },
+    {
+      "id": 946,
+      "pdm_offset": "0x2D31000",
+      "tim2_header_present": true,
+      "width": 256,
+      "height": 256,
+      "image_type": 5,
+      "palette_type": 3
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+name: Source-only checks (no commercial game data)
+on:
+  push:
+  pull_request:
+jobs:
+  no-rom-selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile all Python source (syntax only)
+        run: python -m compileall -q scripts research
+      - name: Phase 5 standalone memory and trace tests
+        run: python scripts/run_audits.py --selftest --out validation-output
+      - name: Validate test manifest
+        run: python scripts/check_manifest.py
+      - name: Reject unapproved large or original game files
+        run: python scripts/check_repository_safety.py

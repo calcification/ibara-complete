@@ -1,0 +1,16 @@
+test_arcade_selector (__main__.Phase9.test_arcade_selector) ... ok
+test_arrange_branches (__main__.Phase9.test_arrange_branches) ... ok
+test_direct_edges (__main__.Phase9.test_direct_edges) ... ok
+test_instruction_and_edge_audit (__main__.Phase9.test_instruction_and_edge_audit) ... ok
+test_mips_mult_encoding (__main__.Phase9.test_mips_mult_encoding) ... ok
+test_mutation_rejected_by_hash (__main__.Phase9.test_mutation_rejected_by_hash) ... ok
+test_mutation_rejected_by_instruction_even_if_sha_not_checked (__main__.Phase9.test_mutation_rejected_by_instruction_even_if_sha_not_checked) ... ok
+test_rank_factor_edges (__main__.Phase9.test_rank_factor_edges) ... ok
+test_rose_score_formula (__main__.Phase9.test_rose_score_formula) ... ok
+test_sha (__main__.Phase9.test_sha) ... ok
+test_spawn_types (__main__.Phase9.test_spawn_types) ... ok
+
+----------------------------------------------------------------------
+Ran 11 tests in 0.040s
+
+OK

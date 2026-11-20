@@ -1,0 +1,10 @@
+test_detects_mutation (__main__.TestVerifiedAddresses.test_detects_mutation) ... ok
+test_known_anchor_words (__main__.TestVerifiedAddresses.test_known_anchor_words) ... ok
+test_sha256 (__main__.TestVerifiedAddresses.test_sha256) ... ok
+test_state_handler_table (__main__.TestVerifiedAddresses.test_state_handler_table) ... ok
+test_truncated_input (__main__.TestVerifiedAddresses.test_truncated_input) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.017s
+
+OK

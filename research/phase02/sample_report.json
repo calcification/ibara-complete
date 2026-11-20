@@ -1,0 +1,137 @@
+{
+  "input": "Ibara (Japan).iso",
+  "iso_bytes": 3932848128,
+  "volume_id": "",
+  "volume_sectors": 1920336,
+  "files": {
+    "SLPM_663.01": {
+      "lba": 1919173,
+      "bytes": 2329648,
+      "crc32": "F9085060",
+      "matches_reference_crc": true,
+      "matches_reference_size": true
+    },
+    "IBARAR.PDM": {
+      "lba": 1801312,
+      "bytes": 241377288,
+      "crc32": "F0A452FE",
+      "matches_reference_crc": true,
+      "matches_reference_size": true
+    },
+    "IBARAR.TBL": {
+      "lba": 1920311,
+      "bytes": 18100,
+      "crc32": "A286422C",
+      "matches_reference_crc": true,
+      "matches_reference_size": true
+    },
+    "ALLIMAGE.DAT": {
+      "lba": 1800552,
+      "bytes": 1555136,
+      "crc32": "C09F7BED",
+      "matches_reference_crc": true,
+      "matches_reference_size": true
+    }
+  },
+  "resource_count": 1130,
+  "root_directory": {
+    "lba": 261,
+    "logical_bytes": 570,
+    "occupied_bytes": 570,
+    "physical_sector_slack": 1478,
+    "slack_all_zero": true,
+    "entries": [
+      "\u0000",
+      "\u0001",
+      "IOP",
+      "SLPM_663.01;1",
+      "IBARAR.PDM;1",
+      "IBARAR.TBL;1",
+      "IOPRP271.IMG;1",
+      "ALLIMAGE.DAT;1",
+      "SYSTEM.CNF;1",
+      "DAMMY1G.DAT;1"
+    ],
+    "note": "Adding a file requires adjusting ISO9660 root-size and entry metadata."
+  },
+  "unallocated_gap_after_dummy": {
+    "start_lba": 500286,
+    "end_lba_exclusive": 1800286,
+    "bytes": 2662400000,
+    "scan_performed": true,
+    "nonzero_bytes": 0,
+    "fully_zero": true
+  },
+  "table_format": {
+    "header_bytes": 20,
+    "index_pointers_start": 20,
+    "record_area_start": 4540,
+    "offset_table_start": 13580,
+    "offsets_are_relative_to": "IBARAR.PDM",
+    "sector_alignment": 2048,
+    "trailing_bytes_after_last_resource": 8
+  },
+  "resource_types": {
+    "TIM2": 1113,
+    "BG00": 16,
+    "SE00": 1
+  },
+  "tim2_dimensions_and_formats": [
+    {
+      "width": 256,
+      "height": 256,
+      "image_type": 4,
+      "count": 507
+    },
+    {
+      "width": 256,
+      "height": 256,
+      "image_type": 5,
+      "count": 447
+    },
+    {
+      "width": 448,
+      "height": 448,
+      "image_type": 1,
+      "count": 100
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "image_type": 5,
+      "count": 53
+    },
+    {
+      "width": 512,
+      "height": 512,
+      "image_type": 1,
+      "count": 5
+    },
+    {
+      "width": 256,
+      "height": 256,
+      "image_type": 1,
+      "count": 1
+    }
+  ],
+  "frontend_art_indexes": {
+    "mode_top_left": 950,
+    "mode_bottom_left": 951,
+    "mode_top_center": 952,
+    "mode_bottom_center": 953,
+    "mode_right_both_halves": 954,
+    "title_left": 1016,
+    "title_right": 1017,
+    "title_v_bottom_left": 1018,
+    "title_v_bottom_right": 1019,
+    "frontend_menu_sprite_A": 945,
+    "frontend_menu_sprite_B": 946
+  },
+  "notes": [
+    "This is metadata only, no game assets or executables are output.",
+    "Mode artwork positions are corroborated by ibara360 tools/ps2extract/mkrecipe.py.",
+    "A separate Black Label binary has NOT been ported to PS2.",
+    "Physical ISO space is not the same as proved working EE RAM/GS VRAM.",
+    "Do not edit the source ISO; prove a read-only metadata baseline first."
+  ]
+}

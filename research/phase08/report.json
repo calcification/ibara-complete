@@ -1,0 +1,253 @@
+{
+  "status": "static retail ELF verification; not gameplay tested",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "player1_base_corrected": "0x0044C380",
+  "player2_base_corrected": "0x0044C610",
+  "player1_score_corrected": "0x0044C600",
+  "player2_score_corrected": "0x0044C890",
+  "collision_to_dispatch": "0x0012A61C -> 0x0012FD00",
+  "dispatcher_uses_record_field": "+0x04 (item type ID)",
+  "award_uses_record_field": "+0x08 (reward/level index)",
+  "generic_award": "0x0012EBF0",
+  "handler_table": "0x0020BF60",
+  "score_metadata_table": "0x0020BE80",
+  "types": [
+    {
+      "type_id": 0,
+      "tentative_label": "Small P?",
+      "handler": "0x0012FB00",
+      "score_metadata": "0x00208790",
+      "metadata_state": "0x00337F00",
+      "verified_reward_samples": [
+        100
+      ]
+    },
+    {
+      "type_id": 1,
+      "tentative_label": "Option?",
+      "handler": "0x0012EDC0",
+      "score_metadata": "0x00209700",
+      "metadata_state": "0x00337F20",
+      "verified_reward_samples": [
+        10000,
+        10000,
+        10000,
+        10000,
+        10000,
+        10000,
+        10000,
+        10000
+      ]
+    },
+    {
+      "type_id": 2,
+      "tentative_label": "Bomb fragment?",
+      "handler": "0x0012F400",
+      "score_metadata": "0x00208920",
+      "metadata_state": "0x00337F08",
+      "verified_reward_samples": [
+        500
+      ]
+    },
+    {
+      "type_id": 3,
+      "tentative_label": "Medal (confirmed scoring)",
+      "handler": "0x0012F7B0",
+      "score_metadata": "0x0020B100",
+      "metadata_state": "0x00337F28",
+      "verified_reward_samples": [
+        100,
+        200,
+        300,
+        400,
+        500,
+        600,
+        700,
+        800,
+        900,
+        1000,
+        2000,
+        3000,
+        4000,
+        5000,
+        6000,
+        7000,
+        8000,
+        9000,
+        10000
+      ]
+    },
+    {
+      "type_id": 4,
+      "tentative_label": "Large P?",
+      "handler": "0x0012FA10",
+      "score_metadata": "0x00208AB0",
+      "metadata_state": "0x00337F10",
+      "verified_reward_samples": [
+        1000
+      ]
+    },
+    {
+      "type_id": 5,
+      "tentative_label": "Full bomb?",
+      "handler": "0x0012F570",
+      "score_metadata": "0x00208C40",
+      "metadata_state": "0x00337F18",
+      "verified_reward_samples": [
+        5000
+      ]
+    },
+    {
+      "type_id": 6,
+      "tentative_label": "1UP?",
+      "handler": "0x0012F930",
+      "score_metadata": "0x00208600",
+      "metadata_state": "0x00337EF8",
+      "verified_reward_samples": [
+        10000
+      ]
+    },
+    {
+      "type_id": 7,
+      "tentative_label": "Score item (consistent with arcade mapping)",
+      "handler": "0x0012F680",
+      "score_metadata": "0x0020BD00",
+      "metadata_state": "0x00337F30",
+      "verified_reward_samples": [
+        100,
+        200,
+        400,
+        800,
+        100,
+        200,
+        400,
+        800
+      ]
+    }
+  ],
+  "medals": [
+    {
+      "medal_level": 1,
+      "score_points": 100,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 0
+    },
+    {
+      "medal_level": 2,
+      "score_points": 200,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 131072
+    },
+    {
+      "medal_level": 3,
+      "score_points": 300,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 262144
+    },
+    {
+      "medal_level": 4,
+      "score_points": 400,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 393216
+    },
+    {
+      "medal_level": 5,
+      "score_points": 500,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 524288
+    },
+    {
+      "medal_level": 6,
+      "score_points": 600,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 655360
+    },
+    {
+      "medal_level": 7,
+      "score_points": 700,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 786432
+    },
+    {
+      "medal_level": 8,
+      "score_points": 800,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 917504
+    },
+    {
+      "medal_level": 9,
+      "score_points": 900,
+      "arcade_rank_stored_delta_down": 256,
+      "arrange_rank_stored_delta_down": 1048576
+    },
+    {
+      "medal_level": 10,
+      "score_points": 1000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1179648
+    },
+    {
+      "medal_level": 11,
+      "score_points": 2000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1310720
+    },
+    {
+      "medal_level": 12,
+      "score_points": 3000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1441792
+    },
+    {
+      "medal_level": 13,
+      "score_points": 4000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1572864
+    },
+    {
+      "medal_level": 14,
+      "score_points": 5000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1703936
+    },
+    {
+      "medal_level": 15,
+      "score_points": 6000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1835008
+    },
+    {
+      "medal_level": 16,
+      "score_points": 7000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 1966080
+    },
+    {
+      "medal_level": 17,
+      "score_points": 8000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 2097152
+    },
+    {
+      "medal_level": 18,
+      "score_points": 9000,
+      "arcade_rank_stored_delta_down": 1024,
+      "arrange_rank_stored_delta_down": 2228224
+    },
+    {
+      "medal_level": 19,
+      "score_points": 10000,
+      "arcade_rank_stored_delta_down": 4096,
+      "arrange_rank_stored_delta_down": 2359296
+    }
+  ],
+  "score_item_rank_deltas": [
+    256,
+    512,
+    768,
+    1024
+  ],
+  "dynamic_enemy_reward_max_helper": "0x00134E90",
+  "bullet_cancellation": "not established; no claim of a complete tracing path",
+  "input_kind": "ELF"
+}

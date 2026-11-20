@@ -1,0 +1,521 @@
+{
+  "source_type": "elf",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "checks": {
+    "fingerprinted_instructions": 60,
+    "rank_decrement_direct_calls": 56,
+    "rank_increment_direct_calls": 2
+  },
+  "address_map": {
+    "gp": "0x0033FCF0",
+    "mode_flag": "0x00338F44",
+    "stored_rank": "0x00338EB4",
+    "rank_ceiling": "0x00338EAC",
+    "p1_score": "0x0045C600",
+    "p2_score": "0x0045C890",
+    "p1_extend_threshold": "0x0045C604",
+    "p2_extend_threshold": "0x0045C894",
+    "p1_stock": "0x0045C5DA",
+    "p2_stock": "0x0045C86A"
+  },
+  "tables": {
+    "item_rank_delta_0x20BFD0_first_four": [
+      256,
+      512,
+      768,
+      1024
+    ],
+    "stock_indexed_rank_relief_0x213070_eight": [
+      4194304,
+      2097152,
+      1048576,
+      524288,
+      262144,
+      131072,
+      2097152,
+      2097152
+    ],
+    "extend_threshold_candidates_0x213540_seven": [
+      4294967295,
+      1000000,
+      2000000,
+      3000000,
+      2000000,
+      4000000,
+      6000000
+    ]
+  },
+  "rank_calls": [
+    {
+      "callsite": "0x001247A4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24041000",
+      "a0_at_call": "a0=4096 (addiu)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001248F8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24041000",
+      "a0_at_call": "a0=4096 (addiu)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0012F054",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040008",
+      "a0_at_call": "a0=0x00080000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F064",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040001",
+      "a0_at_call": "a0=0x00010000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F494",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040001",
+      "a0_at_call": "a0=0x00010000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F4A4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24042000",
+      "a0_at_call": "a0=8192 (addiu)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F504",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040004",
+      "a0_at_call": "a0=0x00040000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F610",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040040",
+      "a0_at_call": "a0=0x00400000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F620",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040002",
+      "a0_at_call": "a0=0x00020000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F65C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F6E0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x8C440000",
+      "a0_at_call": "a0=memory load, base r2 offset 0",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F708",
+      "target": "0x00129DC0",
+      "effect_on_stored_rank": "increase (less difficulty)",
+      "delay_slot_opcode": "0x00022280",
+      "a0_at_call": "a0=register-shifted by 10",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F81C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x8C440000",
+      "a0_at_call": "a0=memory load, base r2 offset 0",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F834",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00022440",
+      "a0_at_call": "a0=register-shifted by 17",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F9A0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040040",
+      "a0_at_call": "a0=0x00400000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012F9B0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040008",
+      "a0_at_call": "a0=0x00080000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012FA80",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040008",
+      "a0_at_call": "a0=0x00080000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012FA90",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040001",
+      "a0_at_call": "a0=0x00010000 (lui)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012FC3C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x34048000",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x0012FC4C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24041000",
+      "a0_at_call": "a0=4096 (addiu)",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x001330A4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040028",
+      "a0_at_call": "a0=40 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x00133364",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040014",
+      "a0_at_call": "a0=20 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x0013370C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x2404000F",
+      "a0_at_call": "a0=15 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x001339AC",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x2404004B",
+      "a0_at_call": "a0=75 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x00133BB8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x2404000F",
+      "a0_at_call": "a0=15 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x00133E84",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040064",
+      "a0_at_call": "a0=100 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x00134164",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040032",
+      "a0_at_call": "a0=50 (addiu)",
+      "neighborhood": "gameplay neighborhood"
+    },
+    {
+      "callsite": "0x00139020",
+      "target": "0x00129DC0",
+      "effect_on_stored_rank": "increase (less difficulty)",
+      "delay_slot_opcode": "0x8C440000",
+      "a0_at_call": "a0=memory load, base r2 offset 0",
+      "neighborhood": "player-stock path"
+    },
+    {
+      "callsite": "0x0013ADE4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00022040",
+      "a0_at_call": "a0=register-shifted by 1",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x0013B124",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24041000",
+      "a0_at_call": "a0=4096 (addiu)",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x0013B214",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24041000",
+      "a0_at_call": "a0=4096 (addiu)",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x0013B260",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24044000",
+      "a0_at_call": "a0=16384 (addiu)",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x0013B2A8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040001",
+      "a0_at_call": "a0=0x00010000 (lui)",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x0013B410",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040010",
+      "a0_at_call": "a0=16 (addiu)",
+      "neighborhood": "player-or-increment neighborhood"
+    },
+    {
+      "callsite": "0x00162FD8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x24040800",
+      "a0_at_call": "a0=2048 (addiu)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016908C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x00169110",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016931C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016945C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016DCD8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016E01C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016E0F0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0016E168",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x00172ED8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x00173104",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001732AC",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x00173300",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001795F0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0017D3DC",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0017F1E4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0017F278",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0017F300",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x0017F3B0",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x00185A8C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001A3B44",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001A3BF4",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x3C040010",
+      "a0_at_call": "a0=0x00100000 (lui)",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001A40C8",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    },
+    {
+      "callsite": "0x001A896C",
+      "target": "0x00129DF0",
+      "effect_on_stored_rank": "decrease (more difficulty)",
+      "delay_slot_opcode": "0x00622021",
+      "a0_at_call": "depends on earlier register state",
+      "neighborhood": "other, needs classification"
+    }
+  ],
+  "interpretive_cautions": [
+    "Subtraction of stored rank raises displayed difficulty; zero stored rank is the hardest.",
+    "The item-rank lookup at 0x20BFD0 is indexed from a runtime item record. Do not label the exact item types without further proof.",
+    "The stock-dependent rank-relief table is identified; the event calling it must still be characterized.",
+    "Exact medal scoring values and Kuro XTC are not established by this static PS2 audit.",
+    "MIPS callsite addresses and CV1000 SH-3 addresses are not interchangeable."
+  ]
+}

@@ -1,0 +1,174 @@
+{
+  "input": "SLPM_663(1).01",
+  "elf": {
+    "file_bytes": 2329648,
+    "sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+    "machine": 8,
+    "entry": 1048584,
+    "loads": [
+      {
+        "offset": 128,
+        "vaddr": 1048576,
+        "file_bytes": 2329088,
+        "memory_bytes": 4202240,
+        "flags": 7
+      },
+      {
+        "offset": 2329216,
+        "vaddr": 5250816,
+        "file_bytes": 0,
+        "memory_bytes": 0,
+        "flags": 6
+      }
+    ]
+  },
+  "iso_boot_file": null,
+  "iso_file_list": [],
+  "menu_tables": {
+    "arcade_main": {
+      "file_offset": 1740960,
+      "address": 2789408,
+      "labels": [
+        {
+          "address": 3152984,
+          "text": "GAME START"
+        },
+        {
+          "address": 3153000,
+          "text": "PRACTICE"
+        },
+        {
+          "address": 3153016,
+          "text": "CONFIG"
+        },
+        {
+          "address": 3152976,
+          "text": "EXIT"
+        }
+      ]
+    },
+    "arrange_main": {
+      "file_offset": 1741000,
+      "address": 2789448,
+      "labels": [
+        {
+          "address": 3152984,
+          "text": "GAME START"
+        },
+        {
+          "address": 3153016,
+          "text": "CONFIG"
+        },
+        {
+          "address": 3152976,
+          "text": "EXIT"
+        }
+      ]
+    },
+    "arrange_options": {
+      "file_offset": 1741024,
+      "address": 2789472,
+      "labels": [
+        {
+          "address": 3153088,
+          "text": "FIGHTER TYPE"
+        },
+        {
+          "address": 3153104,
+          "text": "BULLET DESIGN"
+        },
+        {
+          "address": 3153120,
+          "text": "KEY CONFIG"
+        },
+        {
+          "address": 3152976,
+          "text": "EXIT"
+        }
+      ]
+    },
+    "arcade_difficulty": {
+      "file_offset": 1741184,
+      "address": 2789632,
+      "labels": [
+        {
+          "address": 3153448,
+          "text": "NORMAL"
+        },
+        {
+          "address": 3153456,
+          "text": "HARDER"
+        },
+        {
+          "address": 3153464,
+          "text": "EXTENDED"
+        },
+        {
+          "address": 3152976,
+          "text": "EXIT"
+        }
+      ]
+    }
+  },
+  "boot_resource_table_offsets": [
+    1756480
+  ],
+  "known_code_points": {
+    "arcade_menu_table_ref": 1878388,
+    "arrange_menu_table_ref": 1886948,
+    "arcade_mode_table_ref": 1878992,
+    "arrange_options_table_ref": 1887708,
+    "arcade_accept_dispatch": 1878664,
+    "arrange_accept_dispatch": 1887220
+  },
+  "unmodified_patch_probes": [
+    {
+      "ram": 1757776,
+      "expected_unmodified": 604307457,
+      "actual": 604307457,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1765660,
+      "expected_unmodified": 604242016,
+      "actual": 604242016,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1954240,
+      "expected_unmodified": 0,
+      "actual": 0,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1954256,
+      "expected_unmodified": 240,
+      "actual": 240,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1780180,
+      "expected_unmodified": 2944570740,
+      "actual": 2944570740,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1780320,
+      "expected_unmodified": 2944636240,
+      "actual": 2944636240,
+      "matches_unmodified": true
+    },
+    {
+      "ram": 1780352,
+      "expected_unmodified": 2944570740,
+      "actual": 2944570740,
+      "matches_unmodified": true
+    }
+  ],
+  "notes": [
+    "Code points are inspection locations, not proven safe patch hooks.",
+    "Menu table labels do not establish where artwork lives or whether gameplay engines are shared.",
+    "Kuro arcade assets/logic are not established to exist in the retail ISO.",
+    "No ISO or ELF modifications performed."
+  ]
+}

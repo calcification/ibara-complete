@@ -1,0 +1,24 @@
+Ibara Complete Phase 4: manually add these as EXECUTION breakpoints in PCSX2
+Unmodified retail executable SLPM_663.01 only; no patch is needed.
+Avoid relying on hardcoded $gp values; read $gp in the debugger.
+
+0x00113634  front_end_caller
+0x001CA2C8  initial_menu_state
+0x001CA42C  selector_start
+0x001CA798  accept_dispatch_start
+0x001CA800  arcade_entry
+0x001CA824  arrange_entry
+0x001CA848  gallery_entry
+0x001CA860  options_entry
+0x001CA7E4  exit_entry
+0x001CE780  top_level_return
+
+Expected upon pressing accept on the five mode-select choices:
+Arcade -> 0x001CA800 / state 2
+Arrange -> 0x001CA824 / state 9
+Gallery -> 0x001CA848 / result 2
+Option -> 0x001CA860 / state 13
+Exit -> 0x001CA7E4 / result 1
+
+Follow-up (when convenient): confirm which path the actual hardware/PCSX2 takes.
+This file describes a static analysis prediction, not a completed runtime trace.

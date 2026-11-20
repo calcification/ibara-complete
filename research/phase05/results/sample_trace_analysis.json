@@ -1,0 +1,36 @@
+{
+  "trace": "tests/sample_trace.csv",
+  "operations": 6,
+  "frames_in_trace": 3,
+  "resident_tiles": 15,
+  "resident_MiB": 0.117,
+  "max_touched_tiles_per_frame": 8,
+  "max_touched_MiB_per_frame": 0.062,
+  "pool_tiles": 1024,
+  "pool_MiB": 8.0,
+  "overflow_first_frame": null,
+  "fits_without_eviction": true,
+  "frame_metrics": [
+    {
+      "frame": 0,
+      "touched_tiles": 3,
+      "resident_tiles": 3
+    },
+    {
+      "frame": 1,
+      "touched_tiles": 8,
+      "resident_tiles": 7
+    },
+    {
+      "frame": 2,
+      "touched_tiles": 8,
+      "resident_tiles": 15
+    }
+  ],
+  "limitations": [
+    "This approximates footprint at 64x64 tile granularity",
+    "No replacement/eviction policy is modeled",
+    "Written rectangles are assumed nonzero; zero-only writes may overestimate",
+    "Only covered regions are counted; trace completeness determines accuracy"
+  ]
+}

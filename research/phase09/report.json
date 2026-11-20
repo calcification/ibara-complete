@@ -1,0 +1,456 @@
+{
+  "status": "static exact-original-ELF audit; no emulator or console execution",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "verified_opcode_count": 75,
+  "verified_jal_edges": 13,
+  "call_chain": [
+    "0x0012E62C -> 0x0012AC60 (projectile/bullet collision pass)",
+    "0x0012AE8C/EF4/F0C/F24/F3C -> 0x00121FC0 (selector-specific conversion helper)",
+    "selector 1 -> item type 7; selector 2 -> item type 3; 0 -> no spawn in helper",
+    "0x001220FC/0x001220A0 -> 0x001306D0 (item spawn)",
+    "0x001307B0 -> 0x001308A0 (initialize item)",
+    "0x0012A61C -> 0x0012FD00 (later player-item pickup)",
+    "type 7 handler 0x0012F680 -> Arcade generic points or Arrange rank-weighted points"
+  ],
+  "projectile_pool_base": "0x0044EA40",
+  "projectile_record_stride": "0x50",
+  "bullet_pool_base": "0x004682EC",
+  "bullet_record_stride": "0x54",
+  "item_pool_base": "0x00453A40",
+  "item_record_stride": "0x58",
+  "type7_spawning_rank_factor": "item[+0x54] = ((0x01000000 - stored_rank) >> 16); floor 1, and 256 maps to 300",
+  "type7_arrange_collection_points": "(10 * item[+0x08] + 30) * item[+0x54]",
+  "type7_arcade_points": "fixed item reward metadata; initial samples 100,200,400,800 (Phase 8)",
+  "conversion_is_direct_score": "no direct player score award established inside the verified 0x12AC60 -> 0x121FC0 -> 0x1306D0 path; pickup does award points",
+  "hypotheses_not_yet_verified": [
+    "precise projectile-type names (bomb/Hadou/etc)",
+    "whether the collision helper always retires a bullet with associated pointers",
+    "full late-stage boss cancellation and extra scoring paths",
+    "Kuro XTC/Baradise arithmetic transplanted into the native PS2 engine"
+  ],
+  "conditional_branch_cases": [
+    {
+      "mode": "Arcade",
+      "projectile_type": 0,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 0,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 0,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 1,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 1,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 1,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 2,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 2,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 2,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 3,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 3,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 3,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 8,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 8,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 8,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 9,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 9,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 9,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 10,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 10,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 10,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 11,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 11,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arcade",
+      "projectile_type": 11,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 0,
+      "projectile_subtype": 0,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 0,
+      "projectile_subtype": 1,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 0,
+      "projectile_subtype": 2,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 1,
+      "projectile_subtype": 0,
+      "conversion_selector": null,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 1,
+      "projectile_subtype": 1,
+      "conversion_selector": 2,
+      "item_spawned": 3,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 1,
+      "projectile_subtype": 2,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 2,
+      "projectile_subtype": 0,
+      "conversion_selector": null,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 2,
+      "projectile_subtype": 1,
+      "conversion_selector": 2,
+      "item_spawned": 3,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 2,
+      "projectile_subtype": 2,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 3,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 3,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 3,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 8,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 8,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 8,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 9,
+      "projectile_subtype": 0,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 9,
+      "projectile_subtype": 1,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 9,
+      "projectile_subtype": 2,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 10,
+      "projectile_subtype": 0,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 10,
+      "projectile_subtype": 1,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 10,
+      "projectile_subtype": 2,
+      "conversion_selector": 0,
+      "item_spawned": null,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 11,
+      "projectile_subtype": 0,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 11,
+      "projectile_subtype": 1,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    },
+    {
+      "mode": "Arrange",
+      "projectile_type": 11,
+      "projectile_subtype": 2,
+      "conversion_selector": 1,
+      "item_spawned": 7,
+      "note": "conditional path only; collision guards must already pass"
+    }
+  ],
+  "rank_factor_examples": [
+    {
+      "stored_rank": "0xFFFFFF",
+      "factor_at_spawn": 1,
+      "points_at_collection_level0": 30,
+      "points_at_collection_level3": 60
+    },
+    {
+      "stored_rank": "0xF00000",
+      "factor_at_spawn": 16,
+      "points_at_collection_level0": 480,
+      "points_at_collection_level3": 960
+    },
+    {
+      "stored_rank": "0x800000",
+      "factor_at_spawn": 128,
+      "points_at_collection_level0": 3840,
+      "points_at_collection_level3": 7680
+    },
+    {
+      "stored_rank": "0x010000",
+      "factor_at_spawn": 255,
+      "points_at_collection_level0": 7650,
+      "points_at_collection_level3": 15300
+    },
+    {
+      "stored_rank": "0x000001",
+      "factor_at_spawn": 255,
+      "points_at_collection_level0": 7650,
+      "points_at_collection_level3": 15300
+    },
+    {
+      "stored_rank": "0x000000",
+      "factor_at_spawn": 300,
+      "points_at_collection_level0": 9000,
+      "points_at_collection_level3": 18000
+    }
+  ],
+  "input_kind": "ELF"
+}

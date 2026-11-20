@@ -1,0 +1,16 @@
+{
+  "mode": "inject",
+  "source_iso_sha256": "6e58b52aa5c03d45e413e8473be52a39205095e34a1bd58dae6bd852eb4fb1db",
+  "iso_bytes": 3932848128,
+  "output_path": "/mnt/data/Ibara Complete RETAIL BOOT.iso",
+  "new_file": "KURO.ELF;1",
+  "new_file_lba": 500286,
+  "probe_elf_bytes": 160,
+  "probe_elf_sha256": "d2d2e8e3327c6c05ee1395e1c0a1e39a0f30e0923298ba86ee741505be7c59a4",
+  "new_system_cnf_lba": null,
+  "boot": "SLPM_663.01;1 (retail)",
+  "original_game_files_crc_unchanged": true,
+  "original_iso_sha256_unchanged": true,
+  "root_directory_bytes": 614,
+  "runtime_tested": false
+}

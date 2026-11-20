@@ -1,0 +1,360 @@
+{
+  "source": "SLPM_663(1).01",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "retail_sha256_matches": true,
+  "anchors": [
+    {
+      "label": "dispatch_front_0x139c80",
+      "ee_address": "0x00139C80",
+      "expected_word": "0x0004343C",
+      "actual_word": "0x0004343C",
+      "matches": true
+    },
+    {
+      "label": "dispatch_front_table_base",
+      "ee_address": "0x00139CA4",
+      "expected_word": "0x24422F40",
+      "actual_word": "0x24422F40",
+      "matches": true
+    },
+    {
+      "label": "dispatch_front_indirect_jr",
+      "ee_address": "0x00139CC0",
+      "expected_word": "0x00400008",
+      "actual_word": "0x00400008",
+      "matches": true
+    },
+    {
+      "label": "dispatch_second_table_base",
+      "ee_address": "0x00139CF4",
+      "expected_word": "0x24422F40",
+      "actual_word": "0x24422F40",
+      "matches": true
+    },
+    {
+      "label": "dispatch_second_indirect_jr",
+      "ee_address": "0x00139D10",
+      "expected_word": "0x00400008",
+      "actual_word": "0x00400008",
+      "matches": true
+    },
+    {
+      "label": "arrange_action_prologue",
+      "ee_address": "0x00139850",
+      "expected_word": "0x27BDFFB0",
+      "actual_word": "0x27BDFFB0",
+      "matches": true
+    },
+    {
+      "label": "player_stride_step1",
+      "ee_address": "0x0013987C",
+      "expected_word": "0x00111880",
+      "actual_word": "0x00111880",
+      "matches": true
+    },
+    {
+      "label": "player_stride_step2",
+      "ee_address": "0x00139880",
+      "expected_word": "0x00711821",
+      "actual_word": "0x00711821",
+      "matches": true
+    },
+    {
+      "label": "player_stride_step3",
+      "ee_address": "0x00139884",
+      "expected_word": "0x000318C0",
+      "actual_word": "0x000318C0",
+      "matches": true
+    },
+    {
+      "label": "player_stride_step4",
+      "ee_address": "0x00139888",
+      "expected_word": "0x00711821",
+      "actual_word": "0x00711821",
+      "matches": true
+    },
+    {
+      "label": "player_stride_step5",
+      "ee_address": "0x0013988C",
+      "expected_word": "0x00038100",
+      "actual_word": "0x00038100",
+      "matches": true
+    },
+    {
+      "label": "input_bit_0x40",
+      "ee_address": "0x001398E4",
+      "expected_word": "0x30420040",
+      "actual_word": "0x30420040",
+      "matches": true
+    },
+    {
+      "label": "input_bit_0x80",
+      "ee_address": "0x001399A0",
+      "expected_word": "0x30420080",
+      "actual_word": "0x30420080",
+      "matches": true
+    },
+    {
+      "label": "input_bit_0x100",
+      "ee_address": "0x00139A58",
+      "expected_word": "0x30630100",
+      "actual_word": "0x30630100",
+      "matches": true
+    },
+    {
+      "label": "mode_conditional_read",
+      "ee_address": "0x001398CC",
+      "expected_word": "0x8F829254",
+      "actual_word": "0x8F829254",
+      "matches": true
+    }
+  ],
+  "all_anchors_match": true,
+  "dispatch_table_ee_address": "0x00212F40",
+  "dispatch_table_elf_offset": "0x00112FC0",
+  "table_matches_reference": true,
+  "handler_histogram": {
+    "0x00138F60": 1,
+    "0x00139050": 16,
+    "0x00139850": 9,
+    "0x00139B20": 7
+  },
+  "entries": [
+    {
+      "state": 0,
+      "table_address": "0x00212F40",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 1,
+      "table_address": "0x00212F44",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 2,
+      "table_address": "0x00212F48",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 3,
+      "table_address": "0x00212F4C",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 4,
+      "table_address": "0x00212F50",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 5,
+      "table_address": "0x00212F54",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 6,
+      "table_address": "0x00212F58",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 7,
+      "table_address": "0x00212F5C",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 8,
+      "table_address": "0x00212F60",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 9,
+      "table_address": "0x00212F64",
+      "handler_address": "0x00139850",
+      "group": "interactive"
+    },
+    {
+      "state": 10,
+      "table_address": "0x00212F68",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 11,
+      "table_address": "0x00212F6C",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 12,
+      "table_address": "0x00212F70",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 13,
+      "table_address": "0x00212F74",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 14,
+      "table_address": "0x00212F78",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 15,
+      "table_address": "0x00212F7C",
+      "handler_address": "0x00139B20",
+      "group": "other_0_10_15"
+    },
+    {
+      "state": 16,
+      "table_address": "0x00212F80",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 17,
+      "table_address": "0x00212F84",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 18,
+      "table_address": "0x00212F88",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 19,
+      "table_address": "0x00212F8C",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 20,
+      "table_address": "0x00212F90",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 21,
+      "table_address": "0x00212F94",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 22,
+      "table_address": "0x00212F98",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 23,
+      "table_address": "0x00212F9C",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 24,
+      "table_address": "0x00212FA0",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 25,
+      "table_address": "0x00212FA4",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 26,
+      "table_address": "0x00212FA8",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 27,
+      "table_address": "0x00212FAC",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 28,
+      "table_address": "0x00212FB0",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 29,
+      "table_address": "0x00212FB4",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 30,
+      "table_address": "0x00212FB8",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 31,
+      "table_address": "0x00212FBC",
+      "handler_address": "0x00139050",
+      "group": "other_16_31"
+    },
+    {
+      "state": 32,
+      "table_address": "0x00212FC0",
+      "handler_address": "0x00138F60",
+      "group": "other_32"
+    }
+  ],
+  "action_routine": {
+    "address": "0x00139850",
+    "incoming_direct_jal": [],
+    "outgoing_jal": [
+      {
+        "callsite": "0x001398BC",
+        "target": "0x0013B510"
+      },
+      {
+        "callsite": "0x001398C4",
+        "target": "0x0013B2F0"
+      },
+      {
+        "callsite": "0x00139994",
+        "target": "0x001370E0"
+      },
+      {
+        "callsite": "0x00139A44",
+        "target": "0x001370E0"
+      },
+      {
+        "callsite": "0x00139A4C",
+        "target": "0x0013AFC0"
+      },
+      {
+        "callsite": "0x00139AB4",
+        "target": "0x001370E0"
+      }
+    ],
+    "verified_input_bit_masks": [
+      "0x40",
+      "0x80",
+      "0x100"
+    ],
+    "player_record_base": "0x0045C380",
+    "player_record_stride": 656,
+    "note": "Handler for several player states; flags/behavior require runtime confirmation, not a ready Black Label patch."
+  }
+}

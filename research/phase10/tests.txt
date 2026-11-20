@@ -1,0 +1,21 @@
+test_complete_exact_original_audit (test_audit_rose_merging.Phase10.test_complete_exact_original_audit) ... ok
+test_csv_and_report_export (test_audit_rose_merging.Phase10.test_csv_and_report_export) ... ok
+test_detect_mutated_jump_without_hash_check (test_audit_rose_merging.Phase10.test_detect_mutated_jump_without_hash_check) ... ok
+test_detect_mutated_opcode_without_hash_check (test_audit_rose_merging.Phase10.test_detect_mutated_opcode_without_hash_check) ... ok
+test_detect_mutated_update_table_without_hash_check (test_audit_rose_merging.Phase10.test_detect_mutated_update_table_without_hash_check) ... ok
+test_each_type_update_handler (test_audit_rose_merging.Phase10.test_each_type_update_handler) ... ok
+test_ee_unsigned_addition_wrap (test_audit_rose_merging.Phase10.test_ee_unsigned_addition_wrap) ... ok
+test_elf_extraction_byte_exact (test_audit_rose_merging.Phase10.test_elf_extraction_byte_exact) ... ok
+test_factor_does_not_reclamp_to_300 (test_audit_rose_merging.Phase10.test_factor_does_not_reclamp_to_300) ... ok
+test_invalid_elf_sha_revision (test_audit_rose_merging.Phase10.test_invalid_elf_sha_revision) ... ok
+test_invalid_range (test_audit_rose_merging.Phase10.test_invalid_range) ... ok
+test_level_gate_at_three (test_audit_rose_merging.Phase10.test_level_gate_at_three) ... ok
+test_original_branch_exit_and_loop (test_audit_rose_merging.Phase10.test_original_branch_exit_and_loop) ... ok
+test_original_call_edges (test_audit_rose_merging.Phase10.test_original_call_edges) ... ok
+test_rose_merge_raw_points (test_audit_rose_merging.Phase10.test_rose_merge_raw_points) ... ok
+test_type_or_level_mismatch (test_audit_rose_merging.Phase10.test_type_or_level_mismatch) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.035s
+
+OK

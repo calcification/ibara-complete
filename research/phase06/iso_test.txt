@@ -1,0 +1,8 @@
+Ibara PS2 retail static dispatch audit — PASS
+ELF SHA256: 263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac
+Player state table: 33 entries, EE 0x212f40 | all reference entries match
+Targets: {'0x00138F60': 1, '0x00139050': 16, '0x00139850': 9, '0x00139B20': 7}
+Input flag masks: 0x40, 0x80, 0x100 | player record stride 0x290
+Direct JAL into 0x139850: 0 (function-pointer dispatch, not evidence of no callers)
+Outgoing calls: 0x001398BC=>0x0013B510, 0x001398C4=>0x0013B2F0, 0x00139994=>0x001370E0, 0x00139A44=>0x001370E0, 0x00139A4C=>0x0013AFC0, 0x00139AB4=>0x001370E0
+Wrote /mnt/data/ibara_complete_phase6/dispatch_from_iso.json

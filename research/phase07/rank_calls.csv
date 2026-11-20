@@ -1,0 +1,59 @@
+callsite,target,effect_on_stored_rank,delay_slot_opcode,a0_at_call,neighborhood
+0x001247A4,0x00129DF0,decrease (more difficulty),0x24041000,a0=4096 (addiu),"other, needs classification"
+0x001248F8,0x00129DF0,decrease (more difficulty),0x24041000,a0=4096 (addiu),"other, needs classification"
+0x0012F054,0x00129DF0,decrease (more difficulty),0x3C040008,a0=0x00080000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F064,0x00129DF0,decrease (more difficulty),0x3C040001,a0=0x00010000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F494,0x00129DF0,decrease (more difficulty),0x3C040001,a0=0x00010000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F4A4,0x00129DF0,decrease (more difficulty),0x24042000,a0=8192 (addiu),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F504,0x00129DF0,decrease (more difficulty),0x3C040004,a0=0x00040000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F610,0x00129DF0,decrease (more difficulty),0x3C040040,a0=0x00400000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F620,0x00129DF0,decrease (more difficulty),0x3C040002,a0=0x00020000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F65C,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F6E0,0x00129DF0,decrease (more difficulty),0x8C440000,"a0=memory load, base r2 offset 0",item-or-pickup-neighborhood (requires caller tracing)
+0x0012F708,0x00129DC0,increase (less difficulty),0x00022280,a0=register-shifted by 10,item-or-pickup-neighborhood (requires caller tracing)
+0x0012F81C,0x00129DF0,decrease (more difficulty),0x8C440000,"a0=memory load, base r2 offset 0",item-or-pickup-neighborhood (requires caller tracing)
+0x0012F834,0x00129DF0,decrease (more difficulty),0x00022440,a0=register-shifted by 17,item-or-pickup-neighborhood (requires caller tracing)
+0x0012F9A0,0x00129DF0,decrease (more difficulty),0x3C040040,a0=0x00400000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012F9B0,0x00129DF0,decrease (more difficulty),0x3C040008,a0=0x00080000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012FA80,0x00129DF0,decrease (more difficulty),0x3C040008,a0=0x00080000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012FA90,0x00129DF0,decrease (more difficulty),0x3C040001,a0=0x00010000 (lui),item-or-pickup-neighborhood (requires caller tracing)
+0x0012FC3C,0x00129DF0,decrease (more difficulty),0x34048000,depends on earlier register state,item-or-pickup-neighborhood (requires caller tracing)
+0x0012FC4C,0x00129DF0,decrease (more difficulty),0x24041000,a0=4096 (addiu),item-or-pickup-neighborhood (requires caller tracing)
+0x001330A4,0x00129DF0,decrease (more difficulty),0x24040028,a0=40 (addiu),gameplay neighborhood
+0x00133364,0x00129DF0,decrease (more difficulty),0x24040014,a0=20 (addiu),gameplay neighborhood
+0x0013370C,0x00129DF0,decrease (more difficulty),0x2404000F,a0=15 (addiu),gameplay neighborhood
+0x001339AC,0x00129DF0,decrease (more difficulty),0x2404004B,a0=75 (addiu),gameplay neighborhood
+0x00133BB8,0x00129DF0,decrease (more difficulty),0x2404000F,a0=15 (addiu),gameplay neighborhood
+0x00133E84,0x00129DF0,decrease (more difficulty),0x24040064,a0=100 (addiu),gameplay neighborhood
+0x00134164,0x00129DF0,decrease (more difficulty),0x24040032,a0=50 (addiu),gameplay neighborhood
+0x00139020,0x00129DC0,increase (less difficulty),0x8C440000,"a0=memory load, base r2 offset 0",player-stock path
+0x0013ADE4,0x00129DF0,decrease (more difficulty),0x00022040,a0=register-shifted by 1,player-or-increment neighborhood
+0x0013B124,0x00129DF0,decrease (more difficulty),0x24041000,a0=4096 (addiu),player-or-increment neighborhood
+0x0013B214,0x00129DF0,decrease (more difficulty),0x24041000,a0=4096 (addiu),player-or-increment neighborhood
+0x0013B260,0x00129DF0,decrease (more difficulty),0x24044000,a0=16384 (addiu),player-or-increment neighborhood
+0x0013B2A8,0x00129DF0,decrease (more difficulty),0x3C040001,a0=0x00010000 (lui),player-or-increment neighborhood
+0x0013B410,0x00129DF0,decrease (more difficulty),0x24040010,a0=16 (addiu),player-or-increment neighborhood
+0x00162FD8,0x00129DF0,decrease (more difficulty),0x24040800,a0=2048 (addiu),"other, needs classification"
+0x0016908C,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x00169110,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0016931C,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0016945C,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0016DCD8,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0016E01C,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x0016E0F0,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0016E168,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x00172ED8,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x00173104,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x001732AC,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x00173300,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x001795F0,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x0017D3DC,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x0017F1E4,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0017F278,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x0017F300,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x0017F3B0,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x00185A8C,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x001A3B44,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x001A3BF4,0x00129DF0,decrease (more difficulty),0x3C040010,a0=0x00100000 (lui),"other, needs classification"
+0x001A40C8,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"
+0x001A896C,0x00129DF0,decrease (more difficulty),0x00622021,depends on earlier register state,"other, needs classification"

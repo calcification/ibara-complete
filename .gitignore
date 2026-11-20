@@ -1,0 +1,43 @@
+# Never publish retail game data or generated full-size disc images.
+*.iso
+*.ISO
+*.bin
+*.BIN
+*.7z
+*.rar
+*.chd
+*.cue
+*.img
+*.cso
+*.zso
+*.nrg
+*.zip
+*.xex
+*.ELF
+*.elf
+*.o
+*.a
+*.dll
+*.so
+*.exe
+*.log
+*.png
+*.jpg
+*.jpeg
+*.webp
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+venv/
+validation-output/
+output/
+outputs/
+build/
+*.bak
+# Only original test code we wrote is excepted.
+!tests/fixtures/KURO_PROBE.ELF
+!research/phase05/results/cv1k_memory_mips3.o
+# Host-generated native test executable (Phase 5).
+research/phase05/tests/test_memory
+research/phase05/tests/test_memory.exe

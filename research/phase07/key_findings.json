@@ -1,0 +1,29 @@
+{
+  "title": "Ibara Complete Phase 7 audit summary",
+  "source_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "rank_mechanics": {
+    "value": "0x00338EB4",
+    "mode": "0x00338F44",
+    "stored_increase_callees": 2,
+    "stored_decrease_callees": 56
+  },
+  "rank_increase_direct_calls": [
+    {
+      "callsite": "0x0012F708",
+      "target": "0x00129DC0",
+      "effect_on_stored_rank": "increase (less difficulty)",
+      "delay_slot_opcode": "0x00022280",
+      "a0_at_call": "a0=register-shifted by 10",
+      "neighborhood": "item-or-pickup-neighborhood (requires caller tracing)"
+    },
+    {
+      "callsite": "0x00139020",
+      "target": "0x00129DC0",
+      "effect_on_stored_rank": "increase (less difficulty)",
+      "delay_slot_opcode": "0x8C440000",
+      "a0_at_call": "a0=memory load, base r2 offset 0",
+      "neighborhood": "player-stock path"
+    }
+  ],
+  "status": "ELF-only analysis: no changes or console tests"
+}

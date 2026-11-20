@@ -1,0 +1,15 @@
+test_altered_dispatch_refused_independently (__main__.AuditTests.test_altered_dispatch_refused_independently) ... ok
+test_altered_medal_reward_refused_independently (__main__.AuditTests.test_altered_medal_reward_refused_independently) ... ok
+test_corrected_memory_address (__main__.AuditTests.test_corrected_memory_address) ... ok
+test_item_dispatch_jal (__main__.AuditTests.test_item_dispatch_jal) ... ok
+test_medal_rank_arithmetic_differences (__main__.AuditTests.test_medal_rank_arithmetic_differences) ... ok
+test_modified_elf_refused_by_sha (__main__.AuditTests.test_modified_elf_refused_by_sha) ... ok
+test_no_game_data_in_results (__main__.AuditTests.test_no_game_data_in_results) ... ok
+test_nonjal_refused (__main__.AuditTests.test_nonjal_refused) ... ok
+test_original_sha_and_integrity (__main__.AuditTests.test_original_sha_and_integrity) ... ok
+test_type_3_medal_reward_ladder (__main__.AuditTests.test_type_3_medal_reward_ladder) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.036s
+
+OK

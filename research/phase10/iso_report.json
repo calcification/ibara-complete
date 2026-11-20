@@ -1,0 +1,99 @@
+{
+  "status": "verified STATIC reading of exact unmodified retail ELF; no running PS2 or PCSX2 measurements",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "instruction_fingerprints_checked": 82,
+  "jal_edges_checked": 4,
+  "type_update_table_EE": "0x0020BF00",
+  "type_update_targets": [
+    "0x001323D0",
+    "0x001323D0",
+    "0x001323D0",
+    "0x001322F0",
+    "0x001323D0",
+    "0x001323D0",
+    "0x001323D0",
+    "0x00132BC0"
+  ],
+  "type_7_updater_EE": "0x00132BC0",
+  "type_7_level_gate_EE": "0x00132DC0\u20130x00132DC8",
+  "type_7_merge_call_EE": "0x00132E60",
+  "merge_helper_EE": "0x0012EA10",
+  "candidate_array_base_EE": "0x00453A40",
+  "candidate_stride_bytes": 88,
+  "candidate_count": 256,
+  "matching_checks": [
+    "both item slots active and not same pointer",
+    "same +0x04 type",
+    "same +0x08 level",
+    "shape data present and two-axis overlap"
+  ],
+  "on_success": [
+    "survivor +0x08 level increments by one",
+    "absorbed slot +0x00 set to 0",
+    "survivor +0x54 += absorbed +0x54 (wrap unsigned 32-bit)",
+    "unconditional branch to helper return (at most one merge per call)"
+  ],
+  "important_limits": [
+    "updater only calls merge helper for entering level <3",
+    "other item types may also use merge helper; type 7 use is proved",
+    "no factor clamp after successful merge",
+    "Phase9 score helper limited factor<=300 incorrectly; accumulation can exceed 300"
+  ],
+  "type_0_projectile_emitter_EE": "0x0011A580 (writes 0 to projectile +0x04 at 0x0011A6AC)",
+  "projectile_emitter_note": "type 0 producer verified; weapon identity not yet attributed",
+  "randomized_type_7_paths": [
+    "0x001305B8 calls 0x00110FE0 with a0=4; stores return+4 at item+0x08",
+    "0x00130AA8 calls 0x00110FE0 with a0=7; stores result at item+0x08 on Arcade initializer path"
+  ],
+  "hypothetical_award_cases": [
+    {
+      "level_before": 0,
+      "left_factor_before": 100,
+      "right_factor_before": 50,
+      "separated_raw_award": 4500,
+      "merged_raw_award": 6000,
+      "merged": true,
+      "resulting_level": 1,
+      "resulting_factor": 150,
+      "right_deactivated": true,
+      "caveat": "geometry and live engine state are not simulated"
+    },
+    {
+      "level_before": 0,
+      "left_factor_before": 300,
+      "right_factor_before": 300,
+      "separated_raw_award": 18000,
+      "merged_raw_award": 24000,
+      "merged": true,
+      "resulting_level": 1,
+      "resulting_factor": 600,
+      "right_deactivated": true,
+      "caveat": "geometry and live engine state are not simulated"
+    },
+    {
+      "level_before": 2,
+      "left_factor_before": 100,
+      "right_factor_before": 50,
+      "separated_raw_award": 7500,
+      "merged_raw_award": 9000,
+      "merged": true,
+      "resulting_level": 3,
+      "resulting_factor": 150,
+      "right_deactivated": true,
+      "caveat": "geometry and live engine state are not simulated"
+    },
+    {
+      "level_before": 3,
+      "left_factor_before": 100,
+      "right_factor_before": 50,
+      "separated_raw_award": 9000,
+      "merged_raw_award": null,
+      "merged": false,
+      "resulting_level": 3,
+      "resulting_factor": 100,
+      "right_deactivated": false,
+      "caveat": "geometry and live engine state are not simulated"
+    }
+  ],
+  "source_kind": "ISO"
+}

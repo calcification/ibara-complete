@@ -1,0 +1,13 @@
+test_corrupt_instruction_rejected (__main__.OfflineAuditTests.test_corrupt_instruction_rejected) ... ok
+test_do_not_write_original (__main__.OfflineAuditTests.test_do_not_write_original) ... ok
+test_elf_file_reader (__main__.OfflineAuditTests.test_elf_file_reader) ... ok
+test_known_imm_tables (__main__.OfflineAuditTests.test_known_imm_tables) ... ok
+test_rank_callsite_counts (__main__.OfflineAuditTests.test_rank_callsite_counts) ... ok
+test_verified_signature (__main__.OfflineAuditTests.test_verified_signature) ... ok
+test_word_address_translation (__main__.OfflineAuditTests.test_word_address_translation) ... ok
+test_wrong_format_rejected (__main__.OfflineAuditTests.test_wrong_format_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.368s
+
+OK

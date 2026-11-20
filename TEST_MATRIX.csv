@@ -1,0 +1,22 @@
+id,test,environment,status,instructions_or_file,command,pass_condition
+S01,Retail ELF/ISO signature + phase01 audit,OFFLINE,READY,research/phase01/ibara_complete_audit.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso"" --out validation-output",Read-only ELF/header/menu metadata validated
+S02,"1,130 resource catalog + TBL/PDM integrity",OFFLINE,READY,research/phase02/ibara_complete_phase2_audit.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso"" --out validation-output",Counts and header fingerprints match
+S03,Zero-gap full scan (optional),OFFLINE,READY,research/phase02/ibara_complete_phase2_audit.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso"" --full",Zero bytes found outside mapped files
+S04,Phase3 probe/inject source validation only,OFFLINE,READY,research/phase03/ibara_complete_bootstrap.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso"" --full",Two phase3 dry-run reports succeed
+S05,Phase4 selector + graphic descriptor static audit,OFFLINE,READY,research/phase04/ibara_complete_menu_map.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""",5 options and candidate unused slots match original
+S06,Phase5 standalone C VRAM/NAND tests,OFFLINE,READY,research/phase05/tests/test_memory.c,python3 scripts/run_audits.py --selftest --out validation-output,C test exit code zero when compiler available
+S07,Phase5 Python trace and ROM-negative tests,OFFLINE,READY,research/phase05/tests/test_tools.py,python3 scripts/run_audits.py --selftest --out validation-output,Python test succeeds without ROM
+S08,Phase6 player dispatch audit + 5 tests,OFFLINE,READY,research/phase06/test_audit.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""",Exact state table and mutated word detection
+S09,Phase7 rank/score audit + 8 tests,OFFLINE,READY,research/phase07/test_audit_rank_scoring.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""",58 JAL callsites and known opcode anchors
+S10,Phase8 pickups/medals audit + 10 tests,OFFLINE,READY,research/phase08/test_audit_pickups.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""","8 item handlers, 19 award levels"
+S11,Phase9 cancellation audit + 11 tests,OFFLINE,READY,research/phase09/test_audit_cancellation.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""",Selector cases and JAL edges verified
+S12,Phase10 rose merge audit + 16 tests,OFFLINE,READY,research/phase10/test_audit_rose_merging.py,"python3 scripts/run_audits.py ""Ibara (Japan).iso""",Merge/cap edge tests and source integrity
+S13,Optional Kuro arcade ZIP revision,OFFLINE,OPTIONAL,research/phase05/src/check_kuro_roms.py,python3 research/phase05/src/check_kuro_roms.py /path/to/ibarablk.zip --verify-payload,All four CRC/size roles match; does NOT validate gameplay
+B01,Direct secondary ELF boot probe,PCSX2,PENDING,tests/manual/B01_BOOT_PROBE.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode probe --out outputs","EE PC = 0x00100018, magenta if GS enabled"
+B02,Retail boot with injected extra ELF,PCSX2,PENDING,tests/manual/B02_RETAIL_BOOT.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode inject --out outputs",All five original menu branches and two games work
+B03,Dormant Black Label texture only,PCSX2,PENDING,tests/manual/B03_ASSET_ONLY.md,"python3 scripts/build_test_images.py ""Ibara (Japan).iso"" --mode asset --out outputs",Five original menu buttons; no sixth visible
+B04,Original retail menu debug trace,PCSX2,PENDING,tests/manual/B04_MENU_DEBUGGER.md,See manual checklist,Verified breakpoint execution for five branches
+H01,Retail injection on real PS2,HARDWARE,BLOCKED,tests/manual/H01_REAL_PS2.md,See manual checklist,Only after emulator passes
+F01,Visible sixth BLACK LABEL option,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires new menu hook/descriptors/loader
+F02,Playable arcade-accurate Kuro on PS2,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires working Kuro port + assets and validation
+F03,Integrated Ibara 240p + Kuro,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires combined build and hardware signal tests

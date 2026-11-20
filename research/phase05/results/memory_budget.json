@@ -1,0 +1,17 @@
+{
+  "hardware_memory_MiB": 32,
+  "allocation_budget_MiB": {
+    "CV1000 work RAM": 8.0,
+    "Sparse VRAM 64x64 tile pool": 8.0,
+    "U4 program ROM": 2.0,
+    "NAND 64-page read cache": 0.1289,
+    "320x240 16-bit double buffers": 0.293,
+    "Audio ring buffer": 0.5
+  },
+  "allocated_MiB": 18.9219,
+  "unallocated_MiB": 13.0781,
+  "note": "Unallocated budget still must cover compiled game code, heaps, stacks, PS2 libraries, DMA structures, textures and any resident frontend. This is NOT a game memory measurement.",
+  "rom_not_resident": "U2 132 MiB NAND and two 4 MiB YMZ sound ROMs would require streaming/reuse. No actual streaming performance is established.",
+  "vram_warning": "64 MiB arcade VRAM cannot be directly mapped into 32 MiB EE memory; sparse tiling requires rewriting all direct VRAM accesses and trace-based peak validation.",
+  "fits_illustrative_base": true
+}

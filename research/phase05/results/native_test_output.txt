@@ -1,0 +1,2 @@
+PASS: VRAM pixels / overlapping copies / bounds / pool overflow / NAND boundary + LRU
+VRAM: 4 allocated tiles, 49152 bytes including map; NAND: 1 hits 4 misses, 135680 bytes of cache entries

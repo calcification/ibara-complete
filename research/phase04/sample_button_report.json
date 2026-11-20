@@ -1,0 +1,29 @@
+{
+  "source": "Ibara (Japan).iso",
+  "elf_sha256": "263d3079dee66af82815219351553075340a4d9f42aceaa7bb8ef2bfb812ffac",
+  "resource_id": 946,
+  "resource_pdm_offset": "0x2D31000",
+  "texture_dimensions": [
+    256,
+    256
+  ],
+  "new_button_rect": [
+    112,
+    96,
+    224,
+    144
+  ],
+  "existing_button_source_rect": [
+    0,
+    96,
+    112,
+    144
+  ],
+  "index_bytes_changed": 5376,
+  "total_pixels_outside_rect_modified": 0,
+  "original_resource_size_unchanged": true,
+  "source_iso_modified": false,
+  "inpaint_method": "opencv inpaint",
+  "runtime_status": "ASSET ONLY: not drawn by original menu; requires future renderer and dispatch changes",
+  "copy_output": null
+}

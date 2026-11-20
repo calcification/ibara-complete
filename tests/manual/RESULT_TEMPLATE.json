@@ -1,0 +1,14 @@
+{
+  "test_id": "B01",
+  "date": "",
+  "status": "NOT_RUN",
+  "iso_sha256": "",
+  "test_image_sha256": "",
+  "pcsx2_version": "",
+  "bios_region": "",
+  "renderer": "",
+  "observations": [],
+  "breakpoints": [],
+  "evidence_paths": [],
+  "notes": ""
+}
