@@ -1,0 +1,7216 @@
+{
+ "0C04EEC0->0C04EEC0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C04EF06",
+    "b": "0C04EF06",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C04EF08",
+    "b": "0C04EF08",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C053E90->0C053E90": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C053F1C",
+    "b": "0C053F1C",
+    "mnem": "mov.l",
+    "a_values": [
+     "0x5F5E0FF"
+    ],
+    "b_values": [
+     "0x3B9AC9FF"
+    ],
+    "register_or_form_change": false
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C0588C0->0C0588C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C058968",
+    "b": "0C058968",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058972",
+    "b": "0C058972",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05897E",
+    "b": "0C05897E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058982",
+    "b": "0C058982",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058A38",
+    "b": "0C058A38",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058A3E",
+    "b": "0C058A3E",
+    "mnem": "mov",
+    "a_values": [
+     "0x6"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": false
+   },
+   {
+    "a": "0C058A40",
+    "b": "0C058A40",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058A42",
+    "b": "0C058A42",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058AC0",
+    "b": "0C058AC0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058AC6",
+    "b": "0C058AC6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x11"
+    ],
+    "b_values": [
+     "0x11"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058C3C",
+    "b": "0C058C3C",
+    "mnem": "cmp/gt",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D30",
+    "b": "0C058D30",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D34",
+    "b": "0C058D34",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D50",
+    "b": "0C058D50",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D54",
+    "b": "0C058D54",
+    "mnem": "jsr",
+    "a_values": [
+     "0x0"
+    ],
+    "b_values": [
+     "0x0"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D78",
+    "b": "0C058D78",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C058D82",
+    "b": "0C058D82",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 17
+ },
+ "0C059060->0C059060": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0590A2",
+    "b": "0C0590A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0590B4",
+    "b": "0C0590B4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0590BE",
+    "b": "0C0590BE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0591BE",
+    "b": "0C0591BE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0591C0",
+    "b": "0C0591C0",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0591EA",
+    "b": "0C0591EA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0591EE",
+    "b": "0C0591EE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x3"
+    ],
+    "b_values": [
+     "0x3"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 7
+ },
+ "0C05A0D0->0C05A0D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05A17A",
+    "b": "0C05A17A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A182",
+    "b": "0C05A182",
+    "mnem": "jsr",
+    "a_values": [
+     "0xFF"
+    ],
+    "b_values": [
+     "0xFF"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C05A280->0C05A280": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05A2D2",
+    "b": "0C05A2D2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A2D6",
+    "b": "0C05A2D6",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A2E0",
+    "b": "0C05A2E0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C05A6D0->0C05A6D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05A6F8",
+    "b": "0C05A6F8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A6FC",
+    "b": "0C05A6FC",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A700",
+    "b": "0C05A700",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A704",
+    "b": "0C05A704",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A712",
+    "b": "0C05A712",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A722",
+    "b": "0C05A722",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A780",
+    "b": "0C05A780",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A782",
+    "b": "0C05A782",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A83A",
+    "b": "0C05A83A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A83E",
+    "b": "0C05A83E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A94C",
+    "b": "0C05A94C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05A950",
+    "b": "0C05A950",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05AD52",
+    "b": "0C05AD52",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05AD66",
+    "b": "0C05AD66",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05AD7E",
+    "b": "0C05AD7E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05AD80",
+    "b": "0C05AD80",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 16
+ },
+ "0C05AFF0->0C05AFF0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05B0D0",
+    "b": "0C05B0D0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05B0D2",
+    "b": "0C05B0D2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C05B900->0C05B900": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05B9D4",
+    "b": "0C05B9D4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05BA14",
+    "b": "0C05BA14",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05BA16",
+    "b": "0C05BA16",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C05DE00->0C05DE00": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05E0C0",
+    "b": "0C05E0C0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E0C4",
+    "b": "0C05E0C4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E0FA",
+    "b": "0C05E0FA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E0FE",
+    "b": "0C05E0FE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x27"
+    ],
+    "b_values": [
+     "0x27"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E10A",
+    "b": "0C05E10A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E10E",
+    "b": "0C05E10E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E112",
+    "b": "0C05E112",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E11A",
+    "b": "0C05E11A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E12C",
+    "b": "0C05E12C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E130",
+    "b": "0C05E130",
+    "mnem": "jsr",
+    "a_values": [
+     "0x25"
+    ],
+    "b_values": [
+     "0x25"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 10
+ },
+ "0C05E6E0->0C05E6E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05E91A",
+    "b": "0C05E91A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E91E",
+    "b": "0C05E91E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E9E6",
+    "b": "0C05E9E6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E9F2",
+    "b": "0C05E9F2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E9F8",
+    "b": "0C05E9F8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05E9FC",
+    "b": "0C05E9FC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x18"
+    ],
+    "b_values": [
+     "0x18"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C05EAA0->0C05EAA0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05ECF2",
+    "b": "0C05ECF2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05ECF8",
+    "b": "0C05ECF8",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C05ED70->0C05ED70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05EF80",
+    "b": "0C05EF80",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05EF88",
+    "b": "0C05EF88",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C05F020->0C05F020": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05F172",
+    "b": "0C05F172",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05F176",
+    "b": "0C05F176",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C05F1E0->0C05F1E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C05F3E8",
+    "b": "0C05F3E8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C05F3F0",
+    "b": "0C05F3F0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C061550->0C061550": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C061594",
+    "b": "0C061594",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C061598",
+    "b": "0C061598",
+    "mnem": "jsr",
+    "a_values": [
+     "0xB"
+    ],
+    "b_values": [
+     "0xB"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0621D0->0C0621D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0622A6",
+    "b": "0C0622A6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0622AE",
+    "b": "0C0622AE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x18"
+    ],
+    "b_values": [
+     "0x18"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0622D6",
+    "b": "0C0622D6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0622DE",
+    "b": "0C0622DE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x18"
+    ],
+    "b_values": [
+     "0x18"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062358",
+    "b": "0C062358",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06235E",
+    "b": "0C06235E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x18"
+    ],
+    "b_values": [
+     "0x18"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06238C",
+    "b": "0C06238C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06238E",
+    "b": "0C06238E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x18"
+    ],
+    "b_values": [
+     "0x18"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C0623D0->0C0623D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0624C2",
+    "b": "0C0624C2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0624CA",
+    "b": "0C0624CA",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C062550->0C062550": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0625F0",
+    "b": "0C0625F0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0625F4",
+    "b": "0C0625F4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062642",
+    "b": "0C062642",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062646",
+    "b": "0C062646",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062742",
+    "b": "0C062742",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06274E",
+    "b": "0C06274E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062760",
+    "b": "0C062760",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C062764",
+    "b": "0C062764",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C0627D0->0C0627D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C062820",
+    "b": "0C062820",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06282A",
+    "b": "0C06282A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628A8",
+    "b": "0C0628A8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628AC",
+    "b": "0C0628AC",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628B0",
+    "b": "0C0628B0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628B8",
+    "b": "0C0628B8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628DA",
+    "b": "0C0628DA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0628E0",
+    "b": "0C0628E0",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C064BB0->0C064BB0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C064C20",
+    "b": "0C064C20",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C064C24",
+    "b": "0C064C24",
+    "mnem": "jsr",
+    "a_values": [
+     "0x0"
+    ],
+    "b_values": [
+     "0x0"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0661E0->0C0661E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C066216",
+    "b": "0C066216",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06621C",
+    "b": "0C06621C",
+    "mnem": "jsr",
+    "a_values": [
+     "0xC"
+    ],
+    "b_values": [
+     "0xC"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C066220",
+    "b": "0C066220",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C066222",
+    "b": "0C066222",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C066310->0C066310": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C066362",
+    "b": "0C066362",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C066364",
+    "b": "0C066364",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0663D6",
+    "b": "0C0663D6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0663D8",
+    "b": "0C0663D8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C066CC0->0C066CC0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C066DB8",
+    "b": "0C066DB8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C066DBC",
+    "b": "0C066DBC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C066E90->0C066E90": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067004",
+    "b": "0C067004",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067008",
+    "b": "0C067008",
+    "mnem": "jsr",
+    "a_values": [
+     "0x64"
+    ],
+    "b_values": [
+     "0x64"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0670E0->0C0670E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0671C8",
+    "b": "0C0671C8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0671D4",
+    "b": "0C0671D4",
+    "mnem": "jsr",
+    "a_values": [
+     "0x24"
+    ],
+    "b_values": [
+     "0x24"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C067240->0C067240": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067382",
+    "b": "0C067382",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067384",
+    "b": "0C067384",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4B"
+    ],
+    "b_values": [
+     "0x4B"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C067400->0C067400": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06755C",
+    "b": "0C06755C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067568",
+    "b": "0C067568",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1C"
+    ],
+    "b_values": [
+     "0x1C"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C067600->0C067600": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06776A",
+    "b": "0C06776A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067770",
+    "b": "0C067770",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C067870->0C067870": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067972",
+    "b": "0C067972",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067978",
+    "b": "0C067978",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0679F0->0C0679F0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067004",
+    "b": "0C067004",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067008",
+    "b": "0C067008",
+    "mnem": "jsr",
+    "a_values": [
+     "0x64"
+    ],
+    "b_values": [
+     "0x64"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0679FA",
+    "b": "0C0679FA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067A02",
+    "b": "0C067A02",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C067A20->0C067A20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06776A",
+    "b": "0C06776A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067770",
+    "b": "0C067770",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067A2A",
+    "b": "0C067A2A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067A32",
+    "b": "0C067A32",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C067A50->0C067A50": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067A5A",
+    "b": "0C067A5A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067A62",
+    "b": "0C067A62",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C067AB0->0C067AB0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067972",
+    "b": "0C067972",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067978",
+    "b": "0C067978",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067ABA",
+    "b": "0C067ABA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067AC2",
+    "b": "0C067AC2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C067AE0->0C067AE0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C066DB8",
+    "b": "0C066DB8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C066DBC",
+    "b": "0C066DBC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067AEA",
+    "b": "0C067AEA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067AF2",
+    "b": "0C067AF2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C067B10->0C067B10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0671C8",
+    "b": "0C0671C8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0671D4",
+    "b": "0C0671D4",
+    "mnem": "jsr",
+    "a_values": [
+     "0x24"
+    ],
+    "b_values": [
+     "0x24"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067B1A",
+    "b": "0C067B1A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067B22",
+    "b": "0C067B22",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C067B40->0C067B40": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C067382",
+    "b": "0C067382",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067384",
+    "b": "0C067384",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4B"
+    ],
+    "b_values": [
+     "0x4B"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067B4A",
+    "b": "0C067B4A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C067B52",
+    "b": "0C067B52",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C06B850->0C06B850": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06B85E",
+    "b": "0C06B85E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06B864",
+    "b": "0C06B864",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06B9B0",
+    "b": "0C06B9B0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C06BA60->0C06BA60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06BA88",
+    "b": "0C06BA88",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06BA8A",
+    "b": "0C06BA8A",
+    "mnem": "jsr",
+    "a_values": [
+     "0xFFFFFFF6"
+    ],
+    "b_values": [
+     "0xFFFFFFF6"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06BA8E",
+    "b": "0C06BA8E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06BA92",
+    "b": "0C06BA92",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C06C6D0->0C06C6D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06C6F4",
+    "b": "0C06C6F4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06C6FE",
+    "b": "0C06C6FE",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06C730->0C06C730": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06C794",
+    "b": "0C06C794",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06C79E",
+    "b": "0C06C79E",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06CB10->0C06CB10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06CB90",
+    "b": "0C06CB90",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06CB94",
+    "b": "0C06CB94",
+    "mnem": "jsr",
+    "a_values": [
+     "0x0"
+    ],
+    "b_values": [
+     "0x0"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06CC20->0C06CC20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06CC6C",
+    "b": "0C06CC6C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06CC74",
+    "b": "0C06CC74",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06CD90->0C06CD90": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06CDE0",
+    "b": "0C06CDE0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06CDE4",
+    "b": "0C06CDE4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06CE70->0C06CE70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06CEEA",
+    "b": "0C06CEEA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06CEF2",
+    "b": "0C06CEF2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06D0B0->0C06D0B0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06D0BA",
+    "b": "0C06D0BA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0C2",
+    "b": "0C06D0C2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0C6",
+    "b": "0C06D0C6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0CA",
+    "b": "0C06D0CA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0D2",
+    "b": "0C06D0D2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0DC",
+    "b": "0C06D0DC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0E0",
+    "b": "0C06D0E0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D0E4",
+    "b": "0C06D0E4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C06D1A0->0C06D1A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06D1AE",
+    "b": "0C06D1AE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D1B4",
+    "b": "0C06D1B4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D240",
+    "b": "0C06D240",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C06D290->0C06D290": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06D29E",
+    "b": "0C06D29E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D2A4",
+    "b": "0C06D2A4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D330",
+    "b": "0C06D330",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C06D3C0->0C06D3C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06D3CE",
+    "b": "0C06D3CE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D3D4",
+    "b": "0C06D3D4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D474",
+    "b": "0C06D474",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C06D4C0->0C06D4C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06D4CE",
+    "b": "0C06D4CE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D4D4",
+    "b": "0C06D4D4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06D582",
+    "b": "0C06D582",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C06DCC0->0C06DCC0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06DF22",
+    "b": "0C06DF22",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06DF2A",
+    "b": "0C06DF2A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06E148",
+    "b": "0C06E148",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06E14E",
+    "b": "0C06E14E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C06E560->0C06E560": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06E80A",
+    "b": "0C06E80A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06E8DA",
+    "b": "0C06E8DA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06EDF0->0C06EDF0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F164",
+    "b": "0C06F164",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F174",
+    "b": "0C06F174",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F2B4",
+    "b": "0C06F2B4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F2BC",
+    "b": "0C06F2BC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F3F0",
+    "b": "0C06F3F0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F3F8",
+    "b": "0C06F3F8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C06F830->0C06F830": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F8B6",
+    "b": "0C06F8B6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F8BA",
+    "b": "0C06F8BA",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06F930->0C06F930": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F9F8",
+    "b": "0C06F9F8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FA08",
+    "b": "0C06FA08",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06FA70->0C06FA70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06FB46",
+    "b": "0C06FB46",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FB52",
+    "b": "0C06FB52",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06FBD0->0C06FBD0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06FC98",
+    "b": "0C06FC98",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FCA4",
+    "b": "0C06FCA4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C06FF30->0C06FF30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F8B6",
+    "b": "0C06F8B6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F8BA",
+    "b": "0C06F8BA",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FC98",
+    "b": "0C06FC98",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FCA4",
+    "b": "0C06FCA4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070046",
+    "b": "0C070046",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070208",
+    "b": "0C070208",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070288",
+    "b": "0C070288",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070292",
+    "b": "0C070292",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C070660->0C070660": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070704",
+    "b": "0C070704",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070706",
+    "b": "0C070706",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C070920->0C070920": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0709BA",
+    "b": "0C0709BA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0709C8",
+    "b": "0C0709C8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C070A60->0C070A60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070AF4",
+    "b": "0C070AF4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070AFE",
+    "b": "0C070AFE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C070B80->0C070B80": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070C96",
+    "b": "0C070C96",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070C9E",
+    "b": "0C070C9E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x3"
+    ],
+    "b_values": [
+     "0x3"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C070D20->0C070D20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070DDC",
+    "b": "0C070DDC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070DE0",
+    "b": "0C070DE0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x5"
+    ],
+    "b_values": [
+     "0x5"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C070E70->0C070E70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070704",
+    "b": "0C070704",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070706",
+    "b": "0C070706",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070AF4",
+    "b": "0C070AF4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070AFE",
+    "b": "0C070AFE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070F92",
+    "b": "0C070F92",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070F9A",
+    "b": "0C070F9A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C071B10->0C071B10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C071CB0",
+    "b": "0C071CB0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C071CBC",
+    "b": "0C071CBC",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C071D20->0C071D20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C071EF0",
+    "b": "0C071EF0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C071EF6",
+    "b": "0C071EF6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C071F40->0C071F40": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0720AC",
+    "b": "0C0720AC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0720B0",
+    "b": "0C0720B0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C072110->0C072110": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C072258",
+    "b": "0C072258",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072260",
+    "b": "0C072260",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0722D0->0C0722D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C072434",
+    "b": "0C072434",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072440",
+    "b": "0C072440",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C072530->0C072530": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07261C",
+    "b": "0C07261C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072620",
+    "b": "0C072620",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C072660->0C072660": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C072744",
+    "b": "0C072744",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07274E",
+    "b": "0C07274E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x6"
+    ],
+    "b_values": [
+     "0x6"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C072800->0C072800": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C072D2C",
+    "b": "0C072D2C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072D40",
+    "b": "0C072D40",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C072D60->0C072D60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C071EF0",
+    "b": "0C071EF0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C071EF6",
+    "b": "0C071EF6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072434",
+    "b": "0C072434",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072440",
+    "b": "0C072440",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073320",
+    "b": "0C073320",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07332A",
+    "b": "0C07332A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07356C",
+    "b": "0C07356C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073570",
+    "b": "0C073570",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07363A",
+    "b": "0C07363A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073642",
+    "b": "0C073642",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073B92",
+    "b": "0C073B92",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073D46",
+    "b": "0C073D46",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073DCA",
+    "b": "0C073DCA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C073DD2",
+    "b": "0C073DD2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x0"
+    ],
+    "b_values": [
+     "0x0"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 14
+ },
+ "0C073FE0->0C073FE0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F8B6",
+    "b": "0C06F8B6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F8BA",
+    "b": "0C06F8BA",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C074106",
+    "b": "0C074106",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0742C6",
+    "b": "0C0742C6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07434A",
+    "b": "0C07434A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C074352",
+    "b": "0C074352",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C074760->0C074760": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C070DDC",
+    "b": "0C070DDC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C070DE0",
+    "b": "0C070DE0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x5"
+    ],
+    "b_values": [
+     "0x5"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0748A2",
+    "b": "0C0748A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0748AA",
+    "b": "0C0748AA",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C074FB0->0C074FB0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07261C",
+    "b": "0C07261C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072620",
+    "b": "0C072620",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C072744",
+    "b": "0C072744",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07274E",
+    "b": "0C07274E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x6"
+    ],
+    "b_values": [
+     "0x6"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0751EA",
+    "b": "0C0751EA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0751EE",
+    "b": "0C0751EE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C075306",
+    "b": "0C075306",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07530E",
+    "b": "0C07530E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C075C70->0C075C70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06FB46",
+    "b": "0C06FB46",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FB52",
+    "b": "0C06FB52",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C075DB6",
+    "b": "0C075DB6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C075F76",
+    "b": "0C075F76",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C075FFA",
+    "b": "0C075FFA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C076002",
+    "b": "0C076002",
+    "mnem": "jsr",
+    "a_values": [
+     "0x0"
+    ],
+    "b_values": [
+     "0x0"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C076130",
+    "b": "0C076130",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C076138",
+    "b": "0C076138",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 8
+ },
+ "0C076BF0->0C076BF0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C06F8B6",
+    "b": "0C06F8B6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06F8BA",
+    "b": "0C06F8BA",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FC98",
+    "b": "0C06FC98",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C06FCA4",
+    "b": "0C06FCA4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0770D0",
+    "b": "0C0770D0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0770D6",
+    "b": "0C0770D6",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C077256",
+    "b": "0C077256",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C077404",
+    "b": "0C077404",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C077482",
+    "b": "0C077482",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C077492",
+    "b": "0C077492",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 10
+ },
+ "0C077A10->0C077A10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C077EFE",
+    "b": "0C077EFE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C077F06",
+    "b": "0C077F06",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C078420->0C078420": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0789B4",
+    "b": "0C0789B4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C078A20->0C078A20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C078EB0",
+    "b": "0C078EB0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C078EBE",
+    "b": "0C078EBE",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C079CD0->0C079CD0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C079ED0",
+    "b": "0C079ED0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C079EDE",
+    "b": "0C079EDE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07A020->0C07A020": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07A144",
+    "b": "0C07A144",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07A14C",
+    "b": "0C07A14C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07A310->0C07A310": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07A462",
+    "b": "0C07A462",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07A470",
+    "b": "0C07A470",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07AAA0->0C07AAA0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07AB94",
+    "b": "0C07AB94",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07ABA0",
+    "b": "0C07ABA0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07AC20->0C07AC20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07AD50",
+    "b": "0C07AD50",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07AD5C",
+    "b": "0C07AD5C",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07AE40->0C07AE40": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07AF16",
+    "b": "0C07AF16",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07AF1A",
+    "b": "0C07AF1A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2"
+    ],
+    "b_values": [
+     "0x2"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07B250->0C07B250": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07B420",
+    "b": "0C07B420",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07B42A",
+    "b": "0C07B42A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07B630->0C07B630": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A0CD8",
+    "b": "0C0A0CD8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A0CE2",
+    "b": "0C0A0CE2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07B6C0->0C07B6C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07B7D4",
+    "b": "0C07B7D4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07B7E2",
+    "b": "0C07B7E2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A0CD8",
+    "b": "0C0A0CD8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A0CE2",
+    "b": "0C0A0CE2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C07BE60->0C07BE60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07C1E6",
+    "b": "0C07C1E6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07C2F6",
+    "b": "0C07C2F6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07C302",
+    "b": "0C07C302",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C07C350->0C07C350": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07C368",
+    "b": "0C07C368",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07C36E",
+    "b": "0C07C36E",
+    "mnem": "jsr",
+    "a_values": [
+     "0x24"
+    ],
+    "b_values": [
+     "0x24"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07C6B0->0C07C6B0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07C6C8",
+    "b": "0C07C6C8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07C6CE",
+    "b": "0C07C6CE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x24"
+    ],
+    "b_values": [
+     "0x24"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07CC20->0C07CC20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07CD4E",
+    "b": "0C07CD4E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C07CEB0->0C07CEB0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07CFC8",
+    "b": "0C07CFC8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07CFCE",
+    "b": "0C07CFCE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07D0A0->0C07D0A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07D184",
+    "b": "0C07D184",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07D18E",
+    "b": "0C07D18E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07DB00->0C07DB00": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07E03E",
+    "b": "0C07E03E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07E046",
+    "b": "0C07E046",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07E500->0C07E500": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07EA0A",
+    "b": "0C07EA0A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07EA12",
+    "b": "0C07EA12",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C07F0D0->0C07F0D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07F26C",
+    "b": "0C07F26C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07F274",
+    "b": "0C07F274",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07F5D0",
+    "b": "0C07F5D0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07F5D8",
+    "b": "0C07F5D8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C07FAE0->0C07FAE0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C07FE04",
+    "b": "0C07FE04",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C07FE10",
+    "b": "0C07FE10",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0811A0->0C0811A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C081510",
+    "b": "0C081510",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081630",
+    "b": "0C081630",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081632",
+    "b": "0C081632",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081CB6",
+    "b": "0C081CB6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081CC0",
+    "b": "0C081CC0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081E4C",
+    "b": "0C081E4C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C081E52",
+    "b": "0C081E52",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0826F8",
+    "b": "0C0826F8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C082700",
+    "b": "0C082700",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 9
+ },
+ "0C082C40->0C082C40": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0832C0",
+    "b": "0C0832C0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08350E",
+    "b": "0C08350E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C083510",
+    "b": "0C083510",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08370A",
+    "b": "0C08370A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C083714",
+    "b": "0C083714",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0838DC",
+    "b": "0C0838DC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0838E6",
+    "b": "0C0838E6",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C083BDE",
+    "b": "0C083BDE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C083BEC",
+    "b": "0C083BEC",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 9
+ },
+ "0C084490->0C084490": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C084D70",
+    "b": "0C084D70",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C084D7A",
+    "b": "0C084D7A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08500C",
+    "b": "0C08500C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C085010",
+    "b": "0C085010",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0851B8",
+    "b": "0C0851B8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0851BE",
+    "b": "0C0851BE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0854F4",
+    "b": "0C0854F4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0854FC",
+    "b": "0C0854FC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08564A",
+    "b": "0C08564A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08564E",
+    "b": "0C08564E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 10
+ },
+ "0C0869A0->0C0869A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C086AA2",
+    "b": "0C086AA2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C086AAC",
+    "b": "0C086AAC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C086C50",
+    "b": "0C086C50",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C086CDC",
+    "b": "0C086CDC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C086CEC",
+    "b": "0C086CEC",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C086E1C",
+    "b": "0C086E1C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08739C",
+    "b": "0C08739C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0873A4",
+    "b": "0C0873A4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C087890",
+    "b": "0C087890",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08789A",
+    "b": "0C08789A",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C087CA4",
+    "b": "0C087CA4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 11
+ },
+ "0C088030->0C088030": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C088230",
+    "b": "0C088230",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08823E",
+    "b": "0C08823E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C088580->0C088580": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C088854",
+    "b": "0C088854",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C088858",
+    "b": "0C088858",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C088A90",
+    "b": "0C088A90",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C088A94",
+    "b": "0C088A94",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C088C40->0C088C40": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C088E32",
+    "b": "0C088E32",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C088E3C",
+    "b": "0C088E3C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C089120",
+    "b": "0C089120",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0894B6",
+    "b": "0C0894B6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0894B8",
+    "b": "0C0894B8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0899BE",
+    "b": "0C0899BE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C089BBE",
+    "b": "0C089BBE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C089EAE",
+    "b": "0C089EAE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C089F9E",
+    "b": "0C089F9E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08A738",
+    "b": "0C08A738",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08A840",
+    "b": "0C08A840",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08A84A",
+    "b": "0C08A84A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x6"
+    ],
+    "b_values": [
+     "0x6"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08AB88",
+    "b": "0C08AB88",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 13
+ },
+ "0C08BF90->0C08BF90": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08C052",
+    "b": "0C08C052",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08C060",
+    "b": "0C08C060",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08C0D0->0C08C0D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08C1FE",
+    "b": "0C08C1FE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08C202",
+    "b": "0C08C202",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08C2D0",
+    "b": "0C08C2D0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08C7EC",
+    "b": "0C08C7EC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08C7F0",
+    "b": "0C08C7F0",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D43A",
+    "b": "0C08D43A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D442",
+    "b": "0C08D442",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D6CC",
+    "b": "0C08D6CC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D6D4",
+    "b": "0C08D6D4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D6EC",
+    "b": "0C08D6EC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D6F4",
+    "b": "0C08D6F4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D9BC",
+    "b": "0C08D9BC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08D9C2",
+    "b": "0C08D9C2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08DC74",
+    "b": "0C08DC74",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08DC76",
+    "b": "0C08DC76",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08DCF0",
+    "b": "0C08DCF0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08DDCA",
+    "b": "0C08DDCA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 17
+ },
+ "0C08E3A0->0C08E3A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08E61A",
+    "b": "0C08E61A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08E628",
+    "b": "0C08E628",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08E6F8",
+    "b": "0C08E6F8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08E700",
+    "b": "0C08E700",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08EABA",
+    "b": "0C08EABA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08EAC4",
+    "b": "0C08EAC4",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C08EB00->0C08EB00": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08EC26",
+    "b": "0C08EC26",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08EC30",
+    "b": "0C08EC30",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08EF10->0C08EF10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F200",
+    "b": "0C08F200",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F202",
+    "b": "0C08F202",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F210",
+    "b": "0C08F210",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F212",
+    "b": "0C08F212",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C08F270->0C08F270": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08F2A2->0C08F2A2": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08F2C0->0C08F2C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08F3E0->0C08F3E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F4BC",
+    "b": "0C08F4BC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F4C0",
+    "b": "0C08F4C0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08F590->0C08F590": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08F5F0->0C08F5F0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C08F740->0C08F740": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F8E2",
+    "b": "0C08F8E2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F8E8",
+    "b": "0C08F8E8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C08F990->0C08F990": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F8E2",
+    "b": "0C08F8E2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F8E8",
+    "b": "0C08F8E8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C08FAF0->0C08FAF0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08FB70->0C08FB70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08FC40",
+    "b": "0C08FC40",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08FC48",
+    "b": "0C08FC48",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C08FD30->0C08FD30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08FE30->0C08FE30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08FE74",
+    "b": "0C08FE74",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08FE7C",
+    "b": "0C08FE7C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08FF10->0C08FF10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C08FF50->0C08FF50": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090080->0C090080": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C08F2B6",
+    "b": "0C08F2B6",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090180->0C090180": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C08F2A2",
+    "b": "0C08F2A2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C0902E0->0C0902E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090388",
+    "b": "0C090388",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09038E",
+    "b": "0C09038E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090440->0C090440": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09057A",
+    "b": "0C09057A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09057C",
+    "b": "0C09057C",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090600->0C090600": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090700->0C090700": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0907E0->0C0907E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090860->0C090860": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090960->0C090960": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0909A0->0C0909A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0909E0->0C0909E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090A10->0C090A10": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090A30->0C090A30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090682",
+    "b": "0C090682",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09068A",
+    "b": "0C09068A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090CA0->0C090CA0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090CB8",
+    "b": "0C090CB8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C090CBE",
+    "b": "0C090CBE",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C090D00->0C090D00": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C090E00",
+    "b": "0C090E00",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C090E10",
+    "b": "0C090E10",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0910D0->0C0910D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C091206",
+    "b": "0C091206",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09120C",
+    "b": "0C09120C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0912B0->0C0912B0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0913A4",
+    "b": "0C0913A4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C0921C0->0C0921C0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09229E",
+    "b": "0C09229E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0922A8",
+    "b": "0C0922A8",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C092750->0C092750": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C092802",
+    "b": "0C092802",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C092826",
+    "b": "0C092826",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09282E",
+    "b": "0C09282E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 3
+ },
+ "0C092C60->0C092C60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C092C84",
+    "b": "0C092C84",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C092C8E",
+    "b": "0C092C8E",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C092E30->0C092E30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C092E76",
+    "b": "0C092E76",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C092E7A",
+    "b": "0C092E7A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x24"
+    ],
+    "b_values": [
+     "0x24"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C092ED0->0C092ED0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C092F0E",
+    "b": "0C092F0E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C092F1A",
+    "b": "0C092F1A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C093900->0C093900": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0939E0",
+    "b": "0C0939E0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0939F2",
+    "b": "0C0939F2",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C093CE0->0C093CE0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C093DF2",
+    "b": "0C093DF2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C093DFC",
+    "b": "0C093DFC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C093ED0",
+    "b": "0C093ED0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C093F20",
+    "b": "0C093F20",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C093F22",
+    "b": "0C093F22",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09401A",
+    "b": "0C09401A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09402A",
+    "b": "0C09402A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1C"
+    ],
+    "b_values": [
+     "0x1C"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09421C",
+    "b": "0C09421C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C094388",
+    "b": "0C094388",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0946CA",
+    "b": "0C0946CA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0946D6",
+    "b": "0C0946D6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C094FF6",
+    "b": "0C094FF6",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C094FFE",
+    "b": "0C094FFE",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0955BA",
+    "b": "0C0955BA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0955C6",
+    "b": "0C0955C6",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0959E0",
+    "b": "0C0959E0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0959E2",
+    "b": "0C0959E2",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C095C44",
+    "b": "0C095C44",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C095C54",
+    "b": "0C095C54",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C095DE2",
+    "b": "0C095DE2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 20
+ },
+ "0C096140->0C096140": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09651A",
+    "b": "0C09651A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096524",
+    "b": "0C096524",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096742",
+    "b": "0C096742",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09674C",
+    "b": "0C09674C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C096790->0C096790": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09688E",
+    "b": "0C09688E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096894",
+    "b": "0C096894",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096C0C",
+    "b": "0C096C0C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096C18",
+    "b": "0C096C18",
+    "mnem": "jmp",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C0972D0->0C0972D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09651A",
+    "b": "0C09651A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096524",
+    "b": "0C096524",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C096742",
+    "b": "0C096742",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09674C",
+    "b": "0C09674C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0975AE",
+    "b": "0C0975AE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0975B6",
+    "b": "0C0975B6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0975D0",
+    "b": "0C0975D0",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C097834",
+    "b": "0C097834",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09783A",
+    "b": "0C09783A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09794C",
+    "b": "0C09794C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C097954",
+    "b": "0C097954",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098008",
+    "b": "0C098008",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09826E",
+    "b": "0C09826E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098272",
+    "b": "0C098272",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09841C",
+    "b": "0C09841C",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098606",
+    "b": "0C098606",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098A36",
+    "b": "0C098A36",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098B40",
+    "b": "0C098B40",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098B44",
+    "b": "0C098B44",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098D58",
+    "b": "0C098D58",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098D62",
+    "b": "0C098D62",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098DFE",
+    "b": "0C098DFE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098E02",
+    "b": "0C098E02",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098EBE",
+    "b": "0C098EBE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C098EC8",
+    "b": "0C098EC8",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C099116",
+    "b": "0C099116",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09911A",
+    "b": "0C09911A",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C099750",
+    "b": "0C099750",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C099758",
+    "b": "0C099758",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 29
+ },
+ "0C0999E0->0C0999E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A1026",
+    "b": "0C0A1026",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A1030",
+    "b": "0C0A1030",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09B530->0C09B530": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B67A",
+    "b": "0C09B67A",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B682",
+    "b": "0C09B682",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B6BE",
+    "b": "0C09B6BE",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B6CA",
+    "b": "0C09B6CA",
+    "mnem": "jsr",
+    "a_values": [
+     "0x1"
+    ],
+    "b_values": [
+     "0x1"
+    ],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B712",
+    "b": "0C09B712",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B714",
+    "b": "0C09B714",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 6
+ },
+ "0C09B712->0C09B712": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B712",
+    "b": "0C09B712",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09B714",
+    "b": "0C09B714",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09B8A0->0C09B8A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09B990->0C09B990": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09B9A0->0C09B9A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09BA30->0C09BA30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C1D0->0C09C1D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C270->0C09C270": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C2F0->0C09C2F0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C3D0->0C09C3D0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C4B0->0C09C4B0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C580->0C09C580": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C6E0->0C09C6E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09C8B0->0C09C8B0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09B990",
+    "b": "0C09B990",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09C9CA",
+    "b": "0C09C9CA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09CBC0->0C09CBC0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09CCC4",
+    "b": "0C09CCC4",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09CCCC",
+    "b": "0C09CCCC",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09CDE0->0C09CDE0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09CEBC",
+    "b": "0C09CEBC",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09D3E0->0C09D3E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09D582",
+    "b": "0C09D582",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09D586",
+    "b": "0C09D586",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09D5A0->0C09D5A0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09D674",
+    "b": "0C09D674",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 1
+ },
+ "0C09D840->0C09D840": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09D582",
+    "b": "0C09D582",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09D586",
+    "b": "0C09D586",
+    "mnem": "jsr",
+    "a_values": [
+     "0x4"
+    ],
+    "b_values": [
+     "0x4"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C09FBD0->0C09FBD0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C09FDBA",
+    "b": "0C09FDBA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09FEDA",
+    "b": "0C09FEDA",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09FF9E",
+    "b": "0C09FF9E",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C09FFA6",
+    "b": "0C09FFA6",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 4
+ },
+ "0C0A0C60->0C0A0C60": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A0CD8",
+    "b": "0C0A0CD8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A0CE2",
+    "b": "0C0A0CE2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A0E20->0C0A0E20": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A0E96",
+    "b": "0C0A0E96",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A0EA0",
+    "b": "0C0A0EA0",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A0FB0->0C0A0FB0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A1026",
+    "b": "0C0A1026",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A1030",
+    "b": "0C0A1030",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A1140->0C0A1140": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A11B8",
+    "b": "0C0A11B8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A11C2",
+    "b": "0C0A11C2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A1300->0C0A1300": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A1378",
+    "b": "0C0A1378",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A1382",
+    "b": "0C0A1382",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A1530->0C0A1536": {
+  "status": "changed",
+  "sim": 0.896,
+  "ops": {
+   "replace": 5
+  },
+  "hunks": [
+   {
+    "tag": "replace",
+    "a": "0C0A1530",
+    "b": "0C0A1536",
+    "a_len": 5,
+    "b_len": 2,
+    "a_mnems": "mov.w exts.w mul.l mov.l mov",
+    "b_mnems": "nop mov.b"
+   }
+  ],
+  "operand_changes": [],
+  "n_operand_changes": 0
+ },
+ "0C0A4030->0C0A4030": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A4110",
+    "b": "0C0A4110",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A411C",
+    "b": "0C0A411C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A4210->0C0A4210": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A4234",
+    "b": "0C0A4234",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A423C",
+    "b": "0C0A423C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A44E0->0C0A44E0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A4504",
+    "b": "0C0A4504",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A450C",
+    "b": "0C0A450C",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A6C30->0C0A6C30": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A6CA8",
+    "b": "0C0A6CA8",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A6CB2",
+    "b": "0C0A6CB2",
+    "mnem": "jsr",
+    "a_values": [
+     "0x28"
+    ],
+    "b_values": [
+     "0x28"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A7D70->0C0A7D70": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A7EC2",
+    "b": "0C0A7EC2",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A7EC4",
+    "b": "0C0A7EC4",
+    "mnem": "jsr",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0A9EA0->0C0A9EA0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0A9F06",
+    "b": "0C0A9F06",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0A9F12",
+    "b": "0C0A9F12",
+    "mnem": "jsr",
+    "a_values": [
+     "0x2C"
+    ],
+    "b_values": [
+     "0x2C"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ },
+ "0C0ACCF0->0C0ACCF0": {
+  "status": "operands",
+  "sim": 1.0,
+  "ops": {},
+  "hunks": [],
+  "operand_changes": [
+   {
+    "a": "0C0ACE16",
+    "b": "0C0ACE16",
+    "mnem": "mov.l",
+    "a_values": [],
+    "b_values": [],
+    "register_or_form_change": true
+   },
+   {
+    "a": "0C0ACE24",
+    "b": "0C0ACE24",
+    "mnem": "jsr",
+    "a_values": [
+     "0x14"
+    ],
+    "b_values": [
+     "0x14"
+    ],
+    "register_or_form_change": true
+   }
+  ],
+  "n_operand_changes": 2
+ }
+}

@@ -1,0 +1,18 @@
+{
+  "a": "ibara_drc",
+  "b": "ibarablk_drc",
+  "a_functions": 1336,
+  "b_functions": 1370,
+  "a_instructions": 143003,
+  "b_instructions": 148385,
+  "status_counts": {
+    "changed": 326,
+    "identical": 745,
+    "a_only": 104,
+    "operands": 161,
+    "b_only": 138
+  },
+  "a_instructions_in_changed_or_removed": 84358,
+  "b_instructions_in_added": 18886,
+  "ram_addresses_mapped": 295
+}

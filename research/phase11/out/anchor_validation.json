@@ -1,0 +1,140 @@
+{
+ "documented_pairs": 22,
+ "scored": 19,
+ "ok": 14,
+ "mismatches": 1,
+ "results": [
+  {
+   "ibara": "0C054BA0",
+   "kuro_bl": "0C066680",
+   "kind": "code_inside_function",
+   "verdict": "not_scored"
+  },
+  {
+   "ibara": "0C0588C0",
+   "kuro_bl": "0C06A3C0",
+   "kind": "function",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C05A640",
+   "kuro_bl": "0C06C140",
+   "kind": "function",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C05DE00",
+   "kuro_bl": "0C06CFF0",
+   "kind": "function",
+   "verdict": "MISMATCH->0C06D950"
+  },
+  {
+   "ibara": "0C05E6E0",
+   "kuro_bl": "0C06E1D0",
+   "kind": "function",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C05F1E0",
+   "kuro_bl": "0C06ECD0",
+   "kind": "function",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C062550",
+   "kuro_bl": "0C073600",
+   "kind": "function",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C06BB60",
+   "kuro_bl": "0C07D100",
+   "kind": "function",
+   "verdict": "unmatched"
+  },
+  {
+   "ibara": "0C16BEAC",
+   "kuro_bl": "0C17E1B0",
+   "kind": "code_inside_function",
+   "verdict": "not_scored"
+  },
+  {
+   "ibara": "0C1F5520",
+   "kuro_bl": "0C206924",
+   "kind": "code_inside_function",
+   "verdict": "not_scored"
+  },
+  {
+   "ibara": "0C217A04",
+   "kuro_bl": "0C229004",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C21CCA0",
+   "kuro_bl": "0C2322C0",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C21F7F0",
+   "kuro_bl": "0C238020",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C26CAE8",
+   "kuro_bl": "0C286320",
+   "kind": "ram",
+   "verdict": "not_in_ram_map"
+  },
+  {
+   "ibara": "0C26CD40",
+   "kuro_bl": "0C286578",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C27E0FC",
+   "kuro_bl": "0C297B40",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C283750",
+   "kuro_bl": "0C29D194",
+   "kind": "ram",
+   "verdict": "not_in_ram_map"
+  },
+  {
+   "ibara": "0C283794",
+   "kuro_bl": "0C29D1D8",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C28651C",
+   "kuro_bl": "0C2B1824",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C3929E0",
+   "kuro_bl": "0C3C4048",
+   "kind": "ram",
+   "verdict": "ok"
+  },
+  {
+   "ibara": "0C392B08",
+   "kuro_bl": "0C3C4170",
+   "kind": "ram",
+   "verdict": "not_in_ram_map"
+  },
+  {
+   "ibara": "0C395086",
+   "kuro_bl": "0C3CA6F8",
+   "kind": "ram",
+   "verdict": "ok"
+  }
+ ]
+}
