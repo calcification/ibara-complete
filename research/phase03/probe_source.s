@@ -6,7 +6,7 @@
 .globl _start
 _start:
     lui   $t0, 0x1200        # PS2 GS privileged registers base
-    addiu $t1, $zero, 0x20  # PMODE SLBG (use background)
+    addiu $t1, $zero, 0x20  # PMODE: MMOD = 1, both read circuits disabled
     sd    $t1, 0($t0)        # GS PMODE
     lui   $t1, 0x00ff
     ori   $t1, $t1, 0x00ff   # BGCOLOR R=FF G=00 B=FF

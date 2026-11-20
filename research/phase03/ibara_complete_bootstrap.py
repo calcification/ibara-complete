@@ -10,9 +10,9 @@ Modes:
           byte-identical in their original locations, but the retail game does
           NOT boot in this mode. This is an isolated loader test, not a menu mod.
 
-Probe ELF: minimal original MIPS III/R5900-compatible assembly that sets GS
-PMODE.SLBG and BGCOLOR to magenta, then loops. If the BIOS has not initialized
-video output sufficiently, the screen can remain blank despite execution.
+Probe ELF: minimal original MIPS III/R5900-compatible assembly that disables
+both GS read circuits, sets BGCOLOR to magenta, then loops. If the BIOS has not
+initialized video output sufficiently, the screen can remain blank despite execution.
 It does NOT implement Black Label and does NOT change the normal retail menu.
 
 Example:
@@ -120,7 +120,7 @@ def read_root(fh):
 def build_probe_elf():
     # MIPS III EE instructions assembled independently with LLVM's MIPS backend.
     # lui t0,0x1200          ; GS MMIO @ 0x12000000
-    # addiu t1,zero,0x20   ; PMODE SLBG = 1, screen from GS background
+    # addiu t1,zero,0x20   ; PMODE: MMOD = 1, both read circuits disabled
     # sd t1,0(t0)          ; PMODE
     # lui t1,0x00ff
     # ori t1,t1,0x00ff     ; BGCOLOR magenta, channels R=FF,G=00,B=FF
@@ -229,9 +229,11 @@ def inject(src: Path, dst: Path, mode: str, *, check_only: bool = False):
         raise ValueError('Output exists; choose a new path. Refusing to overwrite.')
     if dst.resolve()==src.resolve():
         raise ValueError('Output path must differ from original ISO')
+    created_output = False
     try:
         # Full local copy, no in-place alteration. May require ~3.7 GB free space.
         with src.open('rb') as original, dst.open('xb') as out:
+            created_output = True
             shutil.copyfileobj(original,out,8*1024*1024)
             out.flush()
         with dst.open('r+b') as out:
@@ -276,7 +278,8 @@ def inject(src: Path, dst: Path, mode: str, *, check_only: bool = False):
         if digest_file(src)!=iso_hash:
             raise ValueError('Original ISO hash changed unexpectedly')
     except Exception:
-        dst.unlink(missing_ok=True)
+        if created_output:
+            dst.unlink(missing_ok=True)
         raise
     return {"mode":mode,"source_iso_sha256":iso_hash,"iso_bytes":EXPECTED_ISO_LEN,
             "output_path":str(dst),"new_file":"KURO.ELF;1","new_file_lba":NEW_FILE_LBA,
