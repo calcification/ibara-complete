@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Build a separate Ibara test ISO with an original ELF handoff probe."""
+"""Build a separate Ibara test ISO that launches a standalone EE payload."""
 
 import argparse
+import hashlib
 from pathlib import Path
 import struct
 import sys
@@ -11,6 +12,9 @@ import ibara_complete_button_prototype as atlas
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'phase03'))
 import ibara_complete_bootstrap as disc
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
+import build_pnach as video
 
 
 # Zero padding begins after the final instruction at 0x001D4280.
@@ -22,6 +26,12 @@ EMPTY_DESCRIPTION = 0x001D42F0
 RETAIL_BASE = 0x00100000
 RETAIL_LOAD_OFFSET = 0x80
 LABEL_BOX = (112, 192, 224, 208)
+DEFAULT_LABEL = 'ELF PROBE'
+VIDEO_PROFILES = {
+    'retail': (),
+    '240p_core': video.VIDEO_EDITS,
+    '240p_halfpixel': video.VIDEO_EDITS + video.HALFPIXEL_EDITS,
+}
 LOAD_EXEC_PS2 = 0x24030006  # addiu v1, zero, 6
 SYSCALL = 0x0000000C
 
@@ -37,7 +47,7 @@ def branch_not_equal(rs, rt, start, target):
     return 0x14000000 | (rs << 21) | (rt << 16) | (delta & 0xFFFF)
 
 
-def menu_elf(original):
+def menu_elf(original, video_profile='retail'):
     elf = bytearray(original)
     edits = {
         0x001CA358: (0xAF8090E0, jump(INIT)),  # Initialize the sixth row each time.
@@ -76,6 +86,10 @@ def menu_elf(original):
             if destination in edits:
                 raise ValueError(f'Overlapping writes at {destination:08X}')
             edits[destination] = (0, word)
+    for address, before, after in VIDEO_PROFILES[video_profile]:
+        if address in edits:
+            raise ValueError(f'Video and launcher writes overlap at {address:08X}')
+        edits[address] = (before, after)
     for address, (before, after) in edits.items():
         offset = address - RETAIL_BASE + RETAIL_LOAD_OFFSET
         if struct.unpack_from('<I', elf, offset)[0] != before:
@@ -127,9 +141,11 @@ def read_probe_elf(path):
     return probe
 
 
-def label_writes(source, files):
+def label_writes(source, files, text=DEFAULT_LABEL):
     from PIL import Image, ImageDraw, ImageFont
 
+    if not text.strip() or not text.isprintable():
+        raise ValueError('The launcher label must be a single printable line')
     pdm = next(record for record in files if record['name'].split(';')[0].upper() == 'IBARAR.PDM')
     with source.open('rb') as iso:
         offset = pdm['lba'] * disc.SECTOR + 0x2D20800  # Resource 945.
@@ -154,17 +170,20 @@ def label_writes(source, files):
         font = ImageFont.truetype('DejaVuSans-Bold.ttf', 13)
     except OSError:
         font = ImageFont.load_default()
-        _, top, _, bottom = draw.textbbox((0, 0), 'ELF PROBE', font=font, anchor='lm', stroke_width=1)
+        _, top, _, bottom = draw.textbbox((0, 0), text, font=font, anchor='lm', stroke_width=1)
         vertical = (label.height - (bottom - top)) // 2 - top
+    left, top, right, bottom = draw.textbbox((4, vertical), text, font=font, anchor='lm', stroke_width=1)
+    if left < 0 or top < 0 or right > label.width or bottom > label.height:
+        raise ValueError('The launcher label must fit in the 112×16-pixel slot; choose a shorter label')
     draw.text(
-        (4, vertical), 'ELF PROBE', font=font, anchor='lm', fill=(255, 244, 162, 255),
+        (4, vertical), text, font=font, anchor='lm', fill=(255, 244, 162, 255),
         stroke_width=1, stroke_fill=(13, 22, 44, 255),
     )
     left, top, _, bottom = LABEL_BOX
     return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
 
 
-def build(source, output, probe_path=None):
+def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail'):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
     probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
@@ -179,12 +198,13 @@ def build(source, output, probe_path=None):
         offset = record['offset'] + 10
         root[offset:offset + 8] = disc.pair32(end)
 
+    executable = menu_elf(original, video_profile)
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
         (disc.NEW_FILE_LBA * disc.SECTOR, probe),
-        (boot['lba'] * disc.SECTOR, menu_elf(original)),
-        *label_writes(source, files),
+        (boot['lba'] * disc.SECTOR, executable),
+        *label_writes(source, files, label),
     ]
     with source.open('rb') as original_iso, output.open('x+b') as target:
         try:
@@ -215,19 +235,26 @@ def build(source, output, probe_path=None):
             target.close()
             output.unlink(missing_ok=True)
             raise
+    return video.xor_elf_crc(executable), hashlib.sha256(executable).hexdigest()
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path, help='Exact original Japanese Ibara ISO')
     parser.add_argument('--output', type=Path, required=True, help='New test ISO path')
-    parser.add_argument('--probe-elf', type=Path, help='Use a custom EE executable in place of the timed probe')
+    parser.add_argument('--payload-elf', '--probe-elf', type=Path,
+                        help='Use a custom EE executable in place of the timed probe')
+    parser.add_argument('--label', default=DEFAULT_LABEL, help='Short label for the sixth menu entry')
+    parser.add_argument('--video-profile', choices=VIDEO_PROFILES, default='retail',
+                        help='Video profile for the retail frontend')
     args = parser.parse_args()
     try:
-        build(args.source, args.output, args.probe_elf)
+        crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label, video_profile=args.video_profile)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(f'Created {args.output}')
+    print(f'Retail ELF CRC: {crc:08X} ({args.video_profile})')
+    print(f'Retail ELF SHA-256: {sha256}')
 
 
 if __name__ == '__main__':

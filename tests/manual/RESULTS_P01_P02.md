@@ -12,7 +12,7 @@ The PCSX2 boot log reported NTSC at nominal 59.94 Hz in all three runs. The log'
 
 The matched 640×480 emulator screenshots of the startup memory-card prompt for P01 and P02 differed only inside the 48×6 pixel selection underline. Judge shimmer and fine registration with matched moving captures and on a physical CRT. This run establishes emulator scan mode, active geometry, and the four extra coordinate writes. It leaves the relative motion quality and the physical video signal open.
 
-Both profiles reached Arcade gameplay. P02's gameplay check used a separate blank memory card and reconfirmed all 18 EE words and 224 active progressive lines. A read-only comparison of the M02 launcher image found all 18 original video words intact under its different executable CRC. The combined launcher and video configuration still needs its own runtime check.
+Both profiles reached Arcade gameplay. P02's gameplay check used a separate blank memory card and reconfirmed all 18 EE words and 224 active progressive lines. The later [M03 launcher round trip](M03_LAUNCHER_VIDEO.md) verified both video profiles in the combined image.
 
 ## Reproduction
 
