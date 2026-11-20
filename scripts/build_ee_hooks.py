@@ -17,6 +17,7 @@ Safety rules (fail closed):
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import struct
 import subprocess
@@ -306,6 +307,41 @@ def bake_elf(retail: bytes, built: dict) -> bytes:
     return bytes(out)
 
 
+PREBUILT = ROOT / "ps2" / "prebuilt"
+
+
+def export_bake(built: dict) -> dict:
+    """JSON-safe description of a baked hook set (our own code words + verified site/patch list)."""
+    return {"base": f"{built['base']:08X}",
+            "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
+            "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
+
+
+def import_bake(spec: dict) -> dict:
+    return {"base": int(spec["base"], 16),
+            "words": [(0, int(a, 16), int(v, 16)) for a, v in spec["words"]],
+            "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]]}
+
+
+def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None) -> tuple[bytes, str]:
+    """Baked BLACK LABEL executable. Uses the cross toolchain when present, else the committed prebuilt image."""
+    if have_toolchain() and not EXTRA_DEFINES:
+        with tempfile.TemporaryDirectory() as tmp:
+            baked = build_hook(key, Path(work or tmp), BAKE_BASE, BAKE_END)
+        source = "built from ps2/hooks with mips-linux-gnu-gcc"
+    else:
+        path = PREBUILT / f"{key}.json"
+        baked = import_bake(json.loads(path.read_text()))
+        source = f"prebuilt {path.relative_to(ROOT)}"
+    vid = video_profile(video)
+    taken = {a for a, _o, _n in baked["sites"]}
+    clash = [f"{a:08X}" for a, _o, _n in vid if a in taken]
+    if clash:
+        raise AssertionError(f"video profile overlaps hook sites: {clash}")
+    baked["sites"] = list(baked["sites"]) + list(vid)
+    return bake_elf(retail, baked), source
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--elf", type=Path, help="clean SLPM_663.01 or ISO, to verify hook-site preimages")
@@ -349,7 +385,11 @@ def main(argv=None) -> int:
                 check_ram(dump, built)
             miss = pending(h)
             if h.get("bake_only"):
-                print(f"{h['test_id']} {key}: built {built['size']} bytes (bake-only, no PNACH)")
+                if not EXTRA_DEFINES:
+                    PREBUILT.mkdir(parents=True, exist_ok=True)
+                    baked_pre = build_hook(key, Path(tmp), BAKE_BASE, BAKE_END)
+                    (PREBUILT / f"{key}.json").write_text(json.dumps(export_bake(baked_pre), indent=0) + "\n")
+                print(f"{h['test_id']} {key}: built {built['size']} bytes (bake-only, no PNACH; prebuilt image refreshed)")
                 continue
             folder = args.output / key
             target = folder / build_pnach.NAME

@@ -131,6 +131,13 @@ class BuildTests(unittest.TestCase):
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
         self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]))
 
+    def test_prebuilt_bl_mode_matches_sources(self):
+        import json
+        b = hooks.build_hook("bl_mode", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
+        committed = json.loads((ROOT / "ps2/prebuilt/bl_mode.json").read_text())
+        self.assertEqual(hooks.export_bake(b), committed,
+                         "ps2/prebuilt/bl_mode.json is stale: run python3 scripts/build_ee_hooks.py")
+
     def test_bake_keeps_program_headers_after_elf_header(self):
         # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000
         body = bytearray(0x30000)

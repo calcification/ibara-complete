@@ -8,6 +8,8 @@
 > [`research/phase11/`](research/phase11/README.md) and [`tests/manual/C00_CODE_INJECTION.md`](tests/manual/C00_CODE_INJECTION.md).
 > **Runtime (2026-11-20, headless PCSX2 v1.7.4000):** C00 code injection **PASS**; K01 Black Label XTC graze runs in the attract demo (partial evidence). See [`tests/results/2026-11-20_RUNTIME.md`](tests/results/2026-11-20_RUNTIME.md).
 
+> **Test the Black Label build:** `python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output 'Ibara Black Label test.iso'` → [docs/BUILD_TEST_ISO.md](docs/BUILD_TEST_ISO.md)
+
 ## Start here: 60-second PCSX2 setup
 
 1. Get **[`pnach/SLPM-66301_420C7FAB.pnach`](pnach/SLPM-66301_420C7FAB.pnach)** (~few KB). The exact filename is required: `420C7FAB` is the **original retail PCSX2 CRC**.
