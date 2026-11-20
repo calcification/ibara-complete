@@ -93,6 +93,20 @@ static void xtc_add(unsigned side, int n)
 	}
 }
 
+#ifdef BL_TEST_ALL_WEAPONS
+/* TEST BUILDS ONLY (--define BL_TEST_ALL_WEAPONS): own all seven weapons, current MG, when a side starts. */
+static void test_grant_weapons(u32 rec)
+{
+	unsigned i;
+	if (EE_RAM(u8, rec + 0x278) != 0)
+		return;
+	for (i = 0; i < 7; i++)
+		EE_RAM(u8, rec + 0x271 + i) = 1;
+	EE_RAM(u8, rec + 0x278) = 7;
+	EE_RAM(u8, rec + 0x270) = 5;
+}
+#endif
+
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
 {
@@ -108,6 +122,9 @@ void xtc_frame(void)
 			p->held = 0;
 			continue;
 		}
+#ifdef BL_TEST_ALL_WEAPONS
+		test_grant_weapons(rec);
+#endif
 		if (!down)
 			p->held = 0;
 		else if (p->held < XTC_MAX_HELD)

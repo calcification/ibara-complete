@@ -124,8 +124,12 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(sites[0x001CA7F0], hooks.jal(0x001370E0))   # Exit sound call
         self.assertEqual(sites[0x0012C394], hooks.jal(0x0012C0E0))   # per-frame score print (Arcade)
         self.assertEqual(sites[0x0012C3BC], hooks.jal(0x0012C0E0))   # per-frame score print (Arrange)
+        patches = {a: (o, n) for a, o, n in h["patches"]}
+        self.assertEqual(patches[0x0012EE70], (0x14800046, 0x10000046))  # option pickup -> stock path
+        self.assertEqual(len([a for a, (o, n) in patches.items() if o == 0x8F879254 and n == 0x24070001]), 16)
         b = hooks.build_hook("bl_mode", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
+        self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]))
 
     def test_bake_keeps_program_headers_after_elf_header(self):
         # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000

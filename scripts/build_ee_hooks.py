@@ -81,6 +81,16 @@ HOOKS = {
                      "player_xy", "pad_held"],
         "establishes": [],
         "bake_only": True,
+        # BL weapon stock in the Arcade game (static, 2026-11-20): option pickups take Arrange's stock path
+        # (0x0012EE70 bnez -> b), the change button runs in Arcade (0x001398D8 beqz -> nop), and Arrange's
+        # formation change (pressed 0x80) stays off (0x001399A0 andi 0x80 -> andi 0).
+        "patches": [(0x0012EE70, 0x14800046, 0x10000046), (0x001398D8, 0x1040005C, 0x00000000),
+                    (0x001399A0, 0x30420080, 0x30420000)]
+        # Input mapper: per-button action lookup uses the Arrange config (mode index 1), whose button 0 is
+        # the weapon change (action 3 -> bit 0x40), BL's fourth button. 8 buttons x 2 players.
+        + [(a, 0x8F879254, 0x24070001) for a in (
+            0x00112ED8, 0x00112F1C, 0x00112F60, 0x00112FA4, 0x00112FE8, 0x0011302C, 0x00113070, 0x001130B4,
+            0x00113128, 0x0011316C, 0x001131B0, 0x001131F4, 0x00113238, 0x0011327C, 0x001132C0, 0x00113304)],
     },
     "bl_xtc": {
         "test_id": "K01",
@@ -150,6 +160,9 @@ def read_elf_sections(path: Path) -> tuple[list[tuple[str, int, bytes, bool]], d
     return secs, syms
 
 
+EXTRA_DEFINES: list[str] = []  # --define NAME (test builds only; never for committed profiles)
+
+
 def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
     h = HOOKS[key]
     objs = []
@@ -163,7 +176,7 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     stub_src.write_text("\n".join(lines) + "\n")
     for src in [stub_src] + [PS2 / "hooks" / s for s in h["sources"]]:
         obj = work / (src.stem + ".o")
-        run([CROSS + "gcc", *CFLAGS, "-c", str(src), "-o", str(obj)])
+        run([CROSS + "gcc", *CFLAGS, *[f"-D{d}" for d in EXTRA_DEFINES], "-c", str(src), "-o", str(obj)])
         objs.append(str(obj))
     elf = work / f"{key}.elf"
     run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",
@@ -180,6 +193,7 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     sites = []
     for site, original_word, entry in h["sites"]:
         sites.append((site, original_word, jal(syms[entry])))
+    sites.extend(h.get("patches", []))  # plain word patches: same preimage check and application
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 
@@ -277,9 +291,13 @@ def main(argv=None) -> int:
     ap.add_argument("--check-ram", type=Path, action="append", default=[], help="PCSX2 eeMemory.bin dump(s)")
     ap.add_argument("--output", type=Path, default=ROOT / "pnach" / "hooks")
     ap.add_argument("--listing-dir", type=Path, default=ROOT / "build" / "ee_hooks")
+    ap.add_argument("--define", action="append", default=[], help="extra -D for test bakes (blocks PNACH output)")
     ap.add_argument("--bake-elf", nargs=2, metavar=("HOOK", "OUT"),
                     help="write a retail-ELF copy with HOOK built in (needs --elf), for the sixth menu entry")
     args = ap.parse_args(argv)
+    if args.define:
+        EXTRA_DEFINES.extend(args.define)
+        args.output = Path(tempfile.mkdtemp())  # test defines never overwrite committed PNACH profiles
     if not have_toolchain():
         print("SKIP: mips-linux-gnu-gcc not installed (apt-get install gcc-mips-linux-gnu)")
         return 0
@@ -316,7 +334,8 @@ def main(argv=None) -> int:
             build_pnach.check_pnach(txt, min_addr=CAVE_BASE)
             target.write_text(txt, encoding="utf-8")
             print(f"{h['test_id']} {key}: {built['size']} bytes at {CAVE_BASE:08X}, "
-                  f"{len(built['words'])} cave words, {len(built['sites'])} hook site(s) -> {target.relative_to(ROOT)}")
+                  f"{len(built['words'])} cave words, {len(built['sites'])} hook site(s) -> "
+                  f"{target.relative_to(ROOT) if target.is_relative_to(ROOT) else target}")
     return 0
 
 
