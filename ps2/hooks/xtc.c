@@ -111,6 +111,26 @@ static void test_grant_weapons(u32 rec)
 }
 #endif
 
+#ifdef BL_TEST_SHOT_LEVELS
+/* TEST BUILDS ONLY: drive the game's small-P pickup handler (0x0012FB00(side, item)) once a game starts.
+ * Results (level, shot P) after each case are left in bl_shot_test[]. */
+typedef void (*pickup_fn)(int side, int item);
+u8 bl_shot_test[8];
+static void test_shot_levels(u32 rec)
+{
+	volatile u8 *streak = (volatile u8 *)(0x00495130u + 8u * EE_RAM(u8, 0x0033FCF0u - 28276));
+	if (bl_shot_test[7])
+		return;
+	bl_shot_test[7] = 1;
+	EE_RAM(u8, rec + 0x25B) = 2; EE_RAM(u8, rec + 0x25C) = 0; streak[0] = 5;   /* secret case */
+	((pickup_fn)0x0012FB00u)(0, 0);
+	bl_shot_test[0] = EE_RAM(u8, rec + 0x25B); bl_shot_test[1] = EE_RAM(u8, rec + 0x25C);
+	EE_RAM(u8, rec + 0x25B) = 5; EE_RAM(u8, rec + 0x25C) = 5; streak[0] = 0;   /* level 5 -> 6 case */
+	((pickup_fn)0x0012FB00u)(0, 0);
+	bl_shot_test[2] = EE_RAM(u8, rec + 0x25B); bl_shot_test[3] = EE_RAM(u8, rec + 0x25C);
+}
+#endif
+
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
 {
@@ -130,6 +150,10 @@ void xtc_frame(void)
 		}
 #ifdef BL_TEST_ALL_WEAPONS
 		test_grant_weapons(rec);
+#endif
+#ifdef BL_TEST_SHOT_LEVELS
+		if (s == 0 && (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT))
+			test_shot_levels(rec);
 #endif
 		if (!down)
 			p->held = 0;

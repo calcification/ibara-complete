@@ -90,7 +90,11 @@ HOOKS = {
         # the weapon change (action 3 -> bit 0x40), BL's fourth button. 8 buttons x 2 players.
         + [(a, 0x8F879254, 0x24070001) for a in (
             0x00112ED8, 0x00112F1C, 0x00112F60, 0x00112FA4, 0x00112FE8, 0x0011302C, 0x00113070, 0x001130B4,
-            0x00113128, 0x0011316C, 0x001131B0, 0x001131F4, 0x00113238, 0x0011327C, 0x001132C0, 0x00113304)],
+            0x00113128, 0x0011316C, 0x001131B0, 0x001131F4, 0x00113238, 0x0011327C, 0x001132C0, 0x00113304)]
+        # BL shot levels (F5): small P also raises level 5 -> 6 (per-level jump table 0x002FCF10 entry 5 goes to
+        # the raise path 0x0012FBA8 instead of the bonus path 0x0012FC24), and the 5-in-a-row full-power
+        # secret is gone (0x0012FB78 bnez -> nop). Level k needs k + 1 small P (table 0x00337F40).
+        + [(0x002FCF24, 0x0012FC24, 0x0012FBA8), (0x0012FB78, 0x14A00038, 0x00000000)],
     },
     "bl_xtc": {
         "test_id": "K01",
