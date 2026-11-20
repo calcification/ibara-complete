@@ -122,6 +122,8 @@ def xdo(display: str, *args: str):
         if best:
             subprocess.run(["xdotool", "windowfocus", "--sync", best], env=env, check=False,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if args and args[0] == "key":  # hold ~7 frames: the game polls the pad once per frame
+        args = ("keydown", args[1], "sleep", "0.12", "keyup", args[1])
     subprocess.run(["xdotool", *args], env=env, check=False,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -179,9 +181,18 @@ def main(argv=None) -> int:
     setup(data, args.bios.resolve(), args.profile, args.renderer)
     xvfb = None
     if not os.environ.get("DISPLAY") or args.display != os.environ.get("DISPLAY"):
+        # pick a display with no stale lock, then wait until it answers (a dead X server makes Qt segfault)
+        n = int(args.display.lstrip(":"))
+        while Path(f"/tmp/.X{n}-lock").exists() or Path(f"/tmp/.X11-unix/X{n}").exists():
+            n += 1
+        args.display = f":{n}"
         xvfb = subprocess.Popen(["Xvfb", args.display, "-screen", "0", "1280x960x24", "-nolisten", "tcp"],
                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        time.sleep(1.5)
+        for _ in range(50):
+            if subprocess.run(["xdotool", "getdisplaygeometry"], env={**os.environ, "DISPLAY": args.display},
+                              capture_output=True).returncode == 0:
+                break
+            time.sleep(0.2)
     env = {**os.environ, "DISPLAY": args.display, "QT_QPA_PLATFORM": "xcb", "XDG_RUNTIME_DIR": str(data / "run")}
     (data / "run").mkdir(exist_ok=True)
     os.chmod(data / "run", 0o700)
@@ -189,15 +200,20 @@ def main(argv=None) -> int:
     if sock.exists():
         sock.unlink()
     log = open(data / "logs" / "stdout.txt", "w")
-    proc = subprocess.Popen([str(args.pcsx2), "-nogui", "-fastboot", "--", str(args.iso.resolve())],
-                            env=env, stdout=log, stderr=subprocess.STDOUT, cwd=data)
+    for attempt in range(3):  # v1.7.4000 occasionally segfaults during Qt start-up; relaunch
+        proc = subprocess.Popen([str(args.pcsx2), "-nogui", "-fastboot", "--", str(args.iso.resolve())],
+                                env=env, stdout=log, stderr=subprocess.STDOUT, cwd=data)
+        time.sleep(4)
+        if proc.poll() is None:
+            break
+        log.write(f"\n[harness] start-up exit {proc.returncode}, relaunching\n")
     steps = sorted((float(t), a, k) for t, a, k in (s.split(":", 2) for s in args.script))
     states = sorted((float(t), int(s)) for t, s in (x.split(":") for x in args.savestate_at))
     result = {"profile": str(args.profile) if args.profile else None, "samples": [], "events": []}
     snapdir = args.snapdir or args.out.parent / (args.out.stem + "_snaps")
     snapdir.mkdir(parents=True, exist_ok=True)
     next_snap = args.snapshot_every or float("inf")
-    t0 = time.time()
+    t0 = time.time() - 4  # include the start-up wait
     pine = None
     try:
         while time.time() - t0 < args.seconds and proc.poll() is None:

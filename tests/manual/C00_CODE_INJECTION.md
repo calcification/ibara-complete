@@ -12,6 +12,8 @@ gameplay, and collect savestates that let us locate the PS2 fields BL features n
 3. Game Properties → Cheats: enable cheats and the single group `C00 HOOK / code-injection smoke test`.
 4. Cold boot.
 
+**Menu path:** title Start → MODE SELECT → **Circle** confirms (Cross cancels in this release) → GAME START → NORMAL.
+
 ## Part A — smoke test
 
 | Step | Action | Pass |
