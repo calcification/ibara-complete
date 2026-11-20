@@ -130,7 +130,7 @@ void spawn_log_frame(void)
 			struct core_rec *c = (struct core_rec *)(CORE_LOG + 16);
 			if (*ccount < CORE_MAX) {
 				c[*ccount].frame = sl_frame - sl_first;
-				c[*ccount].slot = (u16)i;
+				c[*ccount].slot = (u16)(i | EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) << 8); /* + P1 shot level */
 				c[*ccount].hp = EE_RAM(u16, a + 0x3C);
 				c[*ccount].subtype = EE_RAM(u32, a + 8);
 				c[*ccount].x = (s16)(EE_RAM(s32, a + 0x24) >> 16);

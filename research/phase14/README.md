@@ -69,11 +69,40 @@ Every 4 frames both loggers record the type-5 parts with subtype < 3 (core worth
 HP and position. Rank 0x800000, player holding shot without moving (both games start the player at x 66, y 480).
 * The side parts **share the core's HP**; core and part flags change at the same moments in both games
   (`C0008014 → C0008004 → C0008104 → D3008104`, last one = fight starts), and the core has 168 HP in both.
-* Damage per frame is the same while the core is in the line of fire, but the boss **sweeps sideways on a
-  different line**: same ~700-frame period and ~148 px amplitude, BL y 431–580 (centre ≈ 505) vs PS2 442–592
-  (≈ 517). At the far end of each PS2 sweep the static test player misses, so the PS2 core stalls (HP 97 → 92 at
-  6,000–6,300) and dies at 7,270 vs BL 6,728 (post-boss parts at 8,053 vs 7,068).
+* **Correction (16-frame resolution):** the boss's sideways path is the same in both games (y 431–592, same
+  speed and period); only its small forward/back wobble (x 238–282) runs in the opposite phase. (The 100-frame
+  table had suggested different centres; that was sampling.) The PS2 core still takes damage more slowly at the
+  sweep's far end and dies at 7,270 vs BL 6,728 although the PS2 player is at a *higher* shot level (3 vs BL's 2,
+  both with the MG option): the difference is on the player side (shot/option reach), not the boss.
 * BL's type-5 handler is **`0C0995B0`** (enemy type table `0C1DD6DC`, found by matching Phase 12 pairs against a
   RAM dump; 90 entries like PS2's `0x00205BF0`). It dispatches on the part's subtype (0..0x67) through a jump
   table; arcade `0C088C40` / PS2 `0x00165A10` is the same routine compiled as one function, which is why Phase 11
   listed it as a_only/b_only.
+
+### Untouched boss (no shooting, rank 0x800000): attack timeline
+
+`NOSHOT=1` in `bullet_log.lua`; the PS2 test player simply does not hold shot. BL is deterministic (a run with the
+coin 61 frames later gives an identical timeline), so differences below are logic, not chance.
+
+| frames (from first type-54) | BL | PS2 |
+|---|---|---|
+| 4,800–6,200 | type-4 barrage only, ~92 / 200 frames | same barrage plus extra type-0 shots (4,800–5,400), thinner after 5,600 |
+| 6,800–7,200 | spiral, **4 arms** (556 bullets) | spiral, **2 arms** (282) |
+| 7,200–7,600 | type-12 shots | same |
+| 8,200–8,600 | spiral, **2 arms** (275) | spiral, **4 arms** (705) |
+| 9,600–10,000 | no spiral (single aimed shots) | spiral, 4 arms (532) |
+| 10,000–11,000 | types 1 + 12 | same |
+| 11,000–11,400 | spiral, 2 arms (282) | spiral, 2–3 arms (484) |
+
+So BL keeps the boss's attack skeleton and changes **which spiral variant runs at each step** (and drops one).
+The spiral is a two/four-armed rotating ring, 1.0–1.25 px/frame, ~11° between bullets, from the core.
+
+BL code that writes the spiral bullets (MAME write tap on the bullet pool, `research/phase13/bullet_pc_trace.lua`,
+needs `-nodrc`): stores at `0C0BA524`/`0C0BA52E` (callers' return addresses `0C0BA4F6`, `0C0BA52A`) and
+`0C0B9E20` (return `0C0B9F08`); the barrage uses `0C062780`/`0C0BAC32` (return `0C0BAC2C`) and `0C0B9E20`
+(return `0C0B9C0C`); type-12 shots `0C0BB088` (returns `0C0BB0EA`, `0C0BB006`) and `0C0BB992` (return `0C0BBE00`).
+
+**Next for the boss:** walk up from `0C0BA4F6` to the step that chooses the spiral variant (BL type-5 handler
+`0C0995B0`, jump table `0C0995F0`), find the same step in PS2 `0x00165A10`, and patch the PS2 choice/sequence to
+BL's; re-run the no-shot logs until the table above matches. Then compare the player's shot/option reach
+(why the PS2 player at level 3 damages the boss less than BL's at level 2).
