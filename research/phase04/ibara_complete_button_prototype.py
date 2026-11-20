@@ -114,10 +114,10 @@ def quantize(image,palette):
     import numpy as np
     p=np.asarray(image.convert('RGBA'),dtype=np.int16).reshape(-1,4)
     pal=palette.astype(np.int16)
-    # 5376 pixels x 256 palette colors, alpha heavily weighted.
+    # Compare each pixel with all 256 palette colors, weighting alpha heavily.
     a=(p[:,None,:]-pal[None,:,:]).astype(np.int32)
     cost=(a[:,:,:3]*a[:,:,:3]).sum(axis=2) + 5*a[:,:,3]*a[:,:,3]
-    return cost.argmin(axis=1).astype(np.uint8).reshape(48,112)
+    return cost.argmin(axis=1).astype(np.uint8).reshape(image.height,image.width)
 
 
 def apply_indices(raw, new_tile):

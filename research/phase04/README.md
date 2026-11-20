@@ -3,7 +3,7 @@
 **Date:** November 19–20, 2026  
 **Starting ISO:** Original Japanese retail PS2 Ibara (`SLPM_663.01`)  
 **Purpose:** Work that does not depend on the Phase 3 secondary-ELF bootstrap being tested.  
-**Current status:** Static menu path and asset pipeline verified. No menu hook or functioning Kuro mode yet.
+**Current status:** The static map and asset-only work below led to a [separate PCSX2-tested ELF probe](../../tests/manual/M01_MENU_ELF_PROBE.md). It adds a sixth test row and exercises loading a homebrew ELF from the disc and returning through the retail title screen.
 
 ## 1. The actual top-level five-way selector is now located
 
@@ -22,7 +22,7 @@ The earlier Phase 1 work found the inner Arcade and Arrange menu dispatchers. Ph
 | 3 | OPTION | `0x001CA860` | Sets frontend state `13` (Options) |
 | 4 | EXIT | `0x001CA7E4` | Sets frontend return value `1` (Exit request) |
 
-The `0x001C9400` frontend routine returns to the larger game state machine at `0x00113634`; returned values distinguish a Gallery request from exiting. **These are statically determined paths, not yet runtime breakpoint confirmations.**
+The `0x001C9400` frontend routine returns to the larger game state machine at `0x00113634`. Returned values distinguish a Gallery request from exiting. The [B04 trace](../../tests/manual/RESULTS_P00_B04.md) confirmed all five branches in PCSX2.
 
 ## 2. What must change for six selections
 

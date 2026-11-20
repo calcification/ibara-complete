@@ -29,7 +29,7 @@
 ---
 
 > **Research / pre-alpha handoff — NOT a playable Black Label PS2 port.**
-> The existing retail PS2 **Arcade** and **Arrange** modes have not been modified into a tested third game mode. No PS2/PCSX2 boot test of the injected secondary ELF has yet been reported.
+> The [ELF probe](tests/manual/M01_MENU_ELF_PROBE.md) adds a test entry alongside the existing retail choices and verifies a disc-based handoff and return in PCSX2. The direct-boot B01 procedure and hardware tests are pending.
 
 This repository is the reproducible technical handoff for a project investigating a **third authentic Ibara Kuro / Black Label mode** in the Japanese PS2 *Ibara* (`SLPM_663.01`), alongside the existing retail modes. It is **not** the existing 240p patch release; that is maintained at [calcification/cave-ps2-240p](https://github.com/calcification/cave-ps2-240p).
 
@@ -37,7 +37,7 @@ This repository is the reproducible technical handoff for a project investigatin
 
 - Full retail ELF/ISO metadata and 1,130-item resource catalog (Phases 1–2)
 - **Two experimental ISO boot tests**: inject a 160-byte original test ELF without changing retail boot, or boot that ELF instead (Phase 3)
-- Retail mode-select address map and **in-place prototype button generator** (Phase 4; no menu hook, invisible in game)
+- Retail mode-select address map, asset-only button prototype, and [a PCSX2-tested sixth menu entry for a homebrew probe](tests/manual/M01_MENU_ELF_PROBE.md) (Phase 4)
 - Bounded CV1000 VRAM/NAND memory prototype with host-side tests and a MIPS III object (Phase 5)
 - Read-only, instruction-fingerprinted audits for native PS2 input, rank, pickups, medal scoring, bullet conversion, and rose merging (Phases 6–10)
 - Cross-platform scripts, `TEST_MATRIX.csv`, a full manual PCSX2/PS2 checklist, and a reproducible audit runner
