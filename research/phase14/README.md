@@ -129,3 +129,14 @@ the player killing enemies faster in BL (as with the boss), i.e. player shot/opt
 
 **Stage 1 status:** placement, HP, fire timing and boss logic match BL. Open: player-side damage/reach (BL's level-2
 shot kills faster than PS2's level-3), then stage 2.
+
+### Player damage and bullet speeds (stage 1)
+
+* **Damage:** with shot level locked to 2 in both games, the boss core loses ~14–15 HP / 100 frames in BL and ~13
+  on PS2 while in the line of fire, and both pause at the same phase change. The earlier gap came from the PS2
+  player's different shot level (item drops) and the boss's random sweep direction. Nothing to port.
+* **Bullet speeds:** the PS2 logger now measures velocity over 6 frames like the MAME logger
+  (`tools/stage_compare`); per 500-frame bin the mean speeds match (1.00/1.10/1.04/1.24 vs 1.00/1.09/1.00/1.25).
+
+Stage 1 enemy content is therefore matched at fixed rank. The comparison now runs as one command per stage:
+`tools/stage_compare/run_stage.py`.

@@ -1,5 +1,7 @@
 /* TEST BUILDS ONLY (--define BL_SPAWN_LOG): PS2 enemy-spawn logger for stage comparisons with BL (MAME).
  *
+ * Options: BL_SPAWN_RANK (lock rank), BL_LOCK_SHOT (lock shot level), BL_LOG_STAGE (log only that stage),
+ * BL_CORE_STATE / BL_CORE_FLAGS / BL_CORE_TURRET (what the stage-1 boss sampler records).
  * Every logic frame (called from xtc_frame): keeps P1 invincible and records each newly alive enemy part of
  * the PS2 pool 0x0045A840 (192 x 0xB4; +00 flags bit 31 alive, +04 type, +08 subtype, +24/+28 x/y 16.16,
  * +3C hp, +40 score) into a log at SPAWN_LOG (count word, then 24-byte records). Read it from a savestate.
@@ -27,10 +29,11 @@ struct bullet_rec {
 	u16 type;
 	u8 slot, pad;
 	s16 x, y;
-	s16 dx, dy; /* 8.8 pixels per frame, from the next frame's position */
+	s16 dx, dy; /* 8.8 pixels per frame, averaged over the bullet's first 6 frames (as the MAME logger) */
 };
 static u32 bl_alive_mask[8];
 static s16 bl_pending[256]; /* record index + 1 awaiting its velocity */
+static u8 bl_age[256];
 static s32 bl_x0[256], bl_y0[256]; /* full 16.16 start position */
 
 /* Boss sampler: every 4 frames, each alive type-5 part with subtype < 3 (stage-1 boss core and side parts). */
@@ -60,8 +63,16 @@ void spawn_log_frame(void)
 	sl_frame++;
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;
+#ifdef BL_LOCK_SHOT /* controlled damage comparisons: fixed shot level */
+	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
+		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) = BL_LOCK_SHOT;
+#endif
 #ifdef BL_SPAWN_RANK
 	EE_RAM(u32, PS2_RANK_INV) = BL_SPAWN_RANK; /* controlled comparisons: same stored rank as the MAME run */
+#endif
+#ifdef BL_LOG_STAGE /* log one stage only: BL stage byte value, 2 = stage 1 ... 7 = stage 6 (PS2 $gp-28244) */
+	if (EE_RAM(u8, 0x00338E9Cu) != BL_LOG_STAGE)
+		return;
 #endif
 	if (!sl_started) {
 		*count = 0;
@@ -83,11 +94,13 @@ void spawn_log_frame(void)
 			const s32 x = EE_RAM(s32, a + PS2_BULLET_X), y = EE_RAM(s32, a + PS2_BULLET_Y);
 			if (bl_pending[i]) {
 				struct bullet_rec *r = &bl[bl_pending[i] - 1];
-				if (on) {
-					r->dx = (s16)((x - bl_x0[i]) >> 8);
-					r->dy = (s16)((y - bl_y0[i]) >> 8);
+				if (!on)
+					bl_pending[i] = 0;
+				else if (++bl_age[i] == 6) {
+					r->dx = (s16)(((x - bl_x0[i]) >> 8) / 6);
+					r->dy = (s16)(((y - bl_y0[i]) >> 8) / 6);
+					bl_pending[i] = 0;
 				}
-				bl_pending[i] = 0;
 			}
 			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first && *bcount < BULLET_MAX) {
 				struct bullet_rec *r = &bl[*bcount];
@@ -101,6 +114,7 @@ void spawn_log_frame(void)
 				bl_y0[i] = y;
 				(*bcount)++;
 				bl_pending[i] = (s16)*bcount;
+				bl_age[i] = 0;
 			}
 			if (on)
 				bl_alive_mask[i >> 5] |= bit;
