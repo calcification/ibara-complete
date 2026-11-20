@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "bomb",
+  "anchor": "stage1_player_control_with_bomb",
+  "segments": [
+    [60, ["shot"]],
+    [1, ["bomb", "shot"]],
+    [59, ["shot"]],
+    [60, ["right", "shot"]],
+    [120, []]
+  ]
+}
