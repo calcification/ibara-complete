@@ -134,6 +134,11 @@ def extract_ps2(p2s: Path, out: Path):
         for i in range(c):
             fr, slot, hp, sub, x, y = struct.unpack_from("<IHHIhh", r, 0x1F60010 + 16 * i)
             f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y}\n")
+    t = min(struct.unpack_from("<I", r, 0x1FC0000)[0], 512)
+    with open(out / "ps2_tables.txt", "w") as f:
+        for i in range(t):
+            ty, tb = struct.unpack_from("<II", r, 0x1FC0010 + 8 * i)
+            f.write(f"{ty} {tb:08X}\n")
     print(f"  PS2: {n} spawns, {m} bullets, {c} boss samples; scene counter now {r[0x338E9C]}")
     if n == 0:
         print("  WARNING: nothing logged - the capture ended before the stage started (raise --seconds)")
@@ -182,7 +187,7 @@ def run_bl(args, out: Path):
     sh([args.mame, "ibarablk", "-rompath", str(args.bl_roms), "-video", "none", "-sound", "none", "-nothrottle",
         "-autoboot_script", str(ROOT / "tools/stage_compare/bl_stage_log.lua"), "-skip_gameinfo"], env=env,
        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for name in ("spawns", "bullets", "core"):
+    for name in ("spawns", "bullets", "core", "tables"):
         shutil.move(tmp / f"{name}.txt", out / f"bl_{name}.txt")
     tmp.rmdir()
     print(f"  BL: {sum(1 for _ in open(out / 'bl_spawns.txt'))} spawns, "

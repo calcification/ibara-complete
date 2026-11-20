@@ -13,6 +13,8 @@
 --   spawns.txt  frame stage slot type subtype hp score x y segment
 --   bullets.txt frame slot type x0 y0 dx dy   (px/frame averaged over the first 6 frames)
 --   core.txt    frame slot hp subtype x y     (type-5 parts with subtype < 3, every 4 frames: stage-1 boss)
+--   tables.txt  type table index score hp     (each part-record table seen at +0x10: 128 entries of 16 bytes,
+--               score at +4, base HP at +0xE)
 local m = manager.machine; local sp = m.devices[":maincpu"].spaces["program"]
 local ports = m.ioport.ports; local function fld(p, n) return ports[p].fields[n] end
 local P1, EN, BUL, RANK, STAGEB = 0x0C29D1D8, 0x0C286578, 0x0C297B40, 0x0C297A3C, 0x0C3C4170
@@ -21,6 +23,7 @@ local STAGE = tonumber(os.getenv("STAGE") or "2")
 local MAXF = tonumber(os.getenv("MAXFRAMES") or "60000")
 local out = io.open(dir .. "/spawns.txt", "w"); local bout = io.open(dir .. "/bullets.txt", "w")
 local cout = io.open(dir .. "/core.txt", "w")
+local tout = io.open(dir .. "/tables.txt", "w"); local tseen = {}
 local frame, first, shooting, left = 0, nil, false, false
 local alive, typ, balive, bpend = {}, {}, {}, {}
 local plan = {}
@@ -30,7 +33,7 @@ local t0 = 2400
 press(t0, ":PORT_C", "Coin 1", 8); press(t0 + 60, ":PORT_C", "1 Player Start", 8)
 for i = 0, 8 do press(t0 + 300 + i * 40, ":PORT_D", "P1 Button 1", 6) end
 at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1); shooting = true end)
-local function finish() out:close(); bout:close(); cout:close(); m:exit() end
+local function finish() out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
 emu.register_frame_done(function()
   frame = frame + 1
   if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
@@ -51,6 +54,13 @@ emu.register_frame_done(function()
       first = first or frame
       out:write(string.format("%d %d %d %d %08X %d %d %d %d %d\n", frame - first, stage, i, t, sp:read_u32(a + 8),
         sp:read_u16(a + 0x3C), sp:read_u32(a + 0x40), sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, (fl >> 14) & 1))
+      local tb = sp:read_u32(a + 0x10); local key = t .. ":" .. tb
+      if not tseen[key] then
+        tseen[key] = true
+        for k = 0, 127 do
+          tout:write(string.format("%d %08X %d %d %d\n", t, tb, k, sp:read_u32(tb + 16 * k + 4), sp:read_i16(tb + 16 * k + 14)))
+        end
+      end
     end
     alive[i] = on; typ[i] = t
     if on and t == 5 and first and (frame - first) % 4 == 0 and sp:read_u32(a + 8) < 3 then

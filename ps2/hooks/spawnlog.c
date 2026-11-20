@@ -50,7 +50,27 @@ struct core_rec {
 	s16 x, y;
 };
 
+/* Part-record tables seen (+0x10 of each new part): count, then (type, table) pairs; read by
+ * tools/stage_compare/diff_part_tables.py to compare HP/score records with BL's. */
+#define TABLE_LOG 0x01FC0000u
+#define TABLE_MAX 512u
+
 static u32 sl_frame, sl_first, sl_started;
+
+static void table_seen(u32 type, u32 table)
+{
+	volatile u32 *n = (volatile u32 *)TABLE_LOG;
+	volatile u32 *e = (volatile u32 *)(TABLE_LOG + 16);
+	u32 i;
+	for (i = 0; i < *n; i++)
+		if (e[2 * i] == type && e[2 * i + 1] == table)
+			return;
+	if (*n < TABLE_MAX) {
+		e[2 * *n] = type;
+		e[2 * *n + 1] = table;
+		(*n)++;
+	}
+}
 static u32 sl_type[EN_COUNT];
 static u8 sl_alive[EN_COUNT];
 
@@ -77,6 +97,7 @@ void spawn_log_frame(void)
 	if (!sl_started) {
 		*count = 0;
 		EE_RAM(u32, CORE_LOG) = 0;
+		EE_RAM(u32, TABLE_LOG) = 0;
 		sl_started = 1;
 	}
 	{
@@ -137,6 +158,7 @@ void spawn_log_frame(void)
 			r->type = t;
 			r->subtype = EE_RAM(u32, a + 8);
 			r->score = EE_RAM(u32, a + 0x40);
+			table_seen(t, EE_RAM(u32, a + 0x10));
 			r->x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
 			r->y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
 			(*count)++;
