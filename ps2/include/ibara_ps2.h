@@ -56,6 +56,9 @@ typedef int s32;
 #define PS2_PLAYER_HELD      0x24Cu
 #define PS2_PLAYER_PRESSED   0x24Eu
 #define PS2_PLAYER_INVINCIBLE 0x27Au
+#define PS2_PLAYER_LIVES     0x25Au      /* + shot 0x25B, shot P 0x25C (same layout as Kuro BL's record) */
+#define PS2_PLAYER_BOMBS     0x25Du      /* full bombs */
+#define PS2_PLAYER_FRAGS     0x25Eu      /* bomb fragments, 40 = one bomb (savestates 2026-11-20) */
 #define PS2_PAD_SHOT         0x0010u
 #define PS2_COLLIDE_SIDE     0x00338EA0u /* $gp-0x6E50: side tested this frame (alternates) */
 

@@ -7,7 +7,8 @@
  *     while the player can be hit, the shot button has been held >= 5 frames and the option pods are out:
  *     score += 10 and the counter's quarter-steps += 1, capped at 39996 (displayed value = quarters >> 2);
  *   - whenever the displayed value changes the wipe timer is set to 128; it counts down every frame and
- *     clears the counter at 0. A bomb clears it 16 frames after the bomb starts (TODO: bomb event on PS2);
+ *     clears the counter at 0. A bomb clears it 16 frames after the bomb starts (PS2: a drop in the
+ *     player's bomb power, bombs x 40 + fragments);
  *   - box half sizes: 14 + e + 1 along the game's x, 19 + e + 1 along its y, with
  *     e = ((((2^24 - rank_inv) >> 3) * held) >> 3) >> 16, held = shot-held frames (0..8). Strict "<".
  *
@@ -39,9 +40,12 @@ struct xtc_state {
 	struct xtc_player pl[2];
 	u32 grazes;    /* total, for debugging */
 	u32 points;    /* total score added by XTC (runtime check: points == 10 * grazes) */
+	u16 power[2];  /* last bomb power (bombs * 40 + fragments) per side */
+	u8 wipe[2];    /* frames until a bomb's wipe (0 = none pending) */
+	u16 bombs_seen; /* debug: bomb starts detected */
 };
 
-__attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u, 0u };
+__attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u, 0u, {0, 0}, {0, 0}, 0 };
 
 static inline s32 iabs(s32 v) { return v < 0 ? -v : v; }
 
@@ -120,6 +124,8 @@ void xtc_frame(void)
 			p->quarters = 0;
 			p->left = 0;
 			p->held = 0;
+			xtc.power[s] = 0;
+			xtc.wipe[s] = 0;
 			continue;
 		}
 #ifdef BL_TEST_ALL_WEAPONS
@@ -131,6 +137,18 @@ void xtc_frame(void)
 			p->held++;
 		if (p->left && --p->left == 0)
 			p->quarters = 0;
+		{
+			const u16 power = (u16)(EE_RAM(u8, rec + PS2_PLAYER_BOMBS) * 40 + EE_RAM(u8, rec + PS2_PLAYER_FRAGS));
+			if (power < xtc.power[s]) { /* a bomb started: BL wipes the counter 16 frames later */
+				xtc.wipe[s] = 16;
+				xtc.bombs_seen++;
+			}
+			xtc.power[s] = power;
+			if (xtc.wipe[s] && --xtc.wipe[s] == 0) {
+				p->quarters = 0;
+				p->left = 0;
+			}
+		}
 	}
 	s = xtc.side;
 	xtc.side ^= 1u;
