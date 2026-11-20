@@ -27,9 +27,11 @@ Phase 11 · **[PS2]** PS2 counterpart known · **[todo]** PS2 counterpart not ye
 ## 1b. Worklist: ship select (F1), shot tables (F5), bombs (F7)
 
 BL routines that touch the player shot table or the ship-select flag (Phase 11), with their arcade Ibara
-originals and Phase 12 PS2 candidates. Confirmed-by-other-evidence pairs: PS2 `0x0013B2F0` is the per-frame
+originals and Phase 12 PS2 candidates (candidates only). Known PS2 roles: `0x0013B2F0` is a per-frame
 shooting routine (reads held `0x10`), `0x0011A580` the projectile writer from Phase 9, `0x0012AC60` the
-shot-vs-bullet pass. The ship-select screen itself is BL-only code (`0C0B8210`, 1,618 instructions, plus
+shot-vs-bullet pass. **Caution:** BL `0C06D170` reads as a player start/continue setup (shot level
+`+0x25B/0x25C`, a 7-entry stock loop, current weapon `+0x26F`, input words, ship-select flag, rank), so its
+Phase 12 pairing with the per-frame shooter `0x0013B2F0` is probably wrong; verify each pair before porting. The ship-select screen itself is BL-only code (`0C0B8210`, 1,618 instructions, plus
 `0C070DC0`, `0C0703C0`, `0C0734D0`); the BL ship byte is side·8 + ship·4 + type (ship 0 straight, 1 spread).
 
 | BL | status | insns | arcade Ibara | PS2 candidate | structures |
