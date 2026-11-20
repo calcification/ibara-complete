@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 from pathlib import Path
+import re
 import struct
 import sys
 
@@ -141,6 +142,60 @@ def read_probe_elf(path):
     return probe
 
 
+def companion_layout(specifications, records, probe_size):
+    occupied_names = {record['name'].split(b';', 1)[0] for record in records}
+    occupied_names.add(disc.PROBE_FILENAME.split(b';', 1)[0])
+    end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR
+    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, probe_size)]
+    companions = []
+    for specification in specifications:
+        name, separator, path = specification.partition('=')
+        if (not separator or not path or
+                not re.fullmatch(r'[A-Za-z0-9_]{1,8}(?:\.[A-Za-z0-9_]{1,3})?', name)):
+            raise ValueError(f'Use --disc-file NAME.EXT=PATH with an ISO 8.3 filename: {specification!r}')
+        filename = name.upper().encode('ascii')
+        if filename in occupied_names:
+            raise ValueError(f'Disc filename is already in use: {name.upper()}')
+        occupied_names.add(filename)
+        source = Path(path)
+        if not source.is_file():
+            raise ValueError(f'Companion must be a regular file: {source}')
+        size = source.stat().st_size
+        sectors = max(1, (size + disc.SECTOR - 1) // disc.SECTOR)
+        if end_lba + sectors > disc.NEXT_ORIGINAL_FILE_LBA:
+            raise ValueError(f'Companion files exceed the reserved disc extent at {name.upper()}')
+        payload_records.append(disc.make_file_record(filename + b';1', end_lba, size))
+        companions.append((source, end_lba * disc.SECTOR, size))
+        end_lba += sectors
+    directory_entries = b''.join(payload_records)
+    if disc.ORIGINAL_ROOT_LEN + len(directory_entries) > disc.SECTOR:
+        raise ValueError('Added files exceed the available root directory space')
+    return directory_entries, companions, end_lba
+
+
+def write_companion(target, path, offset, size, chunk_size):
+    with path.open('rb') as source:
+        target.seek(offset)
+        remaining = size
+        while remaining:
+            length = min(remaining, chunk_size)
+            block = source.read(length)
+            if len(block) != length:
+                raise ValueError(f'Companion changed size during build: {path}')
+            target.write(block)
+            remaining -= length
+        if source.read(1):
+            raise ValueError(f'Companion changed size during build: {path}')
+        source.seek(0)
+        target.seek(offset)
+        remaining = size
+        while remaining:
+            length = min(remaining, chunk_size)
+            if target.read(length) != source.read(length):
+                raise ValueError(f'Output verification failed for companion: {path}')
+            remaining -= length
+
+
 def label_writes(source, files, text=DEFAULT_LABEL):
     from PIL import Image, ImageDraw, ImageFont
 
@@ -183,17 +238,17 @@ def label_writes(source, files, text=DEFAULT_LABEL):
     return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
 
 
-def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail'):
+def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=()):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
     probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
+    rows, companions, end_lba = companion_layout(disc_files, records, len(probe))
     original, files, boot = retail.load_input(source)
-    row = disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, len(probe))
-    end = disc.ORIGINAL_ROOT_LEN + len(row)
+    end = disc.ORIGINAL_ROOT_LEN + len(rows)
     pvd, root = bytearray(pvd), bytearray(root)
     pvd[166:174] = disc.pair32(end)
-    root[disc.ORIGINAL_ROOT_LEN:end] = row
+    root[disc.ORIGINAL_ROOT_LEN:end] = rows
     for record in records[:2]:
         offset = record['offset'] + 10
         root[offset:offset + 8] = disc.pair32(end)
@@ -210,11 +265,11 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         try:
             zeros = bytes(4 * 1024 * 1024)
             original_iso.seek(disc.NEW_FILE_LBA * disc.SECTOR)
-            remaining = (len(probe) + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
+            remaining = (end_lba - disc.NEW_FILE_LBA) * disc.SECTOR
             while remaining:
                 size = min(remaining, len(zeros))
                 if original_iso.read(size) != zeros[:size]:
-                    raise ValueError('The probe would overwrite occupied disc sectors')
+                    raise ValueError('The payload or a companion would overwrite occupied disc sectors')
                 remaining -= size
             original_iso.seek(0)
             while block := original_iso.read(len(zeros)):
@@ -226,6 +281,8 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
             for offset, contents in writes:
                 target.seek(offset)
                 target.write(contents)
+            for path, offset, size in companions:
+                write_companion(target, path, offset, size, len(zeros))
             for offset, contents in writes:
                 if disc.read_at(target, offset, len(contents)) != contents:
                     raise ValueError(f'Output verification failed at disc offset {offset:08X}')
@@ -244,12 +301,15 @@ def main():
     parser.add_argument('--output', type=Path, required=True, help='New test ISO path')
     parser.add_argument('--payload-elf', '--probe-elf', type=Path,
                         help='Use a custom EE executable in place of the timed probe')
+    parser.add_argument('--disc-file', action='append', default=[], metavar='NAME=PATH',
+                        help='Add a companion file to the disc root (repeatable, ISO 8.3 name)')
     parser.add_argument('--label', default=DEFAULT_LABEL, help='Short label for the sixth menu entry')
     parser.add_argument('--video-profile', choices=VIDEO_PROFILES, default='retail',
                         help='Video profile for the retail frontend')
     args = parser.parse_args()
     try:
-        crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label, video_profile=args.video_profile)
+        crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label,
+                            video_profile=args.video_profile, disc_files=args.disc_file)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(f'Created {args.output}')

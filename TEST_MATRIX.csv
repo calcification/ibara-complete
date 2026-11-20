@@ -28,6 +28,7 @@ H01,Retail injection on real PS2,HARDWARE,BLOCKED,tests/manual/H01_REAL_PS2.md,S
 M01,Sixth menu row launches and returns from homebrew ELF,PCSX2,PASS,tests/manual/M01_MENU_ELF_PROBE.md,See manual checklist,Disc probe executes and retail title reloads with all five original frontend choices intact
 M02,Interactive controller probe and return with a saved card,PCSX2,PASS,tests/manual/M02_INTERACTIVE_ELF_PROBE.md,See manual checklist,Controller input and deliberate return work repeatedly and the test save remains intact
 M03,Launcher round trip with built-in progressive video,PCSX2,PASS,tests/manual/M03_LAUNCHER_VIDEO.md,Build each progressive profile with the interactive probe,Payload executes and retail stays progressive after reloading
+M04,Standalone ELF reads companion files from the launcher disc,PCSX2,PASS,tests/manual/M04_COMPANION_FILES.md,Build the companion file probe and select FILE TEST,Payload verifies a 5000-byte pattern and opens an empty file
 S14,Synthetic EE memory allocation and cache smoke test,PCSX2,PASS,research/phase05/README.md,Build with PS2DEV and boot the smoke ELF,Tile and cache checks pass while the reserved buffers are live
 F01,Visible sixth BLACK LABEL option,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires new menu hook/descriptors/loader
 F02,Playable arcade-accurate Kuro on PS2,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires working Kuro port + assets and validation
