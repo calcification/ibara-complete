@@ -48,3 +48,17 @@ the bullet part of `ps2/hooks/spawnlog.c` (PS2, `0x01F40000`). Optional rank loc
 **Next:** (1) compare the stage-1 boss (type 5 parts): HP at equal rank and its attack sequence; (2) for the
 mid-stage shooters, read BL vs arcade/PS2 code for fire-rate formulas (Phase 11 changed set ∩ types active there)
 and port the formula changes as BLACK LABEL build patches; re-run both loggers until the timelines match.
+
+## Enemy HP: ported (K11)
+
+BL `0C0A9AE0` (pair of arcade `0C0A1530`, PS2 `0x00126C10`): **HP = base + base × stage / 16**, stage = BL's stage
+byte (2 at stage 1), no rank term. PS2 Arcade uses `base + base × ((2^24 − rank) >> 16) >> 7` (≈ 2 × base at
+rank 0x800000, which is why PS2 parts had about twice BL's HP). PS2 Arrange already has the stage form but reads a
+stage *id* (`$gp-28248`: 1 at stage 1, 3 at stage 2, 4 at stage 3); the scene counter `$gp-28244` (`0x00338E9C`)
+is 2, 3, 4 … at stages 1, 2, 3 = BL's byte. The BLACK LABEL build sends Arcade down that path reading the counter.
+
+Result (`stage1_bl_vs_ps2_hpfix.txt`, `stage1_bullets_rank800000_hpfix.txt`, both at rank 0x800000): every type's
+HP distribution now equals BL's; enemy bullets in BL's stage-1 span 1,119 (BL 1,081; before 1,839). What is left:
+* **Boss sequence:** BL fires 316 bullets at 5,500–6,500 (types 0, 4, 2) and spawns 18 type-55 parts; patched PS2
+  fires 98 there and 238 at 6,500–8,000, with 6 type-55 parts.
+* **Mid-stage:** PS2 still fires ~1.5× BL's type-0 bullets at 1,000–2,000 and 2× at 2,500–3,000.

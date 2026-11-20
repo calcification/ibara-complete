@@ -74,7 +74,7 @@ branch on the ship byte; implement the BL-only select screen with the game's own
 | G3 | Start menu side select (1P/2P) | [spec] | [todo] |
 | G4 | Music = Ibara's list minus "Show Time" (seq 15/16) | [spec] | [PS2] PS2 soundtrack already on disc |
 | G5 | Bosses | run Ibara's boss code with Ibara's constants (checked constant by constant in ibara360 notes) [spec] | [PS2] reuse PS2 Arcade bosses; verify timing |
-| G6 | Stage content (regular enemies, scripts) | ~288 changed routines touching enemy parts, ~17k-instruction delta [delta]; stage 1 boss arena at scroll 2449.25 [spec] | [todo] the bulk of the port |
+| G6 | Stage content (regular enemies, scripts) | ~288 changed routines touching enemy parts, ~17k-instruction delta [delta]; stage 1 boss arena at scroll 2449.25 [spec] | Stage 1 placement equals PS2 Arcade (Phase 14); **enemy HP formula ported (K11)**; boss sequence and mid-stage fire rates [todo] |
 | G7 | Enemy bullet pool | 256 × 0x54 at `0C297B40`; BL reaches the 256 cap at stage 1 boss [spec] | [PS2] pool `0x004682EC`, stride 0x54 (Phase 9) |
 
 ## 3. Presentation / assets

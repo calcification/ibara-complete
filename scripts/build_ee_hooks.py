@@ -102,7 +102,13 @@ HOOKS = {
         # BL medal and rose rank rules = Arrange's (MAME Phase 13): medal harder by level x 0x20000
         # (0x0012F7FC bnez -> b), rose easier by table[level] x 1024 (0x0012F6C4 bnez -> b). Rank branches only;
         # both rejoin the Arcade code, so scoring is unchanged.
-        + [(0x0012F7FC, 0x1440000B, 0x1000000B), (0x0012F6C4, 0x1440000A, 0x1000000A)],
+        + [(0x0012F7FC, 0x1440000B, 0x1000000B), (0x0012F6C4, 0x1440000A, 0x1000000A)]
+        # BL enemy HP (G6, BL 0C0A9AE0 vs arcade 0C0A1530 / PS2 0x00126C10): BL scales a new part's HP by the
+        # stage, not by rank: hp = base + base * stage / 16, stage = BL's stage byte (2..7 for stages 1..6).
+        # PS2 Arrange already computes that form from $gp-28248 (a stage *id*); the PS2 scene counter
+        # $gp-28244 (0x00338E9C) is 1 at the opening, 2 at stage 1, 3 at stage 2 ... = BL's byte (savestates).
+        # So: Arcade takes the Arrange formula (0x00126C4C beqz -> nop), reading the counter (0x00126C54).
+        + [(0x00126C4C, 0x1060000C, 0x00000000), (0x00126C54, 0x938391A8, 0x938391AC)],
     },
     "bl_xtc": {
         "test_id": "K01",
