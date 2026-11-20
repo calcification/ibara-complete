@@ -2,7 +2,6 @@
 """Test Phase 3 boot routing using a disc made entirely from homebrew data."""
 
 import hashlib
-import importlib.util
 import struct
 import sys
 import tempfile
@@ -16,11 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'research/phase04'))
 import build_menu_probe as menu
 
-spec = importlib.util.spec_from_file_location(
-    'bootstrap', ROOT / 'research/phase03/ibara_complete_bootstrap.py'
-)
-bootstrap = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(bootstrap)
+bootstrap = menu.disc
 
 
 class CompanionFilesTests(unittest.TestCase):
@@ -188,6 +183,49 @@ class BootstrapTests(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 bootstrap.inject(self.source, self.output, 'probe')
         self.assertEqual(self.output.read_bytes(), marker)
+
+    def test_launcher_rejects_malformed_payload_before_creating_output(self):
+        payload = self.source.with_suffix('.elf')
+        for field, width, value, error in [
+            (40, '<H', 0, 'Invalid MIPS executable header'),
+            (52 + 16, '<I', 4096, 'load segment exceeds'),
+            (52 + 16, '<I', 0, 'entry point must be inside'),
+        ]:
+            with self.subTest(field=field, value=value):
+                probe = bytearray(bootstrap.build_probe_elf())
+                struct.pack_into(width, probe, field, value)
+                payload.write_bytes(probe)
+                with self.assertRaisesRegex(ValueError, error):
+                    menu.build(self.source, self.output, payload)
+                self.assertFalse(self.output.exists())
+
+    def test_launcher_rejects_oversized_companion_before_creating_output(self):
+        companion = self.source.with_suffix('.dat')
+        free_sectors = bootstrap.NEXT_ORIGINAL_FILE_LBA - bootstrap.NEW_FILE_LBA
+        with companion.open('wb') as file:
+            file.truncate(free_sectors * bootstrap.SECTOR)
+        with self.assertRaisesRegex(ValueError, 'reserved disc extent'):
+            menu.build(self.source, self.output, disc_files=[f'DATA.DAT={companion}'])
+        self.assertFalse(self.output.exists())
+
+    def test_launcher_cleans_up_interrupted_build(self):
+        companion = self.source.with_suffix('.dat')
+        companion.write_bytes(b'homebrew companion')
+        executable = bootstrap.build_probe_elf()
+        boot_lba = bootstrap.EXPECTED_CRC['SLPM_663.01;1'][0]
+
+        def interrupt(target, *args):
+            self.assertGreater(target.tell(), 0)
+            raise KeyboardInterrupt
+
+        with (patch.object(menu.retail, 'load_input', return_value=(executable, [], {'lba': boot_lba})),
+              patch.object(menu, 'label_writes', return_value=[]),
+              patch.object(menu, 'menu_elf', return_value=executable),
+              patch.object(menu, 'write_companion', side_effect=interrupt)):
+            with self.assertRaises(KeyboardInterrupt):
+                menu.build(self.source, self.output, disc_files=[f'DATA.DAT={companion}'])
+        self.assertFalse(self.output.exists())
+        self.assertEqual(bootstrap.digest_file(self.source), bootstrap.EXPECTED_SHA256)
 
 
 if __name__ == '__main__':

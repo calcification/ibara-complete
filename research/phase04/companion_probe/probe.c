@@ -1,5 +1,6 @@
 #include <debug.h>
 #include <fcntl.h>
+#include <graph.h>
 #include <iopcontrol.h>
 #include <kernel.h>
 #include <sifrpc.h>
@@ -36,7 +37,16 @@ int main(void)
     scr_printf("PROBE.DAT: %s (%d bytes)\n", ok ? "PASS" : "FAIL", pattern);
     int empty = read_file("cdrom0:\\EMPTY;1");
     scr_printf("EMPTY: %s (%d bytes)\n", empty == 0 ? "PASS" : "FAIL", empty);
-    scr_printf("\n%s\n", ok && empty == 0 ? "BOTH COMPANIONS VERIFIED" : "COMPANION CHECK FAILED");
+    if (ok && empty == 0) {
+        scr_printf("\nBOTH COMPANIONS VERIFIED\n");
+        scr_printf("Returning to Ibara in six seconds.\n");
+        for (int field = 0; field < 360; ++field)
+            graph_wait_vsync();
+        LoadExecPS2("cdrom0:\\SLPM_663.01;1", 0, NULL);
+        scr_printf("Retail reload failed.\n");
+    } else {
+        scr_printf("\nCOMPANION CHECK FAILED\n");
+    }
     SleepThread();
     return 0;
 }

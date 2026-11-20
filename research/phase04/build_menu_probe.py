@@ -123,14 +123,15 @@ def read_probe_elf(path):
     if len(probe) < 52 or probe[:7] != b'\x7fELF\x01\x01\x01':
         raise ValueError('The probe must be a little-endian ELF32 executable')
     kind, machine, version, entry, table = struct.unpack_from('<HHIII', probe, 16)
-    header_size, count = struct.unpack_from('<HH', probe, 42)
-    if ((kind, machine, version) != (2, 8, 1) or header_size != 32 or count == 0 or
-            table < 52 or table + count * header_size > len(probe) or entry & 3):
+    elf_header_size, segment_header_size, count = struct.unpack_from('<HHH', probe, 40)
+    if ((kind, machine, version) != (2, 8, 1) or elf_header_size != 52 or
+            segment_header_size != 32 or count == 0 or table < elf_header_size or
+            table + count * segment_header_size > len(probe) or entry & 3):
         raise ValueError('Invalid MIPS executable header or program headers')
     executable_entry = False
     for index in range(count):
         segment, offset, address, _, size, memory, flags, _ = struct.unpack_from(
-            '<8I', probe, table + index * header_size,
+            '<8I', probe, table + index * segment_header_size,
         )
         if segment != 1:
             continue
@@ -288,9 +289,11 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
                     raise ValueError(f'Output verification failed at disc offset {offset:08X}')
             if disc.digest_file(source) != source_sha:
                 raise ValueError('Original ISO changed during build')
-        except Exception:
-            target.close()
-            output.unlink(missing_ok=True)
+        except BaseException:
+            try:
+                target.close()
+            finally:
+                output.unlink(missing_ok=True)
             raise
     return video.xor_elf_crc(executable), hashlib.sha256(executable).hexdigest()
 
