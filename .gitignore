@@ -41,3 +41,7 @@ build/
 # Host-generated native test executable (Phase 5).
 research/phase05/tests/test_memory
 research/phase05/tests/test_memory.exe
+# PCSX2 savestates and RAM dumps hold game memory: keep local.
+*.p2s
+eeMemory.bin
+*.p2s.backup

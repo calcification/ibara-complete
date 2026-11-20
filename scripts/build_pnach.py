@@ -148,7 +148,7 @@ def write_files(out: Path):
     for p in profiles.glob('*/'+NAME): check_pnach(p.read_text(encoding='utf-8'))
 
 
-def check_pnach(src: str):
+def check_pnach(src: str, min_addr: int = 0x100000):
     if not src.startswith('gametitle=Ibara'):
         raise AssertionError('Bad PNACH header')
     groups=[];seen=set();cur='';entries=[]
@@ -162,7 +162,7 @@ def check_pnach(src: str):
         if not m or not cur: raise AssertionError('Invalid patch syntax/group: '+line)
         p=int(m[1]);addr=int(m[2],16);val=int(m[3],16)
         if addr & 3: raise AssertionError('Unaligned write')
-        if not (0x100000<=addr<0x02000000): raise AssertionError('Out-of-bounds EE address')
+        if not (min_addr<=addr<0x02000000): raise AssertionError('Out-of-bounds EE address')
         if (cur,addr) in seen: raise AssertionError('Duplicate group-address pair')
         seen.add((cur,addr));entries.append((cur,p,addr,val))
     if src.find('patch=')!=-1 and not entries: raise AssertionError('Found patch text but no valid commands')

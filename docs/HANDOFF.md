@@ -28,6 +28,8 @@
 
 **Phase 10:** distinct 8-entry item *update* table at `0x0020BF00`, type 7 updater `0x00132BC0`, overlap/merge helper `0x0012EA10`, item slots `0x00453A40`, 256 × 0x58. Compatible overlaps increment surviving level by 1 and ADD score factors at `+0x54` (no post-merge 300 cap). At most one success per call. `research/phase10/`.
 
+**Phase 11 (Black Label delta):** structural SH-3 matcher over a local ibara360 checkout: BL changes 326 and adds 138 arcade routines (~27.8k instructions; ~17k enemy/stage behaviour, ~7k player systems). Plan: native delta port on the PS2 engine via injected EE C hooks (`ps2/`, `scripts/build_ee_hooks.py`). Start with C00, then the savestate field discovery, then K01 XTC. See `docs/BLACK_LABEL_PORT_PLAN.md`.
+
 ### Immediate responsibilities
 
 1. **Do not publish a functional Kuro claim.** First run the small **PCSX2 P00–P06 PNACH tests** in [PCSX2_FIRST](PCSX2_FIRST.md), then only the relevant optional ISO-specific B01–B04 tests. Record CRC, active profile, EE memory evidence and PCSX2 version.

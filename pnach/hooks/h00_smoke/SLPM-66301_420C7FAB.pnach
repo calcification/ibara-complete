@@ -1,0 +1,60 @@
+gametitle=Ibara (Japan) (SLPM-66301)
+// Ibara Complete RESEARCH ONLY | original ELF XOR CRC 420C7FAB
+// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
+// Uses the clean retail executable, NOT a pre-patched 240p ELF.
+// WARNING: Enable ONE test at a time; video tests and rank tests conflict.
+// All tests are unverified in PCSX2 (offline source checks only).
+// Injected-code profile: enable alone, cold boot, temporary memory card.
+
+[Ibara Complete\C00 HOOK / code-injection smoke test (frame counter at 000C0000)]
+description=Redirects the per-frame collision call through injected code that still calls the retail routine, then counts frames. Watch 000C0008 increase in the debugger. The game must play exactly as P00. RUNTIME UNTESTED.
+author=Ibara Complete Research
+patch=0,EE,000C0000,word,58434249
+patch=0,EE,000C0004,word,00000001
+patch=0,EE,000C0008,word,00000000
+patch=0,EE,000C000C,word,00000000
+patch=2,EE,000C0010,word,27BDFF40
+patch=2,EE,000C0014,word,7FBF0000
+patch=2,EE,000C0018,word,7FB00010
+patch=2,EE,000C001C,word,7FB10020
+patch=2,EE,000C0020,word,7FB20030
+patch=2,EE,000C0024,word,7FB30040
+patch=2,EE,000C0028,word,7FB40050
+patch=2,EE,000C002C,word,7FB50060
+patch=2,EE,000C0030,word,7FB60070
+patch=2,EE,000C0034,word,7FB70080
+patch=2,EE,000C0038,word,7FBE0090
+patch=2,EE,000C003C,word,0C04AB18
+patch=2,EE,000C0040,word,7FBC00A0
+patch=2,EE,000C0044,word,AFA200B0
+patch=2,EE,000C0048,word,0C030024
+patch=2,EE,000C004C,word,AFA300B4
+patch=2,EE,000C0050,word,8FA200B0
+patch=2,EE,000C0054,word,8FA300B4
+patch=2,EE,000C0058,word,7BBC00A0
+patch=2,EE,000C005C,word,7BBE0090
+patch=2,EE,000C0060,word,7BB70080
+patch=2,EE,000C0064,word,7BB60070
+patch=2,EE,000C0068,word,7BB50060
+patch=2,EE,000C006C,word,7BB40050
+patch=2,EE,000C0070,word,7BB30040
+patch=2,EE,000C0074,word,7BB20030
+patch=2,EE,000C0078,word,7BB10020
+patch=2,EE,000C007C,word,7BB00010
+patch=2,EE,000C0080,word,7BBF0000
+patch=2,EE,000C0084,word,03E00008
+patch=2,EE,000C0088,word,27BD00C0
+patch=2,EE,000C008C,word,00000000
+patch=2,EE,000C0090,word,3C02000C
+patch=2,EE,000C0094,word,24420000
+patch=2,EE,000C0098,word,3C040044
+patch=2,EE,000C009C,word,8C430008
+patch=2,EE,000C00A0,word,3484C600
+patch=2,EE,000C00A4,word,8C840000
+patch=2,EE,000C00A8,word,24630001
+patch=2,EE,000C00AC,word,AC430008
+patch=2,EE,000C00B0,word,03E00008
+patch=2,EE,000C00B4,word,AC44000C
+patch=2,EE,000C00B8,word,00000000
+patch=2,EE,000C00BC,word,00000000
+patch=2,EE,0012E62C,word,0C030004

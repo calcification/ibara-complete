@@ -1,0 +1,243 @@
+#!/usr/bin/env python3
+"""Build injected EE hook code for Ibara (SLPM-66301, CRC 420C7FAB) into PCSX2 PNACH profiles.
+
+Pipeline: C/asm in ps2/hooks -> mips-linux-gnu-gcc (-march=r5900, o32, soft-float, no PIC, -G0)
+-> linked at the code cave -> PNACH words. Hook sites are retail `jal` words replaced by `jal stub`;
+stubs (ps2/hooks/stub.S) call the retail routine first, then our C, preserving 128-bit registers.
+
+Safety rules (fail closed):
+* every hook site's original word is listed and checked against the clean ELF when --elf is given;
+* a hook whose `requires` names a RUNTIME_PENDING fact is never emitted as a PNACH group (build-only);
+* the image must fit inside the cave; --check-ram verifies the cave is zero in a PCSX2 eeMemory dump.
+
+    python3 scripts/build_ee_hooks.py                 # build all, write pnach/hooks/<hook>/
+    python3 scripts/build_ee_hooks.py --elf SLPM_663.01   # also verify retail preimages
+    python3 scripts/build_ee_hooks.py --check-ram eeMemory.bin
+"""
+from __future__ import annotations
+
+import argparse
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import build_pnach  # noqa: E402
+
+PS2 = ROOT / "ps2"
+CROSS = "mips-linux-gnu-"
+CFLAGS = ["-march=r5900", "-EL", "-mabi=32", "-msoft-float", "-mno-abicalls", "-fno-pic", "-G0", "-O2",
+          "-ffreestanding", "-fno-builtin", "-nostdlib", "-fno-common", "-Wall", "-Werror",
+          "-I", str(PS2 / "include")]
+CAVE_BASE = 0x000C0000
+CAVE_END = 0x00100000
+
+# Facts a hook may depend on. Only "verified" facts allow a PNACH group to be emitted.
+FACTS = {
+    "site_frame_collide": "verified",   # 0x0012E62C: jal 0x0012AC60, phase09 static
+    "player_score": "verified",         # 0x0044C600, phase08 static
+    "rank_inv": "verified",             # 0x00338EB4, phase07 static
+    "cave_free": "pending",             # needs --check-ram on title/Arcade/Arrange savestates
+    "bullet_layout": "pending",         # +0 flags / +0x28 x / +0x2C y by analogy with arcade
+    "player_xy": "pending",             # unknown offsets
+    "camera_y": "pending",
+    "pad_held": "pending",
+}
+
+HOOKS = {
+    "h00_smoke": {
+        "test_id": "C00",
+        "title": "HOOK / code-injection smoke test (frame counter at 000C0000)",
+        "description": ("Redirects the per-frame collision call through injected code that still calls the "
+                        "retail routine, then counts frames. Watch 000C0008 increase in the debugger. "
+                        "The game must play exactly as P00. RUNTIME UNTESTED."),
+        "sources": ["h00_smoke.c"],
+        "stubs": [("h00_entry", 0x0012AC60, "h00_frame")],
+        "sites": [(0x0012E62C, 0x0C04AB18, "h00_entry")],
+        # cave_free is what this test establishes, so it is the one pending fact allowed here.
+        "requires": ["site_frame_collide", "player_score"],
+        "establishes": ["cave_free"],
+    },
+    "bl_xtc": {
+        "test_id": "K01",
+        "title": "BLACK LABEL / XTC graze counter (+10 per graze)",
+        "description": "Kuro BL graze scoring on the PS2 engine. BUILD-ONLY until bullet/player layouts are confirmed.",
+        "sources": ["xtc.c"],
+        "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame")],
+        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
+        "requires": ["site_frame_collide", "player_score", "rank_inv", "cave_free", "bullet_layout",
+                     "player_xy", "camera_y", "pad_held"],
+        "establishes": [],
+    },
+}
+
+
+def jal(target: int) -> int:
+    if target & 3:
+        raise AssertionError(f"unaligned jal target {target:08X}")
+    return 0x0C000000 | ((target >> 2) & 0x03FFFFFF)
+
+
+def have_toolchain() -> bool:
+    return shutil.which(CROSS + "gcc") is not None and shutil.which(CROSS + "ld") is not None
+
+
+def run(cmd: list[str]) -> str:
+    p = subprocess.run(cmd, capture_output=True, text=True)
+    if p.returncode:
+        raise RuntimeError(f"{' '.join(cmd)}\n{p.stdout}{p.stderr}")
+    return p.stdout
+
+
+def read_elf_sections(path: Path) -> tuple[list[tuple[str, int, bytes, bool]], dict[str, int]]:
+    """Return ([(name, addr, data, is_mutable)], symbols) from a little-endian ELF32."""
+    data = path.read_bytes()
+    if data[:4] != b"\x7fELF" or data[4] != 1 or data[5] != 1:
+        raise AssertionError("expected ELF32 little-endian")
+    e_shoff, = struct.unpack_from("<I", data, 0x20)
+    e_shentsize, e_shnum, e_shstrndx = struct.unpack_from("<HHH", data, 0x2E)
+    shdrs = [struct.unpack_from("<IIIIIIIIII", data, e_shoff + i * e_shentsize) for i in range(e_shnum)]
+    shstr = shdrs[e_shstrndx]
+
+    def name(off, tab):
+        end = data.index(b"\0", tab[4] + off)
+        return data[tab[4] + off:end].decode()
+
+    secs, syms = [], {}
+    strtab = None
+    for sh in shdrs:
+        n = name(sh[0], shstr)
+        if n == ".strtab":
+            strtab = sh
+    for sh in shdrs:
+        n = name(sh[0], shstr)
+        sh_type, flags, addr, off, size = sh[1], sh[2], sh[3], sh[4], sh[5]
+        if flags & 0x2 and size:  # SHF_ALLOC
+            mutable = bool(flags & 0x1)  # SHF_WRITE
+            blob = b"\0" * size if sh_type == 8 else data[off:off + size]  # SHT_NOBITS
+            secs.append((n, addr, blob, mutable))
+        if sh_type == 2 and strtab:  # SHT_SYMTAB
+            for i in range(size // 16):
+                st_name, st_value, _, _, _, _ = struct.unpack_from("<IIIBBH", data, off + i * 16)
+                if st_name:
+                    syms[name(st_name, strtab)] = st_value
+    return secs, syms
+
+
+def build_hook(key: str, work: Path) -> dict:
+    h = HOOKS[key]
+    objs = []
+    stub_src = work / f"{key}_stubs.S"
+    lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
+    defsyms = []
+    for entry, original, chook in h["stubs"]:
+        sym = f"retail_{original:08X}"
+        lines.append(f"HOOK_AFTER {entry}, {sym}, {chook}")
+        defsyms += ["--defsym", f"{sym}=0x{original:08X}"]
+    stub_src.write_text("\n".join(lines) + "\n")
+    for src in [stub_src] + [PS2 / "hooks" / s for s in h["sources"]]:
+        obj = work / (src.stem + ".o")
+        run([CROSS + "gcc", *CFLAGS, "-c", str(src), "-o", str(obj)])
+        objs.append(str(obj))
+    elf = work / f"{key}.elf"
+    run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{CAVE_BASE:08X}",
+         *defsyms, "-o", str(elf), *objs])
+    secs, syms = read_elf_sections(elf)
+    end = syms["__cave_end"]
+    if not (CAVE_BASE <= syms["__cave_start"] and end <= CAVE_END):
+        raise AssertionError(f"{key}: image {syms['__cave_start']:08X}-{end:08X} outside cave")
+    words = []  # (place, addr, value)
+    for name, addr, blob, mutable in secs:
+        blob = blob + b"\0" * (-len(blob) % 4)
+        for i in range(0, len(blob), 4):
+            words.append((0 if mutable else 2, addr + i, struct.unpack_from("<I", blob, i)[0]))
+    sites = []
+    for site, original_word, entry in h["sites"]:
+        sites.append((site, original_word, jal(syms[entry])))
+    listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
+    return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - CAVE_BASE, "listing": listing}
+
+
+def pending(h: dict) -> list[str]:
+    return [r for r in h["requires"] if FACTS[r] != "verified"]
+
+
+def pnach_group(h: dict, built: dict) -> str:
+    out = [f'[Ibara Complete\\{h["test_id"]} {h["title"]}]', f'description={h["description"]}',
+           "author=Ibara Complete Research"]
+    for place, addr, val in built["words"]:
+        out.append(f"patch={place},EE,{addr:08X},word,{val:08X}")
+    for site, _orig, new in built["sites"]:
+        out.append(f"patch=2,EE,{site:08X},word,{new:08X}")
+    return "\n".join(out) + "\n"
+
+
+def verify_sites(elf: bytes, built: dict):
+    for site, orig, _new in built["sites"]:
+        off = site - build_pnach.ELF_BASE + build_pnach.ELF_FILE_OFFSET
+        found, = struct.unpack_from("<I", elf, off)
+        if found != orig:
+            raise AssertionError(f"preimage mismatch @ {site:08X}: found {found:08X}, expected {orig:08X}")
+
+
+def check_ram(path: Path, built: dict):
+    ram = path.read_bytes()
+    if len(ram) != 32 * 1024 * 1024:
+        raise AssertionError("eeMemory dump must be exactly 32 MiB")
+    lo, hi = CAVE_BASE, CAVE_BASE + built["size"]
+    nz = [a for a in range(lo, hi, 4) if struct.unpack_from("<I", ram, a)[0]]
+    ours = {a for _p, a, _v in built["words"]}
+    foreign = [a for a in nz if a not in ours]
+    if foreign:
+        raise AssertionError(f"cave not free: {len(foreign)} non-zero words not written by us, first {foreign[0]:08X}")
+    return len(nz)
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--elf", type=Path, help="clean SLPM_663.01 or ISO, to verify hook-site preimages")
+    ap.add_argument("--check-ram", type=Path, action="append", default=[], help="PCSX2 eeMemory.bin dump(s)")
+    ap.add_argument("--output", type=Path, default=ROOT / "pnach" / "hooks")
+    ap.add_argument("--listing-dir", type=Path, default=ROOT / "build" / "ee_hooks")
+    args = ap.parse_args(argv)
+    if not have_toolchain():
+        print("SKIP: mips-linux-gnu-gcc not installed (apt-get install gcc-mips-linux-gnu)")
+        return 0
+    elf = build_pnach.load_elf(args.elf) if args.elf else None
+    args.listing_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory() as tmp:
+        for key, h in HOOKS.items():
+            built = build_hook(key, Path(tmp))
+            (args.listing_dir / f"{key}.lst").write_text(built["listing"])
+            if elf:
+                verify_sites(elf, built)
+            for dump in args.check_ram:
+                check_ram(dump, built)
+            miss = pending(h)
+            folder = args.output / key
+            target = folder / build_pnach.NAME
+            if miss:
+                if target.exists():
+                    target.unlink()
+                print(f"{h['test_id']} {key}: built {built['size']} bytes; NOT emitted, pending facts: {', '.join(miss)}")
+                continue
+            folder.mkdir(parents=True, exist_ok=True)
+            txt = build_pnach.HEADER + "// Injected-code profile: enable alone, cold boot, temporary memory card.\n\n" \
+                + pnach_group(h, built)
+            build_pnach.check_pnach(txt, min_addr=CAVE_BASE)
+            target.write_text(txt, encoding="utf-8")
+            print(f"{h['test_id']} {key}: {built['size']} bytes at {CAVE_BASE:08X}, "
+                  f"{len(built['words'])} cave words, {len(built['sites'])} hook site(s) -> {target.relative_to(ROOT)}")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (AssertionError, ValueError, RuntimeError) as err:
+        print("FAIL:", err, file=sys.stderr)
+        sys.exit(1)

@@ -3,6 +3,11 @@
 > **Fastest path (laptop + desktop): one clean Ibara ISO/CHD, one tiny `.pnach`. No repeated 3.66 GB image builds.**
 > This is pre-alpha research, **NOT a playable Kuro / Black Label port.** No runtime patch in this new PNACH suite has yet been validated in PCSX2.
 
+> **Black Label port (new, Nov 2026):** the plan, the measured arcade→BL delta and the first EE code-injection test are in
+> [`docs/BLACK_LABEL_PORT_PLAN.md`](docs/BLACK_LABEL_PORT_PLAN.md), [`docs/BLACK_LABEL_FEATURES.md`](docs/BLACK_LABEL_FEATURES.md),
+> [`research/phase11/`](research/phase11/README.md) and [`tests/manual/C00_CODE_INJECTION.md`](tests/manual/C00_CODE_INJECTION.md).
+> Still **no BL behaviour has run** in PCSX2.
+
 ## Start here: 60-second PCSX2 setup
 
 1. Get **[`pnach/SLPM-66301_420C7FAB.pnach`](pnach/SLPM-66301_420C7FAB.pnach)** (~few KB). The exact filename is required: `420C7FAB` is the **original retail PCSX2 CRC**.

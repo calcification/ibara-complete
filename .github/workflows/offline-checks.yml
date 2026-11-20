@@ -16,6 +16,10 @@ jobs:
         run: python tests/test_pnach.py
       - name: Regenerate tiny patch profiles
         run: python scripts/build_pnach.py
+      - name: Install EE cross toolchain (r5900 hook builds)
+        run: sudo apt-get update && sudo apt-get install -y gcc-mips-linux-gnu
+      - name: Injected EE hook builds and PNACH profiles
+        run: python tests/test_ee_hooks.py
       - name: Phase 5 standalone memory and trace tests
         run: python scripts/run_audits.py --selftest --out validation-output
       - name: Validate test manifest
