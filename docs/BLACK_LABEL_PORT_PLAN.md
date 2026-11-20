@@ -37,7 +37,7 @@ reference idea: BL behaviour itself is checked against MAME/ibara360 runs of the
 | M0 | Prove injection + collect facts | PCSX2, BIOS, clean ISO | C00 passes; cave free in title/Arcade/Arrange savestates; P00 baseline |
 | M1 | PS2 fields for player x/y, camera, pad, bullet layout | savestates (protocol in `tests/manual/C00_CODE_INJECTION.md`) | `scripts/p2s_tools.py find` hits confirmed in debugger |
 | M2 | **K01 XTC** live in Arcade/Arrange | M0+M1 | grazing adds 10/bullet; counter resets after 128 frames |
-| M3 | Arcade ↔ PS2 routine map (Phase 12 cross-ISA matcher) | retail ELF | ≥ 80% of Phase 11 changed set mapped, spot-checked in debugger |
+| M3 | Arcade ↔ PS2 routine map (`research/phase12`, built) | retail ELF | ≥ 80% of Phase 11 changed set mapped, spot-checked in debugger |
 | M4 | BL mode flag: Arrange path + BL player systems (F1–F3, F5, F7, F8) | M3 | weapon stock/change and ship select play correctly |
 | M5 | Stage content delta, stage 1 first | M3, BL reference runs | stage 1 enemy waves match BL video/trace frame-for-frame |
 | M6 | Third menu entry, BL art from user's ROM, attract/title | M4, Phase 4 | selectable from the retail menu; Arcade/Arrange unchanged |
@@ -48,6 +48,7 @@ reference idea: BL behaviour itself is checked against MAME/ibara360 runs of the
 | Path | Purpose |
 |---|---|
 | `research/phase11/` | arcade Ibara ↔ BL routine matcher, delta catalog, subsystem tags, anchor validation |
+| `research/phase12/` | arcade SH-3 ↔ PS2 EE routine matcher (M3), offline-tested, awaiting the retail ELF |
 | `ps2/` | EE hook sources (`hooks/*.c`, register-safe `stub.S`), PS2 address header with evidence levels, linker script |
 | `scripts/build_ee_hooks.py` | compile + link at the cave + emit PNACH; refuses hooks that depend on unconfirmed facts |
 | `scripts/p2s_tools.py` | read PCSX2 savestates (zstd ok), find fields by correlation, check the code cave |
