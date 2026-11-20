@@ -12,7 +12,8 @@
  *     e = ((((2^24 - rank_inv) >> 3) * held) >> 3) >> 16, held = shot-held frames (0..8). Strict "<".
  *
  * PS2 adaptation notes: the PS2 player record (stride 0x290) has no BL XTC fields, so state lives here in
- * the cave. Shot-held frames are counted from the pad word. "Pods out" has no located PS2 equivalent yet;
+ * the cave. Shot-held frames are counted from the record's held-button word (+0x24C & 0x10). Player and
+ * bullet positions share one space on PS2 (no camera term). "Pods out" has no located PS2 equivalent yet;
  * XTC_REQUIRE_PODS stays 0 (documented deviation) until it is found.
  */
 #include "ibara_ps2.h"
@@ -20,7 +21,6 @@
 #ifndef XTC_REQUIRE_PODS
 #define XTC_REQUIRE_PODS 0
 #endif
-#define XTC_PAD_SHOT 0x0040u /* RUNTIME_PENDING: the game's own bit for the shot button (phase06 mask 0x40) */
 #define XTC_MAX_QUARTERS 39996
 #define XTC_TIMER 128
 #define XTC_MIN_HELD 5
@@ -51,7 +51,6 @@ static int xtc_test_player(unsigned side)
 	const u32 rank_inv = EE_RAM(u32, PS2_RANK_INV) & 0x00FFFFFFu;
 	const s32 px = EE_RAM(s32, rec + PS2_PLAYER_X) >> 16;
 	const s32 py = EE_RAM(s32, rec + PS2_PLAYER_Y) >> 16;
-	const s32 cam = EE_RAM(s32, PS2_CAMERA_Y);
 	s32 e, hx, hy;
 	unsigned k;
 	int n = 0;
@@ -70,7 +69,7 @@ static int xtc_test_player(unsigned side)
 		if ((f & (BULLET_CAN_HIT | BULLET_SEGMENT)) != BULLET_CAN_HIT)
 			continue;
 		bx = EE_RAM(s32, b + PS2_BULLET_X) >> 16;
-		by = (EE_RAM(s32, b + PS2_BULLET_Y) - cam) >> 16;
+		by = EE_RAM(s32, b + PS2_BULLET_Y) >> 16;
 		if (iabs(bx - px) < hx && iabs(by - py) < hy)
 			n++;
 	}
@@ -95,12 +94,12 @@ static void xtc_add(unsigned side, int n)
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
 {
-	const u32 pad = EE_RAM(u32, PS2_PAD_HELD);
 	unsigned s;
 
 	for (s = 0; s < 2; s++) {
 		struct xtc_player *p = &xtc.pl[s];
-		const int down = s == 0 ? (pad & XTC_PAD_SHOT) != 0 : 0; /* TODO: 2P pad word */
+		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
+		const int down = (EE_RAM(u16, rec + PS2_PLAYER_HELD) & PS2_PAD_SHOT) != 0;
 		if (!down)
 			p->held = 0;
 		else if (p->held < XTC_MAX_HELD)

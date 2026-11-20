@@ -11,4 +11,7 @@ Treat this page as authoritative over older copied phase reports.
 7. **Baseline:** all fingerprinted reverse-engineering audits assume the **unmodified** Japanese ELF; the already patched progressive 240p build will intentionally fail them.
 8. **Unresolved:** numeric player-projectile types 0/1/2/9/10 have not been conclusively mapped to bomb, Hadou, trail, or regular shot. Avoid invented type labels.
 
+9. **Phase 9 enemy-bullet pool base:** `0x004682EC` is the **last** of 256 records; the loops at `0x0012A680`/`0x0012AC60` start there with counter 255 and step −0x54. The pool starts at **`0x00462F40`** (256 × 0x54). Bullet `+0x28/+0x2C` = x/y (16.16), `+0x00 & 0x10000000` = can hit the player, `& 0x01000000` = cancellable by shots (static, 2026-11-20).
+10. **Player record fields (static, 2026-11-20):** `+0x10/+0x14` x/y, `+0x24C` held buttons (`0x10` shot, `0x0F` stick), `+0x24E` newly pressed, `+0x27A` invincibility, `+0x280` score. See `ps2/include/ibara_ps2.h` for instruction evidence.
+
 Original correction log: [Phase 6–7 errata](PHASE6-7_ORIGINAL_ERRATA.md). When revising an interpretation, include an instruction address, raw opcode evidence, control-flow trace, and whether it is static/dynamic.

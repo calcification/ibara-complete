@@ -42,10 +42,9 @@ FACTS = {
     "player_score": "verified",         # 0x0044C600, phase08 static
     "rank_inv": "verified",             # 0x00338EB4, phase07 static
     "cave_free": "pending",             # needs --check-ram on title/Arcade/Arrange savestates
-    "bullet_layout": "pending",         # +0 flags / +0x28 x / +0x2C y by analogy with arcade
-    "player_xy": "pending",             # unknown offsets
-    "camera_y": "pending",
-    "pad_held": "pending",
+    "bullet_layout": "verified",        # 0x00462F40 x256, +0 0x10000000, +0x28/+0x2C: 0x0012A680 static
+    "player_xy": "verified",            # +0x10/+0x14, same space as bullets: 0x0012A680 static
+    "pad_held": "verified",             # +0x24C held, shot 0x10: 0x0012DA3C / 0x0013B2F0 static
 }
 
 HOOKS = {
@@ -70,7 +69,7 @@ HOOKS = {
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
         "requires": ["site_frame_collide", "player_score", "rank_inv", "cave_free", "bullet_layout",
-                     "player_xy", "camera_y", "pad_held"],
+                     "player_xy", "pad_held"],
         "establishes": [],
     },
 }

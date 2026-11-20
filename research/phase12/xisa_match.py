@@ -35,7 +35,7 @@ ARCADE_STRUCTS = [
 ]
 PS2_STRUCTS = [
     ("player", 0x0044C380, 2 * 0x290), ("rank", 0x00338EB4, 4), ("shots", 0x0044EA40, 2 * 0x2800),
-    ("bullets", 0x004682EC, 256 * 0x54),
+    ("bullets", 0x00462F40, 256 * 0x54),
 ]
 # Strides/sizes that differ only because the record layouts differ: normalise to a shared token.
 EQUIV = {0x280: "STRIDE_PLAYER", 0x290: "STRIDE_PLAYER", 0x2A0: "STRIDE_PLAYER"}
