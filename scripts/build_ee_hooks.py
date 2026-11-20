@@ -68,6 +68,20 @@ HOOKS = {
         "requires": ["site_frame_collide", "player_score"],
         "establishes": ["cave_free"],
     },
+    "bl_mode": {
+        "test_id": "K03",
+        "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
+        "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c"],
+        "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
+                  ("hud_entry", 0x0012C0E0, "xtc_hud")],
+        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x001CA7F0, 0x0C04DC38, "ret_entry"),
+                  (0x0012C394, 0x0C04B038, "hud_entry"), (0x0012C3BC, 0x0C04B038, "hud_entry")],
+        "requires": ["site_frame_collide", "player_score", "rank_inv", "cave_free", "bullet_layout",
+                     "player_xy", "pad_held"],
+        "establishes": [],
+        "bake_only": True,
+    },
     "bl_xtc": {
         "test_id": "K01",
         "title": "BLACK LABEL / XTC graze counter (+10 per graze)",
@@ -286,6 +300,9 @@ def main(argv=None) -> int:
             for dump in args.check_ram:
                 check_ram(dump, built)
             miss = pending(h)
+            if h.get("bake_only"):
+                print(f"{h['test_id']} {key}: built {built['size']} bytes (bake-only, no PNACH)")
+                continue
             folder = args.output / key
             target = folder / build_pnach.NAME
             if miss:

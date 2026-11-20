@@ -116,6 +116,17 @@ class BuildTests(unittest.TestCase):
         self.assertIn(expected, path.read_text(encoding="utf-8"),
                       "pnach/hooks is stale: run python3 scripts/build_ee_hooks.py")
 
+    def test_bl_mode_is_bake_only_and_hooks_verified_sites(self):
+        h = hooks.HOOKS["bl_mode"]
+        self.assertTrue(h.get("bake_only"))
+        self.assertFalse((ROOT / "pnach/hooks/bl_mode").exists(), "bl_mode must never be a PNACH (Exit reloads the disc)")
+        sites = {site: orig for site, orig, _e in h["sites"]}
+        self.assertEqual(sites[0x001CA7F0], hooks.jal(0x001370E0))   # Exit sound call
+        self.assertEqual(sites[0x0012C394], hooks.jal(0x0012C0E0))   # per-frame score print (Arcade)
+        self.assertEqual(sites[0x0012C3BC], hooks.jal(0x0012C0E0))   # per-frame score print (Arrange)
+        b = hooks.build_hook("bl_mode", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
+        self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
+
     def test_bake_keeps_program_headers_after_elf_header(self):
         # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000
         body = bytearray(0x30000)

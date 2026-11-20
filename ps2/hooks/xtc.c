@@ -38,9 +38,10 @@ struct xtc_state {
 	u32 side;      /* the side tested next frame */
 	struct xtc_player pl[2];
 	u32 grazes;    /* total, for debugging */
+	u32 points;    /* total score added by XTC (runtime check: points == 10 * grazes) */
 };
 
-__attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u };
+__attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u, 0u };
 
 static inline s32 iabs(s32 v) { return v < 0 ? -v : v; }
 
@@ -83,6 +84,7 @@ static void xtc_add(unsigned side, int n)
 	while (n-- > 0) {
 		const s32 shown = p->quarters >> 2;
 		EE_RAM(u32, rec + PS2_PLAYER_SCORE) += 10;
+		xtc.points += 10;
 		if (p->quarters < XTC_MAX_QUARTERS)
 			p->quarters++;
 		if ((p->quarters >> 2) != shown)
@@ -100,6 +102,12 @@ void xtc_frame(void)
 		struct xtc_player *p = &xtc.pl[s];
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
 		const int down = (EE_RAM(u16, rec + PS2_PLAYER_HELD) & PS2_PAD_SHOT) != 0;
+		if (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) == 0) { /* side not in the game: a new run starts clean */
+			p->quarters = 0;
+			p->left = 0;
+			p->held = 0;
+			continue;
+		}
 		if (!down)
 			p->held = 0;
 		else if (p->held < XTC_MAX_HELD)
