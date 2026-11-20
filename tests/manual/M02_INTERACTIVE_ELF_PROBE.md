@@ -6,6 +6,8 @@ The sixth Mode Select entry launches an original PS2 program that displays a two
 
 Install the PS2DEV toolchain and set `PS2DEV` and `PS2SDK` to its directories. Put the EE toolchain `bin` and PS2SDK `bin` on `PATH`. The tested toolchain was PS2DEV v2.0.0. [PS2DEV releases](https://github.com/ps2dev/ps2dev/releases/tag/v2.0.0)
 
+On macOS, install the Xcode command-line tools with `xcode-select --install`. Use `ps2dev-macos-latest.tar.gz` on Apple Silicon or `ps2dev-macos-15-intel.tar.gz` on Intel. The Apple Silicon build used for the hardware test required Homebrew's `libmpc` and `zstd` at compile time. Install them with `brew install libmpc zstd`. If the builder reports a source size mismatch, check the input path and confirm that the extracted ISO is exactly 3,932,848,128 bytes. Use the full path in quotes if the ISO is outside the repository.
+
 From the repository root, with Python asset dependencies installed, run the following against the original Japanese retail ISO.
 
 ```sh

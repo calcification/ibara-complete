@@ -22,6 +22,6 @@ Follow the [payload handoff](../../docs/PAYLOAD_HANDOFF.md) to build the image. 
 
 ## Physical PS2 report
 
-The tester reported a working `240p_core` round trip with some diagonal scrolling artifacts. The scan mode reported by the display or scaler was unspecified.
+On November 20, 2026, the tester reported a working `240p_core` round trip with diagonal scrolling shimmer. In a follow-up on the same PS2 setup, `240p_cave_beta` reduced the shimmer to the level of the previously published Cave 240p patch. This establishes visual parity with that patch on the tested setup. Console model, ISO loader, display, and measured scan mode were unspecified.
 
-For comparison on the same setup, build a separate ISO with `--video-profile 240p_cave_beta` and compare the same moving section of Arcade. The 21 video writes reproduce the published [Cave 240p beta's Ibara video-only ELF](https://github.com/calcification/cave-ps2-240p/blob/v0.1.0-beta.1/docs/PATCH_SPEC.md#ibara) byte for byte before applying the launcher. The published beta records some residual shimmer. The physical comparison remains open.
+Use `--video-profile 240p_cave_beta` when you want the launcher image to use the published patch's video settings. The 21 video writes reproduce the Ibara video-only ELF byte for byte before the launcher edits are applied. The published beta records some residual shimmer. [Cave 240p beta patch specification](https://github.com/calcification/cave-ps2-240p/blob/v0.1.0-beta.1/docs/PATCH_SPEC.md#ibara)

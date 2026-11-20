@@ -2,6 +2,8 @@
 
 # Verified status and roadblocks (November 2026)
 
+On one physical PS2 setup, the controller probe returned to Ibara and `240p_cave_beta` matched the published Cave beta's scrolling quality. Signal measurements and results from other hardware setups are pending. [Hardware report](../tests/manual/M03_LAUNCHER_VIDEO.md#physical-ps2-report)
+
 | Area | Present evidence | Unverified / missing |
 |---|---|---|
 | Original ISO | ISO9660 structure, 1,130 resource entries, original checksums | None for this exact reference image |
@@ -11,7 +13,7 @@
 | New art | Phase 4 button indexes altered only within 112x48 alpha-clear slot | Correct hardware texture behavior; new button draw call |
 | Kuro | Public Xbox 360/PC SH-3 recompilation source used as reference; 64 MiB VRAM model demands redesign for PS2 | Ported Kuro game code, data streaming, native graphics, timing, authentic sound and gameplay |
 | Gameplay analysis | Native EE score/rank/pickup/cancellation/rose-merge instruction anchors | Dynamic branch conditions, complete bomb/Hadou IDs, parity against Kuro |
-| 240p | Both original profiles verified on the clean disc and in the [combined launcher](../tests/manual/M03_LAUNCHER_VIDEO.md). Diagonal scrolling artifact reported on a physical PS2 with `240p_core` | Physical signal measurements, comparison with the full Cave beta recipe, integrated gameplay build |
+| 240p | Separate `cave-ps2-240p` release; both profiles verified on the clean disc and in the [combined launcher](../tests/manual/M03_LAUNCHER_VIDEO.md) | Physical CRT signal and shimmer comparison, integrated gameplay build |
 
 **Pending:** a playable Black Label port, arcade-accurate mechanics and timing, and hardware validation.
 
