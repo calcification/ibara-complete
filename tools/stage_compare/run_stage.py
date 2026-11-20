@@ -102,11 +102,13 @@ class Xpcsx2:
 
 def build_logger_iso(args, work: Path) -> Path:
     elf, iso = work / "KURO_LOG.ELF", work / "logger.iso"
-    defines = ["BL_SPAWN_LOG", f"BL_LOG_STAGE={args.stage + 1}"]
+    defines = ["BL_SPAWN_LOG", f"BL_LOG_STAGE={args.stage + 1}", f"BL_BOSS_TYPE={args.boss_type}u"]
     if args.rank is not None:
         defines.append(f"BL_SPAWN_RANK=0x{args.rank:08X}u")
     if args.shot_level is not None:
         defines.append(f"BL_LOCK_SHOT={args.shot_level}")
+    if args.noshot:
+        defines.append("BL_NOSHOT")
     cmd = [sys.executable, str(ROOT / "scripts/build_ee_hooks.py"), "--elf", str(args.retail_iso)]
     for d in defines:
         cmd += ["--define", d]
@@ -132,8 +134,8 @@ def extract_ps2(p2s: Path, out: Path):
     c = min(struct.unpack_from("<I", r, 0x1F60000)[0], 8000)
     with open(out / "ps2_core.txt", "w") as f:
         for i in range(c):
-            fr, slot, hp, sub, x, y = struct.unpack_from("<IHHIhh", r, 0x1F60010 + 16 * i)
-            f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y}\n")
+            fr, slot, hp, sub, x, y, mode, step = struct.unpack_from("<IHHIhhBB", r, 0x1F60010 + 20 * i)
+            f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y} {mode} {step}\n")
     t = min(struct.unpack_from("<I", r, 0x1FC0000)[0], 512)
     with open(out / "ps2_tables.txt", "w") as f:
         for i in range(t):
@@ -174,7 +176,7 @@ def run_ps2(args, out: Path):
 
 def run_bl(args, out: Path):
     print("BL: running MAME ...")
-    env = dict(os.environ, OUTDIR=str(out), STAGE=str(args.stage + 1), MAXFRAMES=str(9000 * args.stage + 3000))
+    env = dict(os.environ, OUTDIR=str(out), STAGE=str(args.stage + 1), BOSSTYPE=str(args.boss_type), MAXFRAMES=str(9000 * args.stage + 3000))
     if args.rank is not None:
         env["RANKLOCK"] = str(args.rank)
     if args.shot_level is not None:
@@ -225,7 +227,8 @@ def main(argv=None):
     ap.add_argument("--bl-roms", type=Path, help="rompath containing ibarablk")
     ap.add_argument("--rank", type=lambda s: int(s, 0), default=0x800000, help="stored rank to lock; -1 = free")
     ap.add_argument("--shot-level", type=int)
-    ap.add_argument("--noshot", action="store_true", help="BL only: stop shooting when the stage starts")
+    ap.add_argument("--boss-type", type=int, default=5, help="enemy type sampled into *_core.txt (stage 1: 5, 2: 45)")
+    ap.add_argument("--noshot", action="store_true", help="untouched boss: refill --boss-type parts' HP every frame in both games")
     ap.add_argument("--seconds", type=int, help="PS2 capture length (wall clock)")
     ap.add_argument("--anchor-type", type=int, help="enemy type used to align the logs (default: BL's first)")
     ap.add_argument("--skip-bl", action="store_true")

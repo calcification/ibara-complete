@@ -7,12 +7,14 @@
 --   STAGE     BL stage byte to log: 2 = stage 1 ... 7 = stage 6 (default 2)
 --   RANKLOCK  stored rank to hold every frame (e.g. 8388608 = 0x800000); unset = free rank
 --   SHOTLOCK  shot level to hold every frame; unset = free
---   NOSHOT=1  stop holding shot once STAGE starts (earlier stages are still cleared by shooting)
+--   NOSHOT=1  untouched boss: parts of type BOSSTYPE keep their first-seen HP every frame while STAGE is logged
+--             (same rule as the PS2 logger's BL_NOSHOT; the player keeps shooting)
 --   MAXFRAMES frames after the game starts before exiting (default 60000); also exits when STAGE ends
 -- The player is kept invincible (BL +0x288). Output formats (frames count from the first spawn of STAGE):
 --   spawns.txt  frame stage slot type subtype hp score x y segment
 --   bullets.txt frame slot type x0 y0 dx dy   (px/frame averaged over the first 6 frames)
---   core.txt    frame slot hp subtype x y     (type-5 parts with subtype < 3, every 4 frames: stage-1 boss)
+--   core.txt    frame slot hp subtype x y mode step  (parts of type BOSSTYPE (default 5) with subtype < 3 or
+--               score >= 50000, every 4 frames; mode = +0x9A, step = +0xA6)
 --   tables.txt  type table index score hp     (each part-record table seen at +0x10: 128 entries of 16 bytes,
 --               score at +4, base HP at +0xE)
 local m = manager.machine; local sp = m.devices[":maincpu"].spaces["program"]
@@ -20,12 +22,14 @@ local ports = m.ioport.ports; local function fld(p, n) return ports[p].fields[n]
 local P1, EN, BUL, RANK, STAGEB = 0x0C29D1D8, 0x0C286578, 0x0C297B40, 0x0C297A3C, 0x0C3C4170
 local dir = assert(os.getenv("OUTDIR"), "set OUTDIR")
 local STAGE = tonumber(os.getenv("STAGE") or "2")
+local BOSST = tonumber(os.getenv("BOSSTYPE") or "5")
 local MAXF = tonumber(os.getenv("MAXFRAMES") or "60000")
 local out = io.open(dir .. "/spawns.txt", "w"); local bout = io.open(dir .. "/bullets.txt", "w")
 local cout = io.open(dir .. "/core.txt", "w")
 local tout = io.open(dir .. "/tables.txt", "w"); local tseen = {}
 local frame, first, shooting, left = 0, nil, false, false
-local alive, typ, balive, bpend = {}, {}, {}, {}
+local alive, typ, balive, bpend, hp0 = {}, {}, {}, {}, {}
+local NOSHOT = os.getenv("NOSHOT")
 local plan = {}
 local function at(f, fn) plan[f] = plan[f] or {}; table.insert(plan[f], fn) end
 local function press(f, p, n, len) at(f, function() fld(p, n):set_value(1) end); at(f + (len or 6), function() fld(p, n):clear_value() end) end
@@ -45,7 +49,6 @@ emu.register_frame_done(function()
   if stage > STAGE and first then left = true end
   if left or frame > t0 + 700 + MAXF then finish(); return end
   if stage ~= STAGE then return end
-  if os.getenv("NOSHOT") and shooting then fld(":PORT_D", "P1 Button 1"):clear_value(); shooting = false end
   for i = 0, 191 do
     local a = EN + i * 0xB4
     local fl = sp:read_u32(a); local on = (fl & 0x80000000) ~= 0
@@ -62,10 +65,12 @@ emu.register_frame_done(function()
         end
       end
     end
+    if on and (not alive[i] or typ[i] ~= t) then hp0[i] = sp:read_u16(a + 0x3C) end
+    if NOSHOT and on and t == BOSST and hp0[i] and hp0[i] > 0 then sp:write_u16(a + 0x3C, hp0[i]) end
     alive[i] = on; typ[i] = t
-    if on and t == 5 and first and (frame - first) % 4 == 0 and sp:read_u32(a + 8) < 3 then
-      cout:write(string.format("%d %d %d %08X %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8),
-        sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16))
+    if on and t == BOSST and first and (frame - first) % 4 == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
+      cout:write(string.format("%d %d %d %08X %d %d %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8),
+        sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, sp:read_u8(a + 0x9A), sp:read_u8(a + 0xA6)))
     end
   end
   if not first then return end
