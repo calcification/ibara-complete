@@ -117,6 +117,7 @@ static void test_grant_weapons(u32 rec)
 typedef void (*pickup_fn)(int side, int item);
 u8 bl_shot_test[8];
 u32 bl_rank_test; /* stored rank after one fragment pickup starting from 0x00800000 */
+u32 bl_rank_test2[2]; /* rank after a level-1 rose and after a level-3 medal (each from 0x00800000) */
 static void test_shot_levels(u32 rec)
 {
 	volatile u8 *streak = (volatile u8 *)(0x00495130u + 8u * EE_RAM(u8, 0x0033FCF0u - 28276));
@@ -132,6 +133,14 @@ static void test_shot_levels(u32 rec)
 	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* fragment rank case */
 	((pickup_fn)0x0012F400u)(0, 0);
 	bl_rank_test = EE_RAM(u32, PS2_RANK_INV);
+	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* rose, level 1 */
+	EE_RAM(u32, PS2_ITEMS_BASE + 255 * 0x58 + 8) = 1;
+	((pickup_fn)0x0012F680u)(0, 255);
+	bl_rank_test2[0] = EE_RAM(u32, PS2_RANK_INV);
+	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* medal, level 3 */
+	EE_RAM(u16, PS2_ITEMS_BASE + 255 * 0x58 + 8) = 3;
+	((pickup_fn)0x0012F7B0u)(0, 255);
+	bl_rank_test2[1] = EE_RAM(u32, PS2_RANK_INV);
 }
 #endif
 

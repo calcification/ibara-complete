@@ -67,3 +67,13 @@ return address (PR) and delta, over ~12,000 frames of scripted play:
 PS2 fragment handler: Arcade path `harder(0x2000)` at `0x0012F4A4`; Arrange adds `harder(0x40000)` at
 `0x0012F504`. BL uses Arrange's 0x40000. PS2 rank helpers: `0x00129DC0` easier (+, capped),
 `0x00129DF0` harder (−); both do nothing while `$gp-0x6DB0` (`0x00338F40`) is non-zero (stage start).
+
+### Rank attribution to item kinds (`rank_attribution.lua`)
+
+Per frame, a rank write is attributed to the pickup kind whose BL streak counter (`0C22E2AC + kind`) rose:
+`0C07E5C0` ← **fragment** (−0x40000), `0C07D010` ← **medal** (0, −0x20000 … −0x80000 = level × 0x20000),
+`0C07E440` ← **score item / rose** (mostly +0x80000, also +0xC0000; easier). These are Arrange's rules on PS2:
+medal `0x0012F7B0` Arrange branch `harder(level << 17)`; rose `0x0012F680` Arrange branch
+`easier(table[level] × 1024)` with table `0x0020BFD0` = 0x100/0x200/0x300/0x400 (Arcade uses the same table
+unscaled as *harder*). Some BL rose writes (±0x180000, negatives) are unexplained (merged roses or the
+easy-end cap?) and are left open.

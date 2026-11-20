@@ -97,7 +97,11 @@ HOOKS = {
         + [(0x002FCF24, 0x0012FC24, 0x0012FBA8), (0x0012FB78, 0x14A00038, 0x00000000)]
         # BL rank (F8, MAME oracle Phase 13): a bomb-fragment pickup makes rank harder by 0x40000 (Arrange's
         # value; PS2 Arcade uses 0x2000): Arcade path of the type-2 handler, 0x0012F4A8 li a0,0x2000 -> lui a0,4.
-        + [(0x0012F4A8, 0x24042000, 0x3C040004)],
+        + [(0x0012F4A8, 0x24042000, 0x3C040004)]
+        # BL medal and rose rank rules = Arrange's (MAME Phase 13): medal harder by level x 0x20000
+        # (0x0012F7FC bnez -> b), rose easier by table[level] x 1024 (0x0012F6C4 bnez -> b). Rank branches only;
+        # both rejoin the Arcade code, so scoring is unchanged.
+        + [(0x0012F7FC, 0x1440000B, 0x1000000B), (0x0012F6C4, 0x1440000A, 0x1000000A)],
     },
     "bl_xtc": {
         "test_id": "K01",
