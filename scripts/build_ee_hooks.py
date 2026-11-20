@@ -240,6 +240,16 @@ def check_ram(path: Path, built: dict):
     return len(nz)
 
 
+def video_profile(name: str) -> list:
+    """(address, original, new) video edits shared with the launcher builder (research/phase04)."""
+    sys.path.insert(0, str(ROOT / "research" / "phase04"))
+    sys.path.insert(0, str(ROOT / "research" / "phase03"))
+    import build_menu_probe  # noqa: E402
+    if name not in build_menu_probe.VIDEO_PROFILES:
+        raise ValueError(f"unknown video profile {name}; choose from {sorted(build_menu_probe.VIDEO_PROFILES)}")
+    return [tuple(e) for e in build_menu_probe.VIDEO_PROFILES[name]]
+
+
 def bake_elf(retail: bytes, built: dict) -> bytes:
     """Copy of the retail ELF with the hook image as an extra PT_LOAD and the hook sites patched.
 
@@ -299,6 +309,9 @@ def main(argv=None) -> int:
     ap.add_argument("--output", type=Path, default=ROOT / "pnach" / "hooks")
     ap.add_argument("--listing-dir", type=Path, default=ROOT / "build" / "ee_hooks")
     ap.add_argument("--define", action="append", default=[], help="extra -D for test bakes (blocks PNACH output)")
+    ap.add_argument("--bake-video", default="retail",
+                    help="video profile for the baked copy (research/phase04 VIDEO_PROFILES: retail, 240p_core, "
+                         "240p_halfpixel, 240p_cave_beta); match the launcher's --video-profile")
     ap.add_argument("--bake-elf", nargs=2, metavar=("HOOK", "OUT"),
                     help="write a retail-ELF copy with HOOK built in (needs --elf), for the sixth menu entry")
     args = ap.parse_args(argv)
@@ -320,8 +333,14 @@ def main(argv=None) -> int:
                 if not elf:
                     raise ValueError("--bake-elf needs --elf (the clean retail ELF or ISO)")
                 baked = build_hook(key, Path(tmp), BAKE_BASE, BAKE_END)
+                video = video_profile(args.bake_video)
+                taken = {site for site, _o, _n in baked["sites"]}
+                clash = [f"{a:08X}" for a, _o, _n in video if a in taken]
+                if clash:
+                    raise AssertionError(f"video profile overlaps hook sites: {clash}")
+                baked["sites"] = baked["sites"] + list(video)
                 Path(args.bake_elf[1]).write_bytes(bake_elf(elf, baked))
-                print(f"{h['test_id']} {key}: baked at {BAKE_BASE:08X} into {args.bake_elf[1]}")
+                print(f"{h['test_id']} {key}: baked at {BAKE_BASE:08X} (video {args.bake_video}) into {args.bake_elf[1]}")
             for dump in args.check_ram:
                 check_ram(dump, built)
             miss = pending(h)

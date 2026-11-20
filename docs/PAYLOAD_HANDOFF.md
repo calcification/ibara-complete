@@ -37,6 +37,7 @@ Both progressive profiles passed the [launcher round-trip test](../tests/manual/
 
 `python3 scripts/build_ee_hooks.py --elf 'Ibara (Japan).iso' --bake-elf bl_xtc outputs/KURO.ELF` writes the
 retail executable with the hook code as an extra load segment at `0x01F00000`. Pass it as `--payload-elf`
-with `--label 'BLACK LABEL'`. Keep the program headers directly after the ELF header in any payload you
+with `--label 'BLACK LABEL'`. Add `--bake-video PROFILE` (same names as `--video-profile`) so the BLACK LABEL build uses the same video mode
+as the launcher (K08: 240p_cave_beta verified progressive, 224 lines). Keep the program headers directly after the ELF header in any payload you
 build: a table placed at the end of the file crashed PCSX2 v1.7.4000 during the handoff. Generated ELFs and
 ISOs contain game code: keep them local.
