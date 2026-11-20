@@ -72,7 +72,7 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
                   ("hud_entry", 0x0012C0E0, "xtc_hud")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x001CA7F0, 0x0C04DC38, "ret_entry"),
@@ -109,7 +109,7 @@ HOOKS = {
         "description": ("Kuro BL graze: holding shot 5+ frames near enemy bullets adds 10 points per bullet. "
                         "State at 000C0000: magic XTC1, then per player quarters(s32)/timer(u16)/held(u8). "
                         "Run only after C00 passes. No HUD counter yet. RUNTIME UNTESTED."),
-        "sources": ["xtc.c"],
+        "sources": ["xtc.c", "spawnlog.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
         "requires": ["site_frame_collide", "player_score", "rank_inv", "cave_free", "bullet_layout",

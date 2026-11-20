@@ -144,11 +144,18 @@ static void test_shot_levels(u32 rec)
 }
 #endif
 
+#ifdef BL_SPAWN_LOG
+void spawn_log_frame(void);
+#endif
+
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
 {
 	unsigned s;
 
+#ifdef BL_SPAWN_LOG
+	spawn_log_frame();
+#endif
 	for (s = 0; s < 2; s++) {
 		struct xtc_player *p = &xtc.pl[s];
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
