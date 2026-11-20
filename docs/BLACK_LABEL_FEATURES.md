@@ -24,6 +24,45 @@ Phase 11 · **[PS2]** PS2 counterpart known · **[todo]** PS2 counterpart not ye
 | F9 | **Score items / medals** | same medal ladder concept; next medal `0C3C53E0`; item pickup routine BL-only `0C07D100` (arcade `0C06BB60`) [spec][delta] | [PS2] medal ladder `0x0020B100`, pickup table `0x0020BF60` |
 | F10 | **Bullet cancel after a boss** | erases all enemy bullets [spec] | [todo] |
 
+## 1b. Worklist: ship select (F1), shot tables (F5), bombs (F7)
+
+BL routines that touch the player shot table or the ship-select flag (Phase 11), with their arcade Ibara
+originals and Phase 12 PS2 candidates. Confirmed-by-other-evidence pairs: PS2 `0x0013B2F0` is the per-frame
+shooting routine (reads held `0x10`), `0x0011A580` the projectile writer from Phase 9, `0x0012AC60` the
+shot-vs-bullet pass. The ship-select screen itself is BL-only code (`0C0B8210`, 1,618 instructions, plus
+`0C070DC0`, `0C0703C0`, `0C0734D0`); the BL ship byte is side·8 + ship·4 + type (ship 0 straight, 1 spread).
+
+| BL | status | insns | arcade Ibara | PS2 candidate | structures |
+|---|---|---|---|---|---|
+| `0C06A3C0` | changed | 556 | `0C0588C0` | `00191B90` (mutual_best 0.438) | attract_flag, player_records, ship_select_flag, stage, stage_record_id |
+| `0C06D170` | changed | 208 | `0C05B260` | `0013B2F0` (mutual_best 0.510) | player_records, rank, ship_select_flag, weapon_stock |
+| `0C06D950` | changed | 496 | `0C05DE00` | — | attract_flag, player_records, ship_select_flag |
+| `0C06E810` | operands | 244 | `0C05ED70` | `0012AF90` (mutual_best 0.462) | enemy_parts, player_records, player_shots |
+| `0C06EAC0` | changed | 183 | `0C05F020` | `0012AC60` (anchor 1.000) | enemy_bullets, player_records, player_shots |
+| `0C077090` | changed | 53 | `0C066150` | `0012D840` (mutual_best 0.452) | camera, player_records, ship_select_flag |
+| `0C078E40` | changed | 112 | `0C067DC0` | `0011C380` (mutual_best 0.616) | player_records, player_shots |
+| `0C078F70` | changed | 578 | `0C067EE0` | `0011B850` (mutual_best 0.548) | enemy_parts, player_records, player_shots |
+| `0C079600` | changed | 126 | `0C068570` | — | player_records, player_shots |
+| `0C077230` | changed | 155 | `0C068F40` | `0011A580` (mutual_best 0.633) | player_records, player_shots |
+| `0C07A100` | operands | 149 | `0C069060` | — | player_records, player_shots |
+| `0C07A280` | operands | 157 | `0C0691E0` | `00119F20` (mutual_best 0.535) | player_records, player_shots |
+| `0C07A410` | changed | 166 | `0C069370` | `00119BC0` (mutual_best 0.554) | player_records, player_shots |
+| `0C07A7B0` | operands | 144 | `0C069710` | — | player_records, player_shots |
+| `0C07A920` | operands | 144 | `0C069880` | — | player_records, player_shots |
+| `0C07AA90` | operands | 109 | `0C0699F0` | `001190A0` (mutual_best 0.553) | player_records, player_shots |
+| `0C07B590` | changed | 42 | `0C06A4F0` | — | player_records, player_shots |
+| `0C07B620` | operands | 59 | `0C06A560` | `0011AA30` (mutual_best 0.544) | player_records, player_shots |
+| `0C07B750` | changed | 39 | `0C06A690` | `0011A9A0` (mutual_best 0.431) | player_shots |
+| `0C0703C0` | b_only | 212 | BL-only | — | camera, player_records, rank, ship_select_flag |
+| `0C070DC0` | b_only | 296 | BL-only | — | camera, player_records, ship_select_flag, weapon_stock |
+| `0C0734D0` | b_only | 121 | BL-only | — | player_records, ship_select_flag |
+| `0C07B7C0` | b_only | 69 | BL-only | — | player_shots |
+| `0C0B8210` | b_only | 1618 | BL-only | — | camera, enemy_parts, player_records, ship_select_flag |
+
+Approach: port each "changed" routine's BL difference into the PS2 counterpart as a hook or word patch in the
+BLACK LABEL build (as done for the weapon stock), starting with the shooting routine and the straight/spread
+branch on the ship byte; implement the BL-only select screen with the game's own menu/text layer.
+
 ## 2. Game flow
 
 | # | Feature | BL facts | PS2 status |
