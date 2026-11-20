@@ -1,0 +1,14 @@
+{
+  "ps2_functions": 1932,
+  "ps2_gp": "0033FCF0",
+  "arcade_functions": 1336,
+  "size_ratio_mips_per_sh3": 1.0,
+  "matched": 246,
+  "by_method": {
+    "anchor": 3,
+    "mutual_best": 199,
+    "callgraph": 44
+  },
+  "bl_changed_arcade_routines": 591,
+  "bl_changed_with_ps2_candidate": 136
+}

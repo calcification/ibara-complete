@@ -149,14 +149,14 @@ def main(argv=None) -> int:
 
     arc = load_program(args.ibara360 / "gen" / "ibara_drc")
     segs = mips_funcs.load_elf(args.elf)
-    mf, gp = mips_funcs.extract(segs, {mips_funcs.elf_entry(args.elf)})
+    mf, gp = mips_funcs.extract(segs, {mips_funcs.elf_entry(args.elf)}, gp=mips_funcs.elf_gp(args.elf))
 
     A = Side({a: len(f.insns) for a, f in arc.items()},
              {a: norm_consts(f.consts) for a, f in arc.items()},
              {a: tags_for(f.ram_refs, ARCADE_STRUCTS) for a, f in arc.items()},
              {a: f.calls for a, f in arc.items()})
     P = Side({a: f.n_insns for a, f in mf.items()},
-             {a: norm_consts(f.consts) for a, f in mf.items()},
+             {a: norm_consts(f.consts + f.mem_offsets) for a, f in mf.items()},
              {a: tags_for(f.data_refs, PS2_STRUCTS) for a, f in mf.items()},
              {a: f.calls for a, f in mf.items()})
     anchors = {int(x, 16): int(y, 16) for x, y in (s.split("=") for s in args.anchor)}

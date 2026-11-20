@@ -78,7 +78,46 @@ def find_gp(words: dict[int, int]) -> int | None:
     return None
 
 
-def extract(segs: list[Segment], extra_starts: set[int] | None = None) -> tuple[dict[int, MFunc], int | None]:
+def elf_gp(path_or_bytes) -> int | None:
+    """$gp from the .reginfo section (ri_gp_value), if present."""
+    data = path_or_bytes if isinstance(path_or_bytes, (bytes, bytearray)) else Path(path_or_bytes).read_bytes()
+    shoff, = struct.unpack_from("<I", data, 0x20)
+    shentsize, shnum = struct.unpack_from("<HH", data, 0x2E)
+    for i in range(shnum):
+        sh = struct.unpack_from("<10I", data, shoff + i * shentsize)
+        if sh[1] == 0x70000006 and sh[5] >= 24:  # SHT_MIPS_REGINFO
+            return struct.unpack_from("<I", data, sh[4] + 20)[0]
+    return None
+
+
+def _is_prologue(w: int | None) -> bool:
+    return w is not None and w >> 16 == 0x27BD and bool(w & 0x8000)
+
+
+def _extent(words: dict[int, int], start: int, new_starts: set[int]) -> int | None:
+    """End address (exclusive) of the function at start; records call/tail-call targets."""
+    a, maxt = start, start
+    while True:
+        w = words.get(a)
+        if w is None or a - start > 0x20000:
+            return None
+        op = w >> 26
+        if op in (4, 5, 6, 7, 20, 21, 22, 23) or (op == 1 and ((w >> 16) & 31) in (0, 1, 2, 3, 16, 17, 18, 19)):
+            maxt = max(maxt, a + 4 + (_s16(w & 0xFFFF) << 2))
+        elif op in (2, 3):
+            t = ((a + 4) & 0xF0000000) | ((w & 0x03FFFFFF) << 2)
+            if op == 3 or not start <= t <= a:
+                new_starts.add(t)
+            if op == 2 and a + 4 >= maxt and not start <= t <= a:
+                return a + 8  # tail call
+        elif w == 0x03E00008 and a + 4 >= maxt:
+            return a + 8
+        a += 4
+
+
+def extract(segs: list[Segment], extra_starts: set[int] | None = None,
+            gp: int | None = None) -> tuple[dict[int, MFunc], int | None]:
+    """Recursive descent from extra_starts (entry point...) plus code pointers found in the image."""
     code = [s for s in segs if s.exec]
     words: dict[int, int] = {}
     for s in code:
@@ -90,30 +129,36 @@ def extract(segs: list[Segment], extra_starts: set[int] | None = None) -> tuple[
     def in_code(a: int) -> bool:
         return lo_code <= a < hi_code and a % 4 == 0
 
-    starts: set[int] = set(extra_starts or ())
-    starts.update(s.vaddr for s in code)
-    for a, w in words.items():
-        if w >> 26 == 0x03:  # jal
-            t = ((a + 4) & 0xF0000000) | ((w & 0x03FFFFFF) << 2)
-            if in_code(t):
-                starts.add(t)
-        # prologue right after `jr $ra` + delay slot
-        if w == 0x03E00008:
-            nxt = a + 8
-            while words.get(nxt) == 0:  # alignment nops
-                nxt += 4
-            w2 = words.get(nxt)
-            if w2 is not None and w2 >> 16 == 0x27BD and w2 & 0x8000:
-                starts.add(nxt)
-    for s in segs:  # code pointers in data (dispatch tables)
-        if s.exec:
-            continue
-        for i in range(0, len(s.data) - 3, 4):
-            p = struct.unpack_from("<I", s.data, i)[0]
-            w = words.get(p)
-            if w is not None and in_code(p) and w >> 16 == 0x27BD and w & 0x8000:
-                starts.add(p)
-    gp = find_gp(words)
+    pending = {a for a in (extra_starts or ()) if in_code(a)} or {code[0].vaddr}
+    extents: dict[int, int] = {}
+    for _round in range(3):
+        while pending:
+            st = pending.pop()
+            if st in extents or not in_code(st):
+                continue
+            found: set[int] = set()
+            end = _extent(words, st, found)
+            if end is None:
+                continue
+            extents[st] = end
+            pending.update(t for t in found if in_code(t) and t not in extents)
+        # every jal word in the image (code reached only through pointers to frameless leaves);
+        # a target is kept only if it decodes to a well-formed function in _extent
+        for a, w in words.items():
+            if w >> 26 == 3:
+                t = ((a + 4) & 0xF0000000) | ((w & 0x03FFFFFF) << 2)
+                if t not in extents and in_code(t):
+                    pending.add(t)
+        # code pointers anywhere in the image (dispatch tables, lui/addiu pairs) that land on a prologue
+        for s in segs:
+            for i in range(0, len(s.data) - 3, 4):
+                ptr = struct.unpack_from("<I", s.data, i)[0]
+                if ptr not in extents and in_code(ptr) and _is_prologue(words.get(ptr)):
+                    pending.add(ptr)
+        if not pending:
+            break
+    if gp is None:
+        gp = find_gp(words)
     ranges = [(s.vaddr, s.vaddr + len(s.data)) for s in segs]
 
     def is_data(v: int) -> bool:
@@ -121,10 +166,8 @@ def extract(segs: list[Segment], extra_starts: set[int] | None = None) -> tuple[
         # 0x00FFFFFF / 0x01000000 (rank arithmetic) stay constants
         return any(lo <= v < hi + DATA_SLACK for lo, hi in ranges)
 
-    order = sorted(starts)
     funcs: dict[int, MFunc] = {}
-    for i, st in enumerate(order):
-        end = order[i + 1] if i + 1 < len(order) else hi_code
+    for st, end in sorted(extents.items()):
         f = MFunc(st, end)
         hi_regs: dict[int, int] = {}
         a = st
