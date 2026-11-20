@@ -40,7 +40,7 @@ struct xtc_state {
 	u32 grazes;    /* total, for debugging */
 };
 
-struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u };
+__attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u, 0u, {{0, 0, 0, 0}, {0, 0, 0, 0}}, 0u };
 
 static inline s32 iabs(s32 v) { return v < 0 ? -v : v; }
 

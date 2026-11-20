@@ -35,9 +35,14 @@ class EncodingTests(unittest.TestCase):
         self.assertGreaterEqual(hooks.CAVE_BASE, 0x00080000)
         self.assertLessEqual(hooks.CAVE_END, pn.ELF_BASE)
 
-    def test_pending_facts_block_xtc(self):
-        self.assertTrue(hooks.pending(hooks.HOOKS["bl_xtc"]))
+    def test_pending_facts_block_emission(self):
         self.assertEqual(hooks.pending(hooks.HOOKS["h00_smoke"]), [])
+        self.assertEqual(hooks.pending(hooks.HOOKS["bl_xtc"]), [])
+        hooks.FACTS["_synthetic"] = "pending"
+        try:
+            self.assertEqual(hooks.pending({"requires": ["player_score", "_synthetic"]}), ["_synthetic"])
+        finally:
+            del hooks.FACTS["_synthetic"]
 
     def test_every_requirement_is_a_known_fact(self):
         for h in hooks.HOOKS.values():
@@ -111,8 +116,13 @@ class BuildTests(unittest.TestCase):
         self.assertIn(expected, path.read_text(encoding="utf-8"),
                       "pnach/hooks is stale: run python3 scripts/build_ee_hooks.py")
 
-    def test_xtc_not_emitted(self):
-        self.assertFalse((ROOT / "pnach/hooks/bl_xtc" / pn.NAME).exists())
+    def test_xtc_state_at_cave_base_and_profile_current(self):
+        b = self.built["bl_xtc"]
+        self.assertEqual(b["syms"]["xtc"], hooks.CAVE_BASE)
+        w = {a: (p, v) for p, a, v in b["words"]}
+        self.assertEqual(w[hooks.CAVE_BASE], (0, 0x31435458))
+        path = ROOT / "pnach/hooks/bl_xtc" / pn.NAME
+        self.assertIn(hooks.pnach_group(hooks.HOOKS["bl_xtc"], b), path.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

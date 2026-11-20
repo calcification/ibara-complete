@@ -32,7 +32,7 @@ PS2 = ROOT / "ps2"
 CROSS = "mips-linux-gnu-"
 CFLAGS = ["-march=r5900", "-EL", "-mabi=32", "-msoft-float", "-mno-abicalls", "-fno-pic", "-G0", "-O2",
           "-ffreestanding", "-fno-builtin", "-nostdlib", "-fno-common", "-Wall", "-Werror",
-          "-I", str(PS2 / "include")]
+          "-Wa,-mfix-r5900", "-I", str(PS2 / "include")]
 CAVE_BASE = 0x000C0000
 CAVE_END = 0x00100000
 
@@ -41,7 +41,9 @@ FACTS = {
     "site_frame_collide": "verified",   # 0x0012E62C: jal 0x0012AC60, phase09 static
     "player_score": "verified",         # 0x0044C600, phase08 static
     "rank_inv": "verified",             # 0x00338EB4, phase07 static
-    "cave_free": "pending",             # needs --check-ram on title/Arcade/Arrange savestates
+    # static: no game code builds an address in 0x000C0000-0x000FFFFF (81 lui hits there are fixed-point
+    # constants; the one stack, 0x00081FC0 set at 0x00215748, grows down away from it). C00 confirms at runtime.
+    "cave_free": "verified",
     "bullet_layout": "verified",        # 0x00462F40 x256, +0 0x10000000, +0x28/+0x2C: 0x0012A680 static
     "player_xy": "verified",            # +0x10/+0x14, same space as bullets: 0x0012A680 static
     "pad_held": "verified",             # +0x24C held, shot 0x10: 0x0012DA3C / 0x0013B2F0 static
@@ -64,7 +66,9 @@ HOOKS = {
     "bl_xtc": {
         "test_id": "K01",
         "title": "BLACK LABEL / XTC graze counter (+10 per graze)",
-        "description": "Kuro BL graze scoring on the PS2 engine. BUILD-ONLY until bullet/player layouts are confirmed.",
+        "description": ("Kuro BL graze: holding shot 5+ frames near enemy bullets adds 10 points per bullet. "
+                        "State at 000C0000: magic XTC1, then per player quarters(s32)/timer(u16)/held(u8). "
+                        "Run only after C00 passes. No HUD counter yet. RUNTIME UNTESTED."),
         "sources": ["xtc.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
