@@ -106,3 +106,26 @@ needs `-nodrc`): stores at `0C0BA524`/`0C0BA52E` (callers' return addresses `0C0
 `0C0995B0`, jump table `0C0995F0`), find the same step in PS2 `0x00165A10`, and patch the PS2 choice/sequence to
 BL's; re-run the no-shot logs until the table above matches. Then compare the player's shot/option reach
 (why the PS2 player at level 3 damages the boss less than BL's at level 2).
+
+### Why the spiral order differs: random choice (no port needed)
+
+All boss parts' flags follow the same timeline in both games except the spiral turrets (subtypes `0x50`–`0x55`).
+They are not spawned: when the boss enters mode 3 (`+0x9A`, cycle 2 → 3 → 4 every 480 frames, identical in both
+games), each turret part switches its subtype to `table[random(3)]` (BL `0C09A692`: call `0C062780` with 3, table
+`0C1C7260` = 0x50, 0x52, 0x54; found with `research/phase13/emitter_subtype_tap.lua`). PS2 has the same table at
+`0x0022F378` and calls its random function `0x00110FE0` in the same routine. So 4-arm vs 2-arm volleys come from the
+random sequence, which differs between the two games; BL is repeatable only because its sequence restarts the same
+way each game.
+
+### Enemy fire timer: ported (K12)
+
+BL changed the shared fire timer (arcade `0C0A9E40` → BL `0C0BC1B0`, PS2 `0x00122120`): before the usual
+`base + factor × (rank >> 16) / 256` it lowers rank by stage × ((k << 18) + 0x40000), floored at 0 (k = settings byte
+`0C234C04`, 3 by default), so enemies fire faster from stage to stage. Ported as `ps2/hooks/bl_enemy.c`. With both games'
+turrets reading the same inputs, their counters now cycle identically (`turret_log.lua` / `BL_CORE_TURRET`).
+Mid-stage, untouched enemies: BL 1,052 bullets in frames 0–3,600, PS2 955 before and 1,112 after; the shooters pass
+the same timer arguments (90, 10) in both games, so the remaining mid-stage gap in *shooting* runs comes from
+the player killing enemies faster in BL (as with the boss), i.e. player shot/option damage, not enemy code.
+
+**Stage 1 status:** placement, HP, fire timing and boss logic match BL. Open: player-side damage/reach (BL's level-2
+shot kills faster than PS2's level-3), then stage 2.

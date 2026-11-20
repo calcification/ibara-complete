@@ -129,7 +129,9 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len([a for a, (o, n) in patches.items() if o == 0x8F879254 and n == 0x24070001]), 16)
         b = hooks.build_hook("bl_mode", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
-        self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]))
+        self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]) + len(h["jumps"]))
+        jumps = {site: new for site, _o, new in b["sites"] if site == 0x00122120}
+        self.assertEqual(jumps[0x00122120], 0x08000000 | (b["syms"]["bl_fire_timer"] >> 2) & 0x03FFFFFF)
 
     def test_prebuilt_bl_mode_matches_sources(self):
         import json

@@ -35,7 +35,11 @@ static s32 bl_x0[256], bl_y0[256]; /* full 16.16 start position */
 
 /* Boss sampler: every 4 frames, each alive type-5 part with subtype < 3 (stage-1 boss core and side parts). */
 #define CORE_LOG 0x01F60000u
+#ifdef BL_CORE_FLAGS
+#define CORE_MAX 24000u
+#else
 #define CORE_MAX 8000u
+#endif
 struct core_rec {
 	u32 frame;
 	u16 slot, hp;
@@ -125,7 +129,13 @@ void spawn_log_frame(void)
 		}
 		sl_alive[i] = (u8)on;
 		sl_type[i] = t;
+		#if defined(BL_CORE_TURRET) /* spiral turrets (type 5, subtype 0x50..0x57) every 4 frames */
+		if (on && t == 5 && sl_first && !((sl_frame - sl_first) & 3) && (EE_RAM(u32, a + 8) & ~7u) == 0x50u) {
+#elif defined(BL_CORE_FLAGS) /* every type-5 part every 16 frames, flags in x (low) / y (high) */
+		if (on && t == 5 && sl_first && !((sl_frame - sl_first) & 15)) {
+#else
 		if (on && t == 5 && sl_first && !((sl_frame - sl_first) & 3) && EE_RAM(u32, a + 8) < 3u) {
+#endif
 			volatile u32 *ccount = (volatile u32 *)CORE_LOG;
 			struct core_rec *c = (struct core_rec *)(CORE_LOG + 16);
 			if (*ccount < CORE_MAX) {
@@ -133,8 +143,19 @@ void spawn_log_frame(void)
 				c[*ccount].slot = (u16)(i | EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) << 8); /* + P1 shot level */
 				c[*ccount].hp = EE_RAM(u16, a + 0x3C);
 				c[*ccount].subtype = EE_RAM(u32, a + 8);
+#if defined(BL_CORE_TURRET) /* x = parent's step byte (+0xA6) | stage counter << 8, y = turret timer (+0x9B) */
+				c[*ccount].x = (s16)(EE_RAM(u8, EN_BASE + EN_STRIDE * (u32)EE_RAM(s16, a + 0x7C) + 0xA6) | EE_RAM(u8, 0x00338E9Cu) << 8);
+				c[*ccount].y = EE_RAM(u8, a + 0x9B);
+#elif defined(BL_CORE_FLAGS)
+				c[*ccount].x = (s16)fl;
+				c[*ccount].y = (s16)(fl >> 16);
+#elif defined(BL_CORE_STATE) /* boss step (+0xA6) and mode (+0x9A) instead of the position */
+				c[*ccount].x = EE_RAM(u8, a + 0xA6);
+				c[*ccount].y = EE_RAM(u8, a + 0x9A);
+#else
 				c[*ccount].x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
 				c[*ccount].y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
+#endif
 				(*ccount)++;
 			}
 		}

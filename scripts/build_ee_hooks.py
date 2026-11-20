@@ -73,7 +73,7 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
                   ("hud_entry", 0x0012C0E0, "xtc_hud")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x001CA7F0, 0x0C04DC38, "ret_entry"),
@@ -109,6 +109,9 @@ HOOKS = {
         # $gp-28244 (0x00338E9C) is 1 at the opening, 2 at stage 1, 3 at stage 2 ... = BL's byte (savestates).
         # So: Arcade takes the Arrange formula (0x00126C4C beqz -> nop), reading the counter (0x00126C54).
         + [(0x00126C4C, 0x1060000C, 0x00000000), (0x00126C54, 0x938391A8, 0x938391AC)],
+        # BL enemy fire timer (BL 0C0BC1B0 / arcade 0C0A9E40 / PS2 0x00122120): `j bl_fire_timer` at the
+        # retail entry (its delay slot `andi v0,v0,0x100` is harmless); see ps2/hooks/bl_enemy.c.
+        "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
     },
     "bl_xtc": {
         "test_id": "K01",
@@ -211,6 +214,9 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     sites = []
     for site, original_word, entry in h["sites"]:
         sites.append((site, original_word, jal(syms[entry])))
+    for site, original_word, entry in h.get("jumps", []):  # plain `j` into a C leaf that returns to the caller
+        assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
+        sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
     sites.extend(h.get("patches", []))  # plain word patches: same preimage check and application
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
