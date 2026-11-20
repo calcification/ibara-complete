@@ -94,7 +94,10 @@ HOOKS = {
         # BL shot levels (F5): small P also raises level 5 -> 6 (per-level jump table 0x002FCF10 entry 5 goes to
         # the raise path 0x0012FBA8 instead of the bonus path 0x0012FC24), and the 5-in-a-row full-power
         # secret is gone (0x0012FB78 bnez -> nop). Level k needs k + 1 small P (table 0x00337F40).
-        + [(0x002FCF24, 0x0012FC24, 0x0012FBA8), (0x0012FB78, 0x14A00038, 0x00000000)],
+        + [(0x002FCF24, 0x0012FC24, 0x0012FBA8), (0x0012FB78, 0x14A00038, 0x00000000)]
+        # BL rank (F8, MAME oracle Phase 13): a bomb-fragment pickup makes rank harder by 0x40000 (Arrange's
+        # value; PS2 Arcade uses 0x2000): Arcade path of the type-2 handler, 0x0012F4A8 li a0,0x2000 -> lui a0,4.
+        + [(0x0012F4A8, 0x24042000, 0x3C040004)],
     },
     "bl_xtc": {
         "test_id": "K01",

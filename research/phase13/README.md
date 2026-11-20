@@ -49,3 +49,21 @@ translated to the PS2 shot system, the spread speeds, and a select step. Next: t
 * So BL indexes the arcade mechanics by ship-kind·4 + type instead of side·4 + type: the pilot is cosmetic and
   straight/spread picks the shot set and speed. The PS2 data already holds both sets; nothing new to port for
   shots or speeds. A BL-faithful select only needs the mechanics index decoupled from the pilot graphics.
+
+## Rank (F8): who changes BL's rank, and by how much (`rank_writes.lua`)
+
+Write tap on BL's stored rank `0C297A3C` (low 32 bits of the 64-bit bus word `0C297A38`), keyed by writer PC,
+return address (PR) and delta, over ~12,000 frames of scripted play:
+
+| writer (helper) | caller | caller's arcade original → PS2 | delta (stored; − = harder) |
+|---|---|---|---|
+| `0C071CA0` | `0C07E5C0` | `0C06D4C0` → PS2 type-2 pickup `0x0012F400` (**bomb fragment**) | −0x40000 (×57) |
+| `0C071CA0` | `0C07D010` (next-medal) | `0C06BA60` → ? | −0x20000 … −0x80000 |
+| `0C071CA0` | `0C07E160` (streaks) | `0C06D0B0` → ? | −0x80000 |
+| `0C071CD4/CD6` | `0C07E440` | `0C06D370` → ? | ±0x80000 … +0x180000 |
+| `0C071CA0` | `0C0BC020`, `0C0BBF10` | (literal-only vs arcade) | −0x1000 |
+| `0C06D302`, `0C06D6FC` | player start, title | — | set |
+
+PS2 fragment handler: Arcade path `harder(0x2000)` at `0x0012F4A4`; Arrange adds `harder(0x40000)` at
+`0x0012F504`. BL uses Arrange's 0x40000. PS2 rank helpers: `0x00129DC0` easier (+, capped),
+`0x00129DF0` harder (−); both do nothing while `$gp-0x6DB0` (`0x00338F40`) is non-zero (stage start).

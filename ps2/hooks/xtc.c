@@ -116,6 +116,7 @@ static void test_grant_weapons(u32 rec)
  * Results (level, shot P) after each case are left in bl_shot_test[]. */
 typedef void (*pickup_fn)(int side, int item);
 u8 bl_shot_test[8];
+u32 bl_rank_test; /* stored rank after one fragment pickup starting from 0x00800000 */
 static void test_shot_levels(u32 rec)
 {
 	volatile u8 *streak = (volatile u8 *)(0x00495130u + 8u * EE_RAM(u8, 0x0033FCF0u - 28276));
@@ -128,6 +129,9 @@ static void test_shot_levels(u32 rec)
 	EE_RAM(u8, rec + 0x25B) = 5; EE_RAM(u8, rec + 0x25C) = 5; streak[0] = 0;   /* level 5 -> 6 case */
 	((pickup_fn)0x0012FB00u)(0, 0);
 	bl_shot_test[2] = EE_RAM(u8, rec + 0x25B); bl_shot_test[3] = EE_RAM(u8, rec + 0x25C);
+	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* fragment rank case */
+	((pickup_fn)0x0012F400u)(0, 0);
+	bl_rank_test = EE_RAM(u32, PS2_RANK_INV);
 }
 #endif
 
@@ -152,7 +156,8 @@ void xtc_frame(void)
 		test_grant_weapons(rec);
 #endif
 #ifdef BL_TEST_SHOT_LEVELS
-		if (s == 0 && (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT))
+		if (s == 0 && (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT) &&
+		    EE_RAM(u32, 0x00338F40u) == 0) /* rank helpers do nothing while $gp-0x6DB0 (0x00338F40) is set */
 			test_shot_levels(rec);
 #endif
 		if (!down)
