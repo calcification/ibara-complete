@@ -12,7 +12,8 @@ local function press(f, p, n, len) at(f, function() fld(p, n):set_value(1) end);
 local t0 = 2400
 press(t0, ":PORT_C", "Coin 1", 8); press(t0 + 60, ":PORT_C", "1 Player Start", 8)
 for i = 0, 8 do press(t0 + 300 + i * 40, ":PORT_D", "P1 Button 1", 6) end
-at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1) end)
+if not os.getenv("NOSHOT") then at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1) end) end
+local cout = os.getenv("COUT") and io.open(os.getenv("COUT"), "w")
 local out = io.open(os.getenv("SPOUT"), "w")
 local LIMIT = tonumber(os.getenv("SPFRAMES") or "16000")
 emu.register_frame_done(function()
@@ -32,6 +33,9 @@ emu.register_frame_done(function()
           sp:read_u16(a + 0x3C), sp:read_u32(a + 0x40), sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, (fl >> 14) & 1))
       end
       alive[i] = on; typ[i] = t
+      if cout and on and t == 5 and first and (frame - first) % 4 == 0 and sp:read_u32(a + 8) < 3 then
+        cout:write(string.format("%d %d %d %08X %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8), sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16))
+      end
     end
   end
   if first then
@@ -57,5 +61,5 @@ emu.register_frame_done(function()
       balive[i] = on
     end
   end
-  if frame == t0 + LIMIT then out:close(); bout:close(); m:exit() end
+  if frame == t0 + LIMIT then out:close(); bout:close(); if cout then cout:close() end; m:exit() end
 end)

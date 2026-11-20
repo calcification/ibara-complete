@@ -33,6 +33,16 @@ static u32 bl_alive_mask[8];
 static s16 bl_pending[256]; /* record index + 1 awaiting its velocity */
 static s32 bl_x0[256], bl_y0[256]; /* full 16.16 start position */
 
+/* Boss sampler: every 4 frames, each alive type-5 part with subtype < 3 (stage-1 boss core and side parts). */
+#define CORE_LOG 0x01F60000u
+#define CORE_MAX 8000u
+struct core_rec {
+	u32 frame;
+	u16 slot, hp;
+	u32 subtype;
+	s16 x, y;
+};
+
 static u32 sl_frame, sl_first, sl_started;
 static u32 sl_type[EN_COUNT];
 static u8 sl_alive[EN_COUNT];
@@ -51,6 +61,7 @@ void spawn_log_frame(void)
 #endif
 	if (!sl_started) {
 		*count = 0;
+		EE_RAM(u32, CORE_LOG) = 0;
 		sl_started = 1;
 	}
 	{
@@ -114,6 +125,19 @@ void spawn_log_frame(void)
 		}
 		sl_alive[i] = (u8)on;
 		sl_type[i] = t;
+		if (on && t == 5 && sl_first && !((sl_frame - sl_first) & 3) && EE_RAM(u32, a + 8) < 3u) {
+			volatile u32 *ccount = (volatile u32 *)CORE_LOG;
+			struct core_rec *c = (struct core_rec *)(CORE_LOG + 16);
+			if (*ccount < CORE_MAX) {
+				c[*ccount].frame = sl_frame - sl_first;
+				c[*ccount].slot = (u16)i;
+				c[*ccount].hp = EE_RAM(u16, a + 0x3C);
+				c[*ccount].subtype = EE_RAM(u32, a + 8);
+				c[*ccount].x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
+				c[*ccount].y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
+				(*ccount)++;
+			}
+		}
 	}
 }
 #endif

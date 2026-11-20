@@ -62,3 +62,18 @@ HP distribution now equals BL's; enemy bullets in BL's stage-1 span 1,119 (BL 1,
 * **Boss sequence:** BL fires 316 bullets at 5,500–6,500 (types 0, 4, 2) and spawns 18 type-55 parts; patched PS2
   fires 98 there and 238 at 6,500–8,000, with 6 type-55 parts.
 * **Mid-stage:** PS2 still fires ~1.5× BL's type-0 bullets at 1,000–2,000 and 2× at 2,500–3,000.
+
+## Stage-1 boss after K11 (boss sampler: `COUT=` in `bullet_log.lua`, `CORE_LOG` 0x01F60000 in `spawnlog.c`)
+
+Every 4 frames both loggers record the type-5 parts with subtype < 3 (core worth 100,000 and its two side parts):
+HP and position. Rank 0x800000, player holding shot without moving (both games start the player at x 66, y 480).
+* The side parts **share the core's HP**; core and part flags change at the same moments in both games
+  (`C0008014 → C0008004 → C0008104 → D3008104`, last one = fight starts), and the core has 168 HP in both.
+* Damage per frame is the same while the core is in the line of fire, but the boss **sweeps sideways on a
+  different line**: same ~700-frame period and ~148 px amplitude, BL y 431–580 (centre ≈ 505) vs PS2 442–592
+  (≈ 517). At the far end of each PS2 sweep the static test player misses, so the PS2 core stalls (HP 97 → 92 at
+  6,000–6,300) and dies at 7,270 vs BL 6,728 (post-boss parts at 8,053 vs 7,068).
+* BL's type-5 handler is **`0C0995B0`** (enemy type table `0C1DD6DC`, found by matching Phase 12 pairs against a
+  RAM dump; 90 entries like PS2's `0x00205BF0`). It dispatches on the part's subtype (0..0x67) through a jump
+  table; arcade `0C088C40` / PS2 `0x00165A10` is the same routine compiled as one function, which is why Phase 11
+  listed it as a_only/b_only.
