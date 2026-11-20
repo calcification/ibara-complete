@@ -30,3 +30,21 @@ enemies *do* (the ~288 changed enemy routines: bullets, movement, timing) and in
 **Next:** log enemy *bullets* per enemy type (count, speed, angle) in both games to find which types behave
 differently, then port those routines. (Earlier idea: locate PS2's stage-1 spawn script (where type/subtype/time come from; the allocator `0x00127F80` has
 181 callers) and rewrite its subtype values and timings to BL's, then re-log and diff to zero — not needed for stage 1.)
+
+## Enemy bullets, stage 1 (`compare_bullets.py`)
+
+Loggers: `research/phase13/bullet_log.lua` (BL; speed measured 6 frames after spawn, after the spawn flash) and
+the bullet part of `ps2/hooks/spawnlog.c` (PS2, `0x01F40000`). Optional rank lock in both
+(`RANKLOCK=` env in MAME, `--define BL_SPAWN_RANK=0x00800000u` on PS2) removes rank as a variable.
+
+`stage1_bullets_rank800000.txt` (both at stored rank 0x800000):
+* Same bullet types (0, 1, 2, 4, 11, 12) in the same sections, BL speeds 1.0–1.4 px/frame.
+* **BL fires fewer** mid-stage: ~55–60% of PS2's type-0 bullets in frames 1,000–3,000; 8 vs 24 around 3,500.
+* **Boss timing differs:** BL's boss burst is at 6,000–6,500 and the stage ends by ~7,000; PS2's burst is at
+  6,500–7,000 and the fight runs past 8,500 (PS2 boss parts also had more HP at spawn).
+* Caveat: equal stored rank may not mean equal difficulty if BL changed its rank scaling; check by reading
+  how BL's enemy routines use rank (e.g. the type-0 shooters) before porting fire rates.
+
+**Next:** (1) compare the stage-1 boss (type 5 parts): HP at equal rank and its attack sequence; (2) for the
+mid-stage shooters, read BL vs arcade/PS2 code for fire-rate formulas (Phase 11 changed set ∩ types active there)
+and port the formula changes as BLACK LABEL build patches; re-run both loggers until the timelines match.

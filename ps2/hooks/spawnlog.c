@@ -20,6 +20,19 @@ struct spawn_rec {
 	s16 x, y;
 };
 
+#define BULLET_LOG 0x01F40000u
+#define BULLET_MAX 7000u
+struct bullet_rec {
+	u32 frame;
+	u16 type;
+	u8 slot, pad;
+	s16 x, y;
+	s16 dx, dy; /* 8.8 pixels per frame, from the next frame's position */
+};
+static u32 bl_alive_mask[8];
+static s16 bl_pending[256]; /* record index + 1 awaiting its velocity */
+static s32 bl_x0[256], bl_y0[256]; /* full 16.16 start position */
+
 static u32 sl_frame, sl_first, sl_started;
 static u32 sl_type[EN_COUNT];
 static u8 sl_alive[EN_COUNT];
@@ -33,9 +46,52 @@ void spawn_log_frame(void)
 	sl_frame++;
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;
+#ifdef BL_SPAWN_RANK
+	EE_RAM(u32, PS2_RANK_INV) = BL_SPAWN_RANK; /* controlled comparisons: same stored rank as the MAME run */
+#endif
 	if (!sl_started) {
 		*count = 0;
 		sl_started = 1;
+	}
+	{
+		volatile u32 *bcount = (volatile u32 *)BULLET_LOG;
+		struct bullet_rec *bl = (struct bullet_rec *)(BULLET_LOG + 16);
+		if (sl_started == 1) {
+			*bcount = 0;
+			sl_started = 2;
+		}
+		for (i = 0; i < 256; i++) {
+			const u32 a = PS2_BULLETS_BASE + i * PS2_BULLET_STRIDE;
+			const u32 fl = EE_RAM(u32, a);
+			const int on = (fl & (BULLET_CAN_HIT | BULLET_SEGMENT)) == BULLET_CAN_HIT;
+			const u32 bit = 1u << (i & 31);
+			const s32 x = EE_RAM(s32, a + PS2_BULLET_X), y = EE_RAM(s32, a + PS2_BULLET_Y);
+			if (bl_pending[i]) {
+				struct bullet_rec *r = &bl[bl_pending[i] - 1];
+				if (on) {
+					r->dx = (s16)((x - bl_x0[i]) >> 8);
+					r->dy = (s16)((y - bl_y0[i]) >> 8);
+				}
+				bl_pending[i] = 0;
+			}
+			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first && *bcount < BULLET_MAX) {
+				struct bullet_rec *r = &bl[*bcount];
+				r->frame = sl_frame - sl_first;
+				r->type = (u16)EE_RAM(u32, a + 4);
+				r->slot = (u8)i;
+				r->x = (s16)(x >> 16);
+				r->y = (s16)(y >> 16);
+				r->dx = r->dy = 0;
+				bl_x0[i] = x;
+				bl_y0[i] = y;
+				(*bcount)++;
+				bl_pending[i] = (s16)*bcount;
+			}
+			if (on)
+				bl_alive_mask[i >> 5] |= bit;
+			else
+				bl_alive_mask[i >> 5] &= ~bit;
+		}
 	}
 	for (i = 0; i < EN_COUNT; i++) {
 		const u32 a = EN_BASE + i * EN_STRIDE;
