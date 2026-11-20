@@ -33,8 +33,13 @@ CROSS = "mips-linux-gnu-"
 CFLAGS = ["-march=r5900", "-EL", "-mabi=32", "-msoft-float", "-mno-abicalls", "-fno-pic", "-G0", "-O2",
           "-ffreestanding", "-fno-builtin", "-nostdlib", "-fno-common", "-Wall", "-Werror",
           "-Wa,-mfix-r5900", "-I", str(PS2 / "include")]
-CAVE_BASE = 0x000C0000
+CAVE_BASE = 0x000C0000  # PNACH profiles: written after boot (C00/K01 runtime-verified)
 CAVE_END = 0x00100000
+# Baked ELF payloads: a PT_LOAD at 0x000C0000 kills PCSX2 v1.7.4000 during LoadExecPS2 (bisected
+# 2026-11-20), so they live in high RAM that stayed zero in ~160 savestates (title, menus, demos,
+# Arcade stages 1-2): 0x01EFE100-0x01FFDA00, below the stack. Runtime-observed only.
+BAKE_BASE = 0x01F00000
+BAKE_END = 0x01F10000
 
 # Facts a hook may depend on. Only "verified" facts allow a PNACH group to be emitted.
 FACTS = {
@@ -131,7 +136,7 @@ def read_elf_sections(path: Path) -> tuple[list[tuple[str, int, bytes, bool]], d
     return secs, syms
 
 
-def build_hook(key: str, work: Path) -> dict:
+def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
     h = HOOKS[key]
     objs = []
     stub_src = work / f"{key}_stubs.S"
@@ -147,11 +152,11 @@ def build_hook(key: str, work: Path) -> dict:
         run([CROSS + "gcc", *CFLAGS, "-c", str(src), "-o", str(obj)])
         objs.append(str(obj))
     elf = work / f"{key}.elf"
-    run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{CAVE_BASE:08X}",
+    run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",
          *defsyms, "-o", str(elf), *objs])
     secs, syms = read_elf_sections(elf)
     end = syms["__cave_end"]
-    if not (CAVE_BASE <= syms["__cave_start"] and end <= CAVE_END):
+    if not (base <= syms["__cave_start"] and end <= end_limit):
         raise AssertionError(f"{key}: image {syms['__cave_start']:08X}-{end:08X} outside cave")
     words = []  # (place, addr, value)
     for name, addr, blob, mutable in secs:
@@ -162,7 +167,7 @@ def build_hook(key: str, work: Path) -> dict:
     for site, original_word, entry in h["sites"]:
         sites.append((site, original_word, jal(syms[entry])))
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
-    return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - CAVE_BASE, "listing": listing}
+    return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 
 
 def pending(h: dict) -> list[str]:
@@ -200,12 +205,66 @@ def check_ram(path: Path, built: dict):
     return len(nz)
 
 
+def bake_elf(retail: bytes, built: dict) -> bytes:
+    """Copy of the retail ELF with the hook image as an extra PT_LOAD and the hook sites patched.
+
+    For the sixth Mode Select entry (research/phase04/build_menu_probe.py --payload-elf): the original
+    SLPM_663.01 stays untouched for Arcade/Arrange, and the copy runs with the hooks and no PNACH.
+    The PS2 loader only reads the program headers right after the ELF header (a table moved to the end of
+    the file killed PCSX2 during LoadExecPS2), so the table stays at 0x34 and all file data shifts by
+    0x80 (the retail segment alignment) to make room; segment and section offsets are fixed up.
+    Output is built locally from the user's own disc and must not be committed or distributed.
+    """
+    SHIFT = 0x80
+    src = bytearray(retail)
+    for site, orig, new in built["sites"]:
+        off = site - build_pnach.ELF_BASE + build_pnach.ELF_FILE_OFFSET
+        found, = struct.unpack_from("<I", src, off)
+        if found != orig:
+            raise AssertionError(f"bake: preimage mismatch @ {site:08X}")
+        struct.pack_into("<I", src, off, new)
+    phoff, = struct.unpack_from("<I", src, 0x1C)
+    shoff, = struct.unpack_from("<I", src, 0x20)
+    phentsize, phnum, shentsize, shnum = struct.unpack_from("<HHHH", src, 0x2A)
+    first_data = min(struct.unpack_from("<I", src, phoff + i * phentsize + 4)[0] for i in range(phnum))
+    if phoff != 0x34 or phoff + (phnum + 1) * phentsize > first_data + SHIFT:
+        raise AssertionError("bake: unexpected retail ELF layout")
+    words = sorted((a, v) for _p, a, v in built["words"])
+    lo, hi = words[0][0], words[-1][0] + 4
+    image = bytearray(hi - lo)
+    for a, v in words:
+        struct.pack_into("<I", image, a - lo, v)
+    out = bytearray(src[:first_data]) + bytearray(SHIFT) + src[first_data:]
+    while len(out) % 16:
+        out.append(0)
+    cave_off = len(out)
+    out += image
+    table = bytearray()
+    for i in range(phnum):
+        ph = list(struct.unpack_from("<8I", src, phoff + i * phentsize))
+        ph[1] += SHIFT
+        table += struct.pack("<8I", *ph)
+    table += struct.pack("<8I", 1, cave_off, lo, lo, len(image), len(image), 7, 0x10)  # PT_LOAD RWX
+    out[phoff:phoff + len(table)] = table
+    struct.pack_into("<H", out, 0x2C, phnum + 1)
+    if shoff and shnum:
+        struct.pack_into("<I", out, 0x20, shoff + SHIFT)
+        for i in range(shnum):
+            at = shoff + SHIFT + i * shentsize + 16  # sh_offset
+            o, = struct.unpack_from("<I", out, at)
+            if o >= first_data:
+                struct.pack_into("<I", out, at, o + SHIFT)
+    return bytes(out)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--elf", type=Path, help="clean SLPM_663.01 or ISO, to verify hook-site preimages")
     ap.add_argument("--check-ram", type=Path, action="append", default=[], help="PCSX2 eeMemory.bin dump(s)")
     ap.add_argument("--output", type=Path, default=ROOT / "pnach" / "hooks")
     ap.add_argument("--listing-dir", type=Path, default=ROOT / "build" / "ee_hooks")
+    ap.add_argument("--bake-elf", nargs=2, metavar=("HOOK", "OUT"),
+                    help="write a retail-ELF copy with HOOK built in (needs --elf), for the sixth menu entry")
     args = ap.parse_args(argv)
     if not have_toolchain():
         print("SKIP: mips-linux-gnu-gcc not installed (apt-get install gcc-mips-linux-gnu)")
@@ -218,6 +277,12 @@ def main(argv=None) -> int:
             (args.listing_dir / f"{key}.lst").write_text(built["listing"])
             if elf:
                 verify_sites(elf, built)
+            if args.bake_elf and args.bake_elf[0] == key:
+                if not elf:
+                    raise ValueError("--bake-elf needs --elf (the clean retail ELF or ISO)")
+                baked = build_hook(key, Path(tmp), BAKE_BASE, BAKE_END)
+                Path(args.bake_elf[1]).write_bytes(bake_elf(elf, baked))
+                print(f"{h['test_id']} {key}: baked at {BAKE_BASE:08X} into {args.bake_elf[1]}")
             for dump in args.check_ram:
                 check_ram(dump, built)
             miss = pending(h)

@@ -27,3 +27,11 @@ The `retail` profile is the default. `240p_core` and `240p_halfpixel` apply the 
 In PCSX2, check that the sixth entry displays the supplied label, the payload starts, and its return action reloads the retail title. Check Arcade, Arrange, Gallery, Option, and Exit after returning. For a progressive profile, confirm the mode after both the initial boot and the retail reload. Use the [P01/P02 register checks](../tests/manual/RESULTS_P01_P02.md) to identify scan mode and active height.
 
 Both progressive profiles passed the [launcher round-trip test](../tests/manual/M03_LAUNCHER_VIDEO.md) with the interactive controller probe.
+
+## Retail copy with Black Label hooks (K02)
+
+`python3 scripts/build_ee_hooks.py --elf 'Ibara (Japan).iso' --bake-elf bl_xtc outputs/KURO.ELF` writes the
+retail executable with the hook code as an extra load segment at `0x01F00000`. Pass it as `--payload-elf`
+with `--label 'BLACK LABEL'`. Keep the program headers directly after the ELF header in any payload you
+build: a table placed at the end of the file crashed PCSX2 v1.7.4000 during the handoff. Generated ELFs and
+ISOs contain game code: keep them local.

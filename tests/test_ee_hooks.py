@@ -116,6 +116,26 @@ class BuildTests(unittest.TestCase):
         self.assertIn(expected, path.read_text(encoding="utf-8"),
                       "pnach/hooks is stale: run python3 scripts/build_ee_hooks.py")
 
+    def test_bake_keeps_program_headers_after_elf_header(self):
+        # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000
+        body = bytearray(0x30000)
+        struct.pack_into("<I", body, 0x0012E62C - 0x00100000, 0x0C04AB18)
+        elf = bytearray(0x80) + body
+        elf[:7] = b"\x7fELF\x01\x01\x01"
+        struct.pack_into("<HHIIIIIHHHHHH", elf, 16, 2, 8, 1, 0x00100008, 0x34, 0, 0, 52, 32, 1, 40, 0, 0)
+        struct.pack_into("<8I", elf, 0x34, 1, 0x80, 0x00100000, 0x00100000, len(body), len(body), 7, 0x80)
+        b = hooks.build_hook("bl_xtc", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
+        out = hooks.bake_elf(bytes(elf), b)
+        self.assertEqual(struct.unpack_from("<I", out, 0x1C)[0], 0x34)
+        self.assertEqual(struct.unpack_from("<H", out, 0x2C)[0], 2)
+        ph = [struct.unpack_from("<8I", out, 0x34 + 32 * i) for i in range(2)]
+        self.assertEqual(ph[0][1], 0x100)
+        self.assertEqual((ph[1][2], ph[1][1] % 16), (hooks.BAKE_BASE, 0))
+        self.assertEqual(out[ph[1][1]:ph[1][1] + 4], struct.pack("<I", 0x31435458))
+        site = struct.unpack_from("<I", out, 0x100 + 0x0012E62C - 0x00100000)[0]
+        self.assertEqual(site, hooks.jal(b["syms"]["xtc_entry"]))
+        self.assertGreaterEqual(b["syms"]["xtc_entry"], hooks.BAKE_BASE)
+
     def test_xtc_state_at_cave_base_and_profile_current(self):
         b = self.built["bl_xtc"]
         self.assertEqual(b["syms"]["xtc"], hooks.CAVE_BASE)
