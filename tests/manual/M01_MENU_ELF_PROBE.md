@@ -1,5 +1,7 @@
 # M01 · Launch and return from the Mode Select ELF probe
 
+For a controller-driven return and a memory-card check, see [M02](M02_INTERACTIVE_ELF_PROBE.md).
+
 **Result:** PASS in PCSX2 2.8.2 on Linux with Japanese BIOS v01.00 and OpenGL (Mesa llvmpipe). The input was the exact Japanese `SLPM-66301` retail ISO, CRC `420C7FAB`. The probe image used CRC `F6BD9C51` for the modified retail executable and `04D616D3` for the homebrew executable. Cheats and patches were disabled.
 
 1. From the repository root, install the optional asset dependencies with `python3 -m pip install -r requirements-assets.txt`.

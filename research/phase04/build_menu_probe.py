@@ -100,6 +100,33 @@ def returning_probe():
     return bytes(header) + code
 
 
+def read_probe_elf(path):
+    available = (disc.NEXT_ORIGINAL_FILE_LBA - disc.NEW_FILE_LBA) * disc.SECTOR
+    if not 52 <= path.stat().st_size <= available:
+        raise ValueError('The probe ELF does not fit in the reserved disc extent')
+    probe = path.read_bytes()
+    if len(probe) < 52 or probe[:7] != b'\x7fELF\x01\x01\x01':
+        raise ValueError('The probe must be a little-endian ELF32 executable')
+    kind, machine, version, entry, table = struct.unpack_from('<HHIII', probe, 16)
+    header_size, count = struct.unpack_from('<HH', probe, 42)
+    if ((kind, machine, version) != (2, 8, 1) or header_size != 32 or count == 0 or
+            table < 52 or table + count * header_size > len(probe) or entry & 3):
+        raise ValueError('Invalid MIPS executable header or program headers')
+    executable_entry = False
+    for index in range(count):
+        segment, offset, address, _, size, memory, flags, _ = struct.unpack_from(
+            '<8I', probe, table + index * header_size,
+        )
+        if segment != 1:
+            continue
+        if size > memory or offset + size > len(probe) or address + memory > 0x02000000:
+            raise ValueError('A probe load segment exceeds the file or EE RAM')
+        executable_entry |= bool(flags & 1 and address <= entry < address + size)
+    if not executable_entry:
+        raise ValueError('The probe entry point must be inside a file-backed executable segment')
+    return probe
+
+
 def label_writes(source, files):
     from PIL import Image, ImageDraw, ImageFont
 
@@ -137,12 +164,12 @@ def label_writes(source, files):
     return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
 
 
-def build(source, output):
+def build(source, output, probe_path=None):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
+    probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
     original, files, boot = retail.load_input(source)
-    probe = returning_probe()
     row = disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, len(probe))
     end = disc.ORIGINAL_ROOT_LEN + len(row)
     pvd, root = bytearray(pvd), bytearray(root)
@@ -162,6 +189,14 @@ def build(source, output):
     with source.open('rb') as original_iso, output.open('x+b') as target:
         try:
             zeros = bytes(4 * 1024 * 1024)
+            original_iso.seek(disc.NEW_FILE_LBA * disc.SECTOR)
+            remaining = (len(probe) + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
+            while remaining:
+                size = min(remaining, len(zeros))
+                if original_iso.read(size) != zeros[:size]:
+                    raise ValueError('The probe would overwrite occupied disc sectors')
+                remaining -= size
+            original_iso.seek(0)
             while block := original_iso.read(len(zeros)):
                 if block == zeros[:len(block)]:
                     target.seek(len(block), 1)
@@ -186,9 +221,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('source', type=Path, help='Exact original Japanese Ibara ISO')
     parser.add_argument('--output', type=Path, required=True, help='New test ISO path')
+    parser.add_argument('--probe-elf', type=Path, help='Use a custom EE executable in place of the timed probe')
     args = parser.parse_args()
     try:
-        build(args.source, args.output)
+        build(args.source, args.output, args.probe_elf)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(f'Created {args.output}')

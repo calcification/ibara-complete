@@ -37,7 +37,7 @@ This repository is the reproducible technical handoff for a project investigatin
 
 - Full retail ELF/ISO metadata and 1,130-item resource catalog (Phases 1–2)
 - **Two experimental ISO boot tests**: inject a 160-byte original test ELF without changing retail boot, or boot that ELF instead (Phase 3)
-- Retail mode-select address map, asset-only button prototype, and [a PCSX2-tested sixth menu entry for a homebrew probe](tests/manual/M01_MENU_ELF_PROBE.md) (Phase 4)
+- Retail mode-select address map, asset-only button prototype, and [a controller-driven homebrew ELF launched from a sixth menu entry](tests/manual/M02_INTERACTIVE_ELF_PROBE.md) (Phase 4)
 - Bounded CV1000 VRAM/NAND memory prototype with host-side tests and a MIPS III object (Phase 5)
 - Read-only, instruction-fingerprinted audits for native PS2 input, rank, pickups, medal scoring, bullet conversion, and rose merging (Phases 6–10)
 - Cross-platform scripts, `TEST_MATRIX.csv`, a full manual PCSX2/PS2 checklist, and a reproducible audit runner
