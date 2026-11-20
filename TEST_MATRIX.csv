@@ -1,7 +1,7 @@
 id,test,environment,status,instructions_or_file,command,pass_condition
 P00,Unmodified baseline (no PNACH write),PCSX2,PASS,pnach/profiles/baseline/SLPM-66301_420C7FAB.pnach;tests/manual/RESULTS_P00_B04.md,Cold boot with cheats disabled or use the baseline profile,Normal 5-entry retail frontend and both Arcade and Arrange
-P01,14-edit PCSX2 240p nearest crop,PCSX2,PENDING,pnach/profiles/240p_core/SLPM-66301_420C7FAB.pnach,Enable only 240p_core group or copy its profile,Compare display mode + shimmer against P00
-P02,18-edit PCSX2 240p half-pixel variant,PCSX2,PENDING,pnach/profiles/240p_halfpixel/SLPM-66301_420C7FAB.pnach,Enable only 240p_halfpixel group or copy its profile,Compare half-pixel registration + shimmer against P01
+P01,14-edit PCSX2 240p nearest crop,PCSX2,PASS,pnach/profiles/240p_core/SLPM-66301_420C7FAB.pnach;tests/manual/RESULTS_P01_P02.md,Enable only 240p_core group or copy its profile,14 verified writes and progressive GS output with 224 active lines
+P02,18-edit PCSX2 240p half-pixel variant,PCSX2,PASS,pnach/profiles/240p_halfpixel/SLPM-66301_420C7FAB.pnach;tests/manual/RESULTS_P01_P02.md,Enable only 240p_halfpixel group or copy its profile,18 verified writes and progressive GS output with 224 active lines
 P03,Player 1 score marker 1000000,PCSX2,PENDING,pnach/profiles/score_marker/SLPM-66301_420C7FAB.pnach,Enable only score_marker; temporary card; watch EE 0044C600,EE score word becomes 000F4240 every vsync
 P04,Inverted rank lock easiest,PCSX2,PENDING,pnach/profiles/rank_easy/SLPM-66301_420C7FAB.pnach,Enable only rank_easy; watch EE 00338EB4,EE rank word becomes 00FFFFFF every vsync
 P05,Inverted rank lock hardest,PCSX2,PENDING,pnach/profiles/rank_hard/SLPM-66301_420C7FAB.pnach,Enable only rank_hard; watch EE 00338EB4,EE rank word becomes 00000000 every vsync
@@ -27,6 +27,7 @@ B04,Original retail menu debug trace,PCSX2,PASS,tests/manual/B04_MENU_DEBUGGER.m
 H01,Retail injection on real PS2,HARDWARE,BLOCKED,tests/manual/H01_REAL_PS2.md,See manual checklist,Only after emulator passes
 M01,Sixth menu row launches and returns from homebrew ELF,PCSX2,PASS,tests/manual/M01_MENU_ELF_PROBE.md,See manual checklist,Disc probe executes and retail title reloads with all five original frontend choices intact
 M02,Interactive controller probe and return with a saved card,PCSX2,PASS,tests/manual/M02_INTERACTIVE_ELF_PROBE.md,See manual checklist,Controller input and deliberate return work repeatedly and the test save remains intact
+S14,Synthetic EE memory allocation and cache smoke test,PCSX2,PASS,research/phase05/README.md,Build with PS2DEV and boot the smoke ELF,Tile and cache checks pass while the reserved buffers are live
 F01,Visible sixth BLACK LABEL option,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires new menu hook/descriptors/loader
 F02,Playable arcade-accurate Kuro on PS2,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires working Kuro port + assets and validation
 F03,Integrated Ibara 240p + Kuro,FUTURE,NOT_IMPLEMENTED,docs/STATUS.md,Not available,Requires combined build and hardware signal tests

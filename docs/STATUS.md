@@ -1,4 +1,4 @@
-**Current recommended method:** small PCSX2 `.pnach` experiments on the original ISO/CHD. The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. P01–P06 have passed offline checks and await emulator runs. See [PCSX2_FIRST](PCSX2_FIRST.md) for the procedures.
+**Current recommended method:** small PCSX2 `.pnach` experiments on the original ISO/CHD. The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. [P01 and P02](../tests/manual/RESULTS_P01_P02.md) both produced 224 active progressive lines. P03–P06 await emulator runs. See [PCSX2_FIRST](PCSX2_FIRST.md) for the procedures.
 
 # Verified status and roadblocks (November 2026)
 
@@ -11,7 +11,7 @@
 | New art | Phase 4 button indexes altered only within 112x48 alpha-clear slot | Correct hardware texture behavior; new button draw call |
 | Kuro | Public Xbox 360/PC SH-3 recompilation source used as reference; 64 MiB VRAM model demands redesign for PS2 | Ported Kuro game code, data streaming, native graphics, timing, authentic sound and gameplay |
 | Gameplay analysis | Native EE score/rank/pickup/cancellation/rose-merge instruction anchors | Dynamic branch conditions, complete bomb/Hadou IDs, parity against Kuro |
-| 240p | Separate `cave-ps2-240p` release | Any integrated, tested 240p + extra-ELF + Kuro build |
+| 240p | Separate `cave-ps2-240p` release; progressive output confirmed for both PNACH profiles in PCSX2 | Physical CRT signal and shimmer comparison, integrated gameplay build |
 
 **Pending:** a playable Black Label port, arcade-accurate mechanics and timing, and hardware validation.
 

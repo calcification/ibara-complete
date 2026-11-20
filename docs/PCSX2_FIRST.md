@@ -20,7 +20,7 @@
 
 ## Experiments
 
-The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. Patch experiments P01–P06 are pending.
+The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. [P01 and P02](../tests/manual/RESULTS_P01_P02.md) both produced 224 active progressive lines. P03–P06 are pending.
 
 Use a temporary or disconnected memory card for all tests that affect score/rank. Do **not** enable the score and rank tests together with video experiments during initial isolation. Distinguish an opcode/value present in memory from evidence that gameplay responds as intended.
 

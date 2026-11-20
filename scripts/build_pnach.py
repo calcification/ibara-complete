@@ -55,12 +55,12 @@ MEDAL_REWARD = (0x0020B104, 0x00000064, 0x00002710)
 TESTS = {
     '240p_core': {
         'title': 'VIDEO / 14-edit 240p nearest and crop',
-        'description': 'Experimental PNACH version of 14 original ISO edits. Shimmer is not fully solved; PCSX2 runtime NOT tested.',
+        'description': '14 core writes and progressive scan verified in PCSX2 2.8.2. CRT shimmer remains open.',
         'phase': 'P01', 'place': 2, 'edits': [(a,v) for a,_,v in VIDEO_EDITS],
     },
     '240p_halfpixel': {
         'title': 'VIDEO / 18-edit 240p plus half-pixel adjustment',
-        'description': 'Includes 14 baseline edits and four half-pixel Y-coordinate edits. Experimental, NOT runtime tested.',
+        'description': 'All 18 writes and progressive scan verified in PCSX2 2.8.2. Motion quality remains open.',
         'phase': 'P02', 'place': 2, 'edits': [(a,v) for a,_,v in VIDEO_EDITS+HALFPIXEL_EDITS],
     },
     'score_marker': {
@@ -91,7 +91,7 @@ HEADER = (
     '// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.\n'
     '// Uses the clean retail executable, NOT a pre-patched 240p ELF.\n'
     '// WARNING: Enable ONE test at a time; video tests and rank tests conflict.\n'
-    '// All tests are unverified in PCSX2 (offline source checks only).\n'
+    '// See tests/manual/RESULTS_P01_P02.md for the PCSX2 video results.\n'
 )
 
 
