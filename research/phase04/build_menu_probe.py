@@ -28,10 +28,17 @@ RETAIL_BASE = 0x00100000
 RETAIL_LOAD_OFFSET = 0x80
 LABEL_BOX = (112, 192, 224, 208)
 DEFAULT_LABEL = 'ELF PROBE'
+# Additional field-state writes from cave-ps2-240p v0.1.0-beta.1.
+FIELD_STATE_EDITS = [
+    (0x001B29D4, 0xAF829574, 0xAF809574),
+    (0x001B2A60, 0xAF839550, 0xAF809550),
+    (0x001B2A80, 0xAF829574, 0xAF809574),
+]
 VIDEO_PROFILES = {
     'retail': (),
     '240p_core': video.VIDEO_EDITS,
     '240p_halfpixel': video.VIDEO_EDITS + video.HALFPIXEL_EDITS,
+    '240p_cave_beta': video.VIDEO_EDITS + video.HALFPIXEL_EDITS + FIELD_STATE_EDITS,
 }
 LOAD_EXEC_PS2 = 0x24030006  # addiu v1, zero, 6
 SYSCALL = 0x0000000C
