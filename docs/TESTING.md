@@ -1,3 +1,9 @@
+# Current priority: PCSX2 patch tests P00–P06
+
+**Use [`PCSX2_FIRST.md`](PCSX2_FIRST.md) before the legacy test procedures below.** The original ISO/CHD plus `pnach/SLPM-66301_420C7FAB.pnach` supports all current video/rank/score/medal experiments with no new game images. The B01–B03 ISO builds below are **optional, postponed** and cannot simply be translated into PNACH. `B04` needs the original disc and debugger only. All PNACH experiments are currently runtime **PENDING**.
+
+---
+
 # Complete testing plan — run in order
 
 **Nothing below implies that a runtime test already passed.** The tests in the previous phases were primarily *offline checks*; the boot and graphical tests have not been reported back yet. Begin with `TEST_MATRIX.csv` for a machine-readable checklist. Save outcomes using `tests/manual/RESULT_TEMPLATE.md`.

@@ -1,4 +1,32 @@
-# Ibara Complete — PS2 Original + Arrange + Black Label Research
+# Ibara Complete — PCSX2-first Research
+
+> **Fastest path (laptop + desktop): one clean Ibara ISO/CHD, one tiny `.pnach`. No repeated 3.66 GB image builds.**
+> This is pre-alpha research, **NOT a playable Kuro / Black Label port.** No runtime patch in this new PNACH suite has yet been validated in PCSX2.
+
+## Start here: 60-second PCSX2 setup
+
+1. Get **[`pnach/SLPM-66301_420C7FAB.pnach`](pnach/SLPM-66301_420C7FAB.pnach)** (~few KB). The exact filename is required: `420C7FAB` is the **original retail PCSX2 CRC**.
+2. Open your PCSX2 **Tools → Open Data Directory** and copy it into **`cheats/`** (back up an existing same-named file).
+3. Boot your **original unmodified** Ibara Japanese disc image; optionally use a **CHD compressed image** to save space. Confirm CRC `420C7FAB`. Enable cheats in game properties.
+4. Under per-game **Cheats**, enable **one** `Ibara Complete` experiment at a time. Default: disable the experimental groups until you intend to test one.
+5. Report result using [`tests/manual/RESULT_TEMPLATE.md`](tests/manual/RESULT_TEMPLATE.md). See **[`docs/PCSX2_FIRST.md`](docs/PCSX2_FIRST.md)** for the exact six patch tests, debugging addresses, and limitations.
+
+**No retail image needed to generate/check the patches:** `python3 scripts/build_pnach.py && python3 tests/test_pnach.py`. With your clean ISO, add `--verify 'Ibara (Japan).iso'` to the generator to check original opcodes. Individual no-conflict profiles, including a no-write baseline, are in [`pnach/profiles/`](pnach/profiles/).
+
+### Ready-to-use experiments
+
+| ID | Patch experiment | Type | Game runtime evidence |
+|---|---|---|---|
+| P00 | No-write baseline | `pnach/profiles/baseline/` | Not yet recorded |
+| P01 | 14-edit native 240p + nearest/crop | `.pnach` named group | Not yet recorded; residual shimmer known in separate disc patch |
+| P02 | 18-edit 240p + four half-pixel coordinates | `.pnach` named group | Not yet recorded as PNACH |
+| P03 | Player 1 score marker (1,000,000) | `.pnach` named group | Awaiting PCSX2 |
+| P04/P05 | Easiest/hardest inverted rank locks | `.pnach` named groups | Awaiting PCSX2 |
+| P06 | First medal reward 100 → 10,000 | `.pnach` named group | Awaiting PCSX2 |
+
+**Existing research and optional 3.66 GB ISO tests are below.** The ISO-based secondary ELF boot and PDM asset injection cannot be faithfully reproduced using only PNACH memory writes, so they remain **secondary**.
+
+---
 
 > **Research / pre-alpha handoff — NOT a playable Black Label PS2 port.**
 > The existing retail PS2 **Arcade** and **Arrange** modes have not been modified into a tested third game mode. No PS2/PCSX2 boot test of the injected secondary ELF has yet been reported.
@@ -16,7 +44,7 @@ This repository is the reproducible technical handoff for a project investigatin
 
 **Read first:** [HANDOFF](docs/HANDOFF.md) · [CURRENT STATUS](docs/STATUS.md) · [ALL TESTS](docs/TESTING.md) · [ERRATA](docs/ERRATA.md).
 
-### Quick start — research validation (Windows, macOS, Linux)
+### Optional: full static research validation (Windows, macOS, Linux)
 
 Requirements: Python **3.10+** and your own clean, unmodified Japanese `Ibara (Japan).iso`.
 
@@ -34,7 +62,7 @@ python3 scripts/run_audits.py 'Ibara (Japan).iso' --out validation-output
 
 This runs the static auditors and their original-ELF-dependent unit tests. It **does not** modify the game. Results are stored in `validation-output/` (gitignored). Use `--full` for the optional checksum-intensive Phase 3 dry runs, zero-gap scan, and Phase 5 C compiler test. Running `python3 scripts/run_audits.py --selftest` does not require any game ISO and tests the Phase 5 standalone tools.
 
-### Prepare boot images — only when ready for PCSX2
+### Optional: disk-space-intensive ISO tests (not the default workflow)
 
 ```bash
 python3 scripts/build_test_images.py 'Ibara (Japan).iso' --mode probe --out outputs

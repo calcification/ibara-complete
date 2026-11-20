@@ -1,0 +1,66 @@
+gametitle=Ibara (Japan) (SLPM-66301)
+// Ibara Complete RESEARCH ONLY | original ELF XOR CRC 420C7FAB
+// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
+// Uses the clean retail executable, NOT a pre-patched 240p ELF.
+// WARNING: Enable ONE test at a time; video tests and rank tests conflict.
+// All tests are unverified in PCSX2 (offline source checks only).
+
+[Ibara Complete\P01 VIDEO / 14-edit 240p nearest and crop]
+description=Experimental PNACH version of 14 original ISO edits. Shimmer is not fully solved; PCSX2 runtime NOT tested.
+author=Ibara Complete Research
+patch=2,EE,001AD250,word,24050000
+patch=2,EE,001AF11C,word,24040000
+patch=2,EE,001DD1C0,word,00000008
+patch=2,EE,001DD1C8,word,00000008
+patch=2,EE,001DD1D0,word,000000E8
+patch=2,EE,001DD1D8,word,000000E8
+patch=2,EE,001DD200,word,00000008
+patch=2,EE,001DD208,word,00000008
+patch=2,EE,001DD210,word,000000E8
+patch=2,EE,001DD218,word,000000E8
+patch=2,EE,001DD240,word,00000008
+patch=2,EE,001DD248,word,00000008
+patch=2,EE,001DD250,word,000000E8
+patch=2,EE,001DD258,word,000000E8
+
+[Ibara Complete\P02 VIDEO / 18-edit 240p plus half-pixel adjustment]
+description=Includes 14 baseline edits and four half-pixel Y-coordinate edits. Experimental, NOT runtime tested.
+author=Ibara Complete Research
+patch=2,EE,001AD250,word,24050000
+patch=2,EE,001AF11C,word,24040000
+patch=2,EE,001DD1C0,word,00000008
+patch=2,EE,001DD1C8,word,00000008
+patch=2,EE,001DD1D0,word,000000E8
+patch=2,EE,001DD1D8,word,000000E8
+patch=2,EE,001DD200,word,00000008
+patch=2,EE,001DD208,word,00000008
+patch=2,EE,001DD210,word,000000E8
+patch=2,EE,001DD218,word,000000E8
+patch=2,EE,001DD240,word,00000008
+patch=2,EE,001DD248,word,00000008
+patch=2,EE,001DD250,word,000000E8
+patch=2,EE,001DD258,word,000000E8
+patch=2,EE,001AECD4,word,24AA78F8
+patch=2,EE,001AED3C,word,265278F8
+patch=2,EE,001AED88,word,244278F8
+patch=2,EE,001AEDD4,word,244278F8
+
+[Ibara Complete\P03 DIAGNOSTIC / P1 score marker 1000000]
+description=Writes P1 score at corrected 0044C600 to 1000000 every vsync. Use a temporary or empty memory card.
+author=Ibara Complete Research
+patch=1,EE,0044C600,word,000F4240
+
+[Ibara Complete\P04 DIAGNOSTIC / rank easiest 00FFFFFF]
+description=Holds inverted rank global at easiest value 00FFFFFF. Never enable with rank_hard.
+author=Ibara Complete Research
+patch=1,EE,00338EB4,word,00FFFFFF
+
+[Ibara Complete\P05 DIAGNOSTIC / rank hardest 00000000]
+description=Holds inverted rank global at hardest value 00000000. Never enable with rank_easy.
+author=Ibara Complete Research
+patch=1,EE,00338EB4,word,00000000
+
+[Ibara Complete\P06 DIAGNOSTIC / first medal 10000 points]
+description=Changes only first medal reward table entry from 100 to 10000. Pick up level-0 medal to test.
+author=Ibara Complete Research
+patch=2,EE,0020B104,word,00002710

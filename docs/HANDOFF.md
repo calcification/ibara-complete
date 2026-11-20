@@ -1,3 +1,7 @@
+## UPDATE: PCSX2-first handoff is now the primary workflow
+
+**Read [`PCSX2_FIRST.md`](PCSX2_FIRST.md) first.** Keep one **unmodified retail ISO/CHD** on the PCSX2 machine and use the tiny `pnach/SLPM-66301_420C7FAB.pnach` for test iterations. The official PCSX2 XOR checksum of the clean retail ELF is **`420C7FAB`**, distinct from the ordinary ELF CRC32 `F9085060`. Runtime patches can be toggled in game properties. `scripts/build_pnach.py` verifies original ELF preimages and generates stand-alone profiles. The 3.66 GB Phase 3/4 ISO builders are optional fallback tests, not required to run the normal patch suite. Do not attribute runtime success to offline fingerprints.
+
 # Handoff for another model / engineer — start here
 
 **Objective:** add a *genuinely authentic* Ibara Kuro / Black Label as a third mode to Japanese PlayStation 2 *Ibara* `SLPM_663.01`, retaining **Arcade**, **Arrange**, existing menus/save behavior, and ultimately native 240p CRT accuracy. Do not settle for an Arrange reskin or falsely claim authenticity.
@@ -26,7 +30,7 @@
 
 ### Immediate responsibilities
 
-1. **Do not publish a functional Kuro claim.** First request/perform PCSX2 tests B01–B04 in [TESTING](TESTING.md), record branch/EE-PC evidence, capture version details.
+1. **Do not publish a functional Kuro claim.** First run the small **PCSX2 P00–P06 PNACH tests** in [PCSX2_FIRST](PCSX2_FIRST.md), then only the relevant optional ISO-specific B01–B04 tests. Record CRC, active profile, EE memory evidence and PCSX2 version.
 2. **Independent review:** reconstruct critical routines in Ghidra/PCSX2; compare raw instructions and delay slots, not merely old AI prose. Audit patched vs original and report mismatches; respect Phase 8+ corrections.
 3. **Identify projectile numeric IDs** by tracing writers for projectile `+0x04` and `+0x08`, starting from `0x0011A580`, pool `0x0044EA40`, 128 slots/side, stride 0x50. Map bombs/Hadou/trails only after evidence.
 4. **Kuro architecture decision:** independently compare authentic Kuro CV1000 behavior and ROM (user-supplied) against native PS2 systems, with timed input/output traces. Consider faithful native adaptation vs highly optimized recompile; currently neither proven.
@@ -41,4 +45,4 @@
 
 ### Repo structure
 
-`research/phase01..10` contains unchanged phase tools and historical docs (two original docs labeled with errata). `scripts/run_audits.py` reruns static tests against your clean original ISO. `scripts/build_test_images.py` creates two separate boot images and optional asset-only image. `tests/manual` contains executable test procedures and a result template. `docs/STATUS.md` is the current truth, `docs/ERRATA.md` overrides superseded statements.
+`research/phase01..10` contains unchanged phase tools and historical docs (two original docs labeled with errata). `scripts/run_audits.py` reruns static tests against your clean original ISO. `scripts/build_pnach.py` generates zero-ISO-rebuild runtime patch profiles. `scripts/build_test_images.py` remains available only for separate boot/asset ISO experiments. `tests/manual` contains executable test procedures and a result template. `docs/STATUS.md` is the current truth, `docs/ERRATA.md` overrides superseded statements.

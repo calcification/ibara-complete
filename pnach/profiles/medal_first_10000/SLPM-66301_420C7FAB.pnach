@@ -1,0 +1,11 @@
+gametitle=Ibara (Japan) (SLPM-66301)
+// Ibara Complete RESEARCH ONLY | original ELF XOR CRC 420C7FAB
+// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
+// Uses the clean retail executable, NOT a pre-patched 240p ELF.
+// WARNING: Enable ONE test at a time; video tests and rank tests conflict.
+// All tests are unverified in PCSX2 (offline source checks only).
+
+[Ibara Complete\P06 DIAGNOSTIC / first medal 10000 points]
+description=Changes only first medal reward table entry from 100 to 10000. Pick up level-0 medal to test.
+author=Ibara Complete Research
+patch=2,EE,0020B104,word,00002710

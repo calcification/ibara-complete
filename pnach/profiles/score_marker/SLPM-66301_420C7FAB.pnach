@@ -1,0 +1,11 @@
+gametitle=Ibara (Japan) (SLPM-66301)
+// Ibara Complete RESEARCH ONLY | original ELF XOR CRC 420C7FAB
+// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
+// Uses the clean retail executable, NOT a pre-patched 240p ELF.
+// WARNING: Enable ONE test at a time; video tests and rank tests conflict.
+// All tests are unverified in PCSX2 (offline source checks only).
+
+[Ibara Complete\P03 DIAGNOSTIC / P1 score marker 1000000]
+description=Writes P1 score at corrected 0044C600 to 1000000 every vsync. Use a temporary or empty memory card.
+author=Ibara Complete Research
+patch=1,EE,0044C600,word,000F4240

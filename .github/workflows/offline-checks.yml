@@ -12,6 +12,10 @@ jobs:
           python-version: '3.11'
       - name: Compile all Python source (syntax only)
         run: python -m compileall -q scripts research
+      - name: PCSX2 PNACH group, CRC, and source-free checks
+        run: python tests/test_pnach.py
+      - name: Regenerate tiny patch profiles
+        run: python scripts/build_pnach.py
       - name: Phase 5 standalone memory and trace tests
         run: python scripts/run_audits.py --selftest --out validation-output
       - name: Validate test manifest

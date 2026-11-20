@@ -1,3 +1,5 @@
+> **Updated guidance:** the primary deliverable is now `pnach/SLPM-66301_420C7FAB.pnach` plus the small portable research repository. Publish this source and the patch files, not any ISO or the full retail ELF. See [`PCSX2_FIRST.md`](PCSX2_FIRST.md).
+
 # Publishing a dedicated GitHub repository
 
 Recommended destination: `calcification/ibara-complete` (a new repo separate from `calcification/cave-ps2-240p`).

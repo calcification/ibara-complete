@@ -31,6 +31,7 @@ def main():
         status='PASS' if rc==0 else 'FAIL';records.append({'id':name,'status':status,'log':name+'.log'})
         print(status,name,flush=True)
         if rc:print(log[-1200:],file=sys.stderr)
+    run('P07_pnach_unit',[py,ROOT/'tests/test_pnach.py'],ROOT)
     run('S07_phase05_python',[py,phase(5)/'tests/test_tools.py'],phase(5))
     run('S07_phase05_trace',[py,phase(5)/'src/analyze_vram_trace.py',phase(5)/'tests/sample_trace.csv','--pool-mib','8','--output',out/'phase05_trace.json'],phase(5))
     run('S07_phase05_budget',[py,phase(5)/'src/memory_budget.py'],phase(5))
@@ -57,6 +58,7 @@ def main():
             else:binary=source;elf=source.read_bytes()
             digest=hashlib.sha256(elf).hexdigest()
             if digest!=ELF_SHA:p.error('Wrong retail revision / modified 240p executable: '+digest)
+            run('P07_pnach_source',[py,ROOT/'tests/test_pnach.py',binary],ROOT)
             env=dict(os.environ,IBARA_ORIGINAL_ELF=str(binary))
             run('S01_phase01',[py,phase(1)/'ibara_complete_audit.py',source,'--json',out/'phase01.json'],phase(1),env)
             if iso:

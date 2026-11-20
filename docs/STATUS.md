@@ -1,3 +1,5 @@
+**Current recommended method:** small PCSX2 `.pnach` experiments P00–P06 on the original ISO/CHD. See [PCSX2_FIRST](PCSX2_FIRST.md). **Offline syntax/preimage checks PASSED; emulator runtime not tested.** The legacy multi-gigabyte test ISO builders remain optional.
+
 # Verified status and roadblocks (November 2026)
 
 | Area | Present evidence | Unverified / missing |

@@ -1,0 +1,11 @@
+gametitle=Ibara (Japan) (SLPM-66301)
+// Ibara Complete RESEARCH ONLY | original ELF XOR CRC 420C7FAB
+// PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
+// Uses the clean retail executable, NOT a pre-patched 240p ELF.
+// WARNING: Enable ONE test at a time; video tests and rank tests conflict.
+// All tests are unverified in PCSX2 (offline source checks only).
+
+[Ibara Complete\P05 DIAGNOSTIC / rank hardest 00000000]
+description=Holds inverted rank global at hardest value 00000000. Never enable with rank_easy.
+author=Ibara Complete Research
+patch=1,EE,00338EB4,word,00000000
