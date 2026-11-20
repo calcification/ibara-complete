@@ -3,10 +3,10 @@ gametitle=Ibara (Japan) (SLPM-66301)
 // PNACH changes EE RAM at runtime; DOES NOT add a BLACK LABEL mode.
 // Uses the clean retail executable, NOT a pre-patched 240p ELF.
 // WARNING: Enable ONE test at a time; video tests and rank tests conflict.
-// All tests are unverified in PCSX2 (offline source checks only).
+// See tests/manual/RESULTS_P01_P02.md for the PCSX2 video results.
 
 [Ibara Complete\P01 VIDEO / 14-edit 240p nearest and crop]
-description=Experimental PNACH version of 14 original ISO edits. Shimmer is not fully solved; PCSX2 runtime NOT tested.
+description=14 core writes and progressive scan verified in PCSX2 2.8.2. CRT shimmer remains open.
 author=Ibara Complete Research
 patch=2,EE,001AD250,word,24050000
 patch=2,EE,001AF11C,word,24040000

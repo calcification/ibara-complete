@@ -1,10 +1,10 @@
 # Ibara Complete — Phase 3 boot-probe package
 
-**Status:** ISO9660 file-injection verified on the exact original Japanese retail ISO. Homebrew ELF runtime execution remains untested: PCSX2/PS2 testing is required. **This is not yet a playable Ibara Kuro port or an in-game menu hook.**
+**Status:** ISO9660 file injection has been verified offline on the original Japanese retail ISO. The homebrew ELF and synthetic disc boot paths have run in Play! 0.70. Retail PCSX2 tests B01 and B02 are pending.
 
 ## What has actually been built
 
-- A completely original, 160-byte PlayStation 2 MIPS ELF named `KURO.ELF` (test placeholder, not arcade Black Label). It writes GS `PMODE = 0x20` to select the background layer, writes `BGCOLOR = 0x00FF00FF` (magenta), and enters an infinite loop. A magenta screen is the intended visual result, **provided video output has already been initialized**. A black screen is inconclusive; use the PCSX2 debugger to inspect execution.
+- A completely original, 160-byte PlayStation 2 MIPS ELF named `KURO.ELF` (test placeholder, not arcade Black Label). It writes GS `PMODE = 0x20` with both read circuits disabled, writes `BGCOLOR = 0x00FF00FF` (magenta), and enters an infinite loop. A magenta screen is the intended visual result, **provided video output has already been initialized**. A black screen is inconclusive. Use the PCSX2 debugger to inspect execution.
 - An ISO9660-only modification that inserts that ELF at LBA **500286**, registers `/KURO.ELF;1` as an ISO file, and updates the root directory metadata from **570 bytes** to **614 bytes**.
 - Two output modes using a user-provided **unmodified** disc:
   - `inject`: retail `SYSTEM.CNF` and `SLPM_663.01` still boot; the added ELF is available on disc but not invoked by the game.
@@ -42,8 +42,8 @@ python3 ibara_complete_bootstrap.py 'Ibara (Japan).iso' --mode probe --dry-run
 
 1. Boot **`Ibara Complete BOOT PROBE.iso`** as a disc. If the firmware loads the tiny ELF and the video output is already initialized, the screen should turn **magenta** and remain that way. It will not show any text or Ibara graphics; the endless loop is intentional.
 2. If the screen is black or the game fails to boot, inspect the EE program counter in the PCSX2 debugger. The program entry is **`0x00100000`**; successful execution should settle in the loop at **`0x00100018`**. That would prove the ELF handoff even if the GS video output is blank. If the EE never reaches this address, report the boot error and any logged diagnostics.
-3. Boot **`Ibara Complete RETAIL BOOT.iso`**. It should start the familiar retail Ibara frontend and retain Original/Arrange behavior; the placeholder ELF is deliberately not exposed in the menu yet.
-4. Use **only PCSX2 first**. This is an untested experimental boot ELF, not a verified real-console release. Do not substitute it into a finalized 240p build until the loader probe works.
+3. Boot **`Ibara Complete RETAIL BOOT.iso`**. Check the retail Ibara frontend and repeat the Arcade and Arrange checks from the unmodified disc.
+4. Complete both PCSX2 disc tests before attempting them on a real PS2 or combining the changes with the 240p build.
 
 **After testing:** report whether (a) probe screen turns magenta or the PC reaches `0x00100018`, and (b) the retail-boot ISO starts normally. That will establish the next objective: an actual frontend mode-selection hook and `LoadExecPS2`/loader path.
 
@@ -65,15 +65,21 @@ Independent full-image comparison confirmed every byte **outside the allowed mod
 - new `KURO.ELF` sector at LBA 500286
 - new `SYSTEM.CNF` data sector at LBA 500287 (probe mode only)
 
-Original disc SHA-256 remained unchanged. Runtime execution **has not** been validated. No original ISO, retail executable, copyrighted art, or soundtrack is included in this package.
+Original disc SHA-256 remained unchanged. Retail runtime tests are pending. No original ISO, retail executable, copyrighted art, or soundtrack is included in this package.
+
+### Homebrew-only runtime check
+
+Play! 0.70 on Linux executed the standalone fixture and both builder outputs from an 80 KiB synthetic ISO. The unmodified synthetic disc and `inject` output booted its original homebrew ELF. The `probe` output booted `KURO.ELF;1`. In each case the save state showed EE PC `0x00100018`. Register `$t1` held `0x0000FF00` for the synthetic disc's original executable and `0x00FF00FF` for the probe, distinguishing the two payloads even with blank video. B01 and B02 require the exact retail image in PCSX2.
+
+Run `python3 tests/test_bootstrap.py` from the repository root to reproduce the offline fixture and ISO checks. The test uses only synthetic input and also verifies that a failed exclusive create preserves a competing builder's output.
 
 ## Roadmap
 
-This is a deliberately isolated **filesystem + ELF loader** proof. Only after it boots should the work advance to:
+Start with the clean-disc P00 baseline and B04 menu trace in the [PCSX2 test plan](../../docs/PCSX2_FIRST.md). Use B01 and B02 when evaluating the on-disc ELF path. For menu integration, proceed in this order.
 
-1. PCSX2 debugger tracing of the *top-level* Original/Arrange selection, separate from Arcade and Arrange's internal menus.
-2. Installing an additional Black Label option with safe input and draw hooks, **not** rewriting the original modes.
-3. Linking the added option to a separate ELF using an appropriate PS2 loader mechanism, testing exit/reentry.
-4. Benchmarking and integrating the real Ibara Kuro program and assets, subject to licensing, performance, and original-data constraints.
+1. Trace the top-level Arcade and Arrange selections in the PCSX2 debugger and confirm all five existing options.
+2. Add an isolated test option with input and draw hooks based on the trace.
+3. Launch the homebrew ELF from the test option and verify the handoff, exit, and reentry.
+4. Evaluate a compatible executable and its data after the test option and loader pass regression checks.
 
 The 160-byte ELF is not an implementation of the CV1000 hardware and does not contain any arcade data.

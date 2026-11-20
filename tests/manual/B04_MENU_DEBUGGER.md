@@ -1,6 +1,6 @@
 # B04 — Original retail frontend debugger trace (NO patch)
 
-**Status:** NOT RUN. Use the **unmodified** ISO only, not a 240p patched build.
+**Status:** PASS for the original frontend paths in PCSX2 2.8.2. See [P00 and B04 results](RESULTS_P00_B04.md). Reproduce with the unmodified ISO.
 
 1. PCSX2 EE Debugger: set *execution* breakpoints from `research/phase04/PCSX2_BREAKPOINTS.txt`. Prioritize selector `0x001CA42C`, accept dispatcher `0x001CA798`, Arcade `0x001CA800`, Arrange `0x001CA824`.
 2. Navigate up/down on menu, trigger each of five options in turn. Record which breakpoints fire and values of `$gp`, selected index (`-0x686C($gp)`), and frontend state (`-0x6D98($gp)` where documented).

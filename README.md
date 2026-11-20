@@ -1,7 +1,7 @@
 # Ibara Complete — PCSX2-first Research
 
 > **Fastest path (laptop + desktop): one clean Ibara ISO/CHD, one tiny `.pnach`. No repeated 3.66 GB image builds.**
-> This is pre-alpha research, **NOT a playable Kuro / Black Label port.** No runtime patch in this new PNACH suite has yet been validated in PCSX2.
+> This is pre-alpha research. [Both video profiles](tests/manual/RESULTS_P01_P02.md) produced progressive output in PCSX2 2.8.2. A playable Black Label mode remains pending.
 
 > **Black Label port (new, Nov 2026):** the plan, the measured arcade→BL delta and the first EE code-injection test are in
 > [`docs/BLACK_LABEL_PORT_PLAN.md`](docs/BLACK_LABEL_PORT_PLAN.md), [`docs/BLACK_LABEL_FEATURES.md`](docs/BLACK_LABEL_FEATURES.md),
@@ -22,9 +22,9 @@
 
 | ID | Patch experiment | Type | Game runtime evidence |
 |---|---|---|---|
-| P00 | No-write baseline | `pnach/profiles/baseline/` | Not yet recorded |
-| P01 | 14-edit native 240p + nearest/crop | `.pnach` named group | Not yet recorded; residual shimmer known in separate disc patch |
-| P02 | 18-edit 240p + four half-pixel coordinates | `.pnach` named group | Not yet recorded as PNACH |
+| P00 | No-write baseline | `pnach/profiles/baseline/` | [Passed in PCSX2 2.8.2](tests/manual/RESULTS_P00_B04.md) |
+| P01 | 14-edit native 240p + nearest/crop | `.pnach` named group | [224 active lines, progressive](tests/manual/RESULTS_P01_P02.md) |
+| P02 | 18-edit 240p + four half-pixel coordinates | `.pnach` named group | [224 active lines, progressive; all 18 writes applied](tests/manual/RESULTS_P01_P02.md) |
 | P03 | Player 1 score marker (1,000,000) | `.pnach` named group | Awaiting PCSX2 |
 | P04/P05 | Easiest/hardest inverted rank locks | `.pnach` named groups | Awaiting PCSX2 |
 | P06 | First medal reward 100 → 10,000 | `.pnach` named group | Awaiting PCSX2 |
@@ -34,7 +34,7 @@
 ---
 
 > **Research / pre-alpha handoff — NOT a playable Black Label PS2 port.**
-> The existing retail PS2 **Arcade** and **Arrange** modes have not been modified into a tested third game mode. No PS2/PCSX2 boot test of the injected secondary ELF has yet been reported.
+> The [ELF probe](tests/manual/M01_MENU_ELF_PROBE.md) adds a test entry alongside the existing retail choices and verifies a disc-based handoff and return in PCSX2. The direct-boot B01 procedure and hardware tests are pending.
 
 This repository is the reproducible technical handoff for a project investigating a **third authentic Ibara Kuro / Black Label mode** in the Japanese PS2 *Ibara* (`SLPM_663.01`), alongside the existing retail modes. It is **not** the existing 240p patch release; that is maintained at [calcification/cave-ps2-240p](https://github.com/calcification/cave-ps2-240p).
 
@@ -42,7 +42,7 @@ This repository is the reproducible technical handoff for a project investigatin
 
 - Full retail ELF/ISO metadata and 1,130-item resource catalog (Phases 1–2)
 - **Two experimental ISO boot tests**: inject a 160-byte original test ELF without changing retail boot, or boot that ELF instead (Phase 3)
-- Retail mode-select address map and **in-place prototype button generator** (Phase 4; no menu hook, invisible in game)
+- Retail mode-select address map and a sixth menu entry for a standalone EE executable (Phase 4). See the [payload handoff](docs/PAYLOAD_HANDOFF.md) for build, video, and return options.
 - Bounded CV1000 VRAM/NAND memory prototype with host-side tests and a MIPS III object (Phase 5)
 - Read-only, instruction-fingerprinted audits for native PS2 input, rank, pickups, medal scoring, bullet conversion, and rose merging (Phases 6–10)
 - Cross-platform scripts, `TEST_MATRIX.csv`, a full manual PCSX2/PS2 checklist, and a reproducible audit runner

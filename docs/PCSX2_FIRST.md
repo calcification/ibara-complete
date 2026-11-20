@@ -18,7 +18,9 @@
 - **CANNOT by itself:** add `/KURO.ELF;1` to ISO9660; replace the disc's `SYSTEM.CNF`; insert new `IBARAR.PDM` texture bytes before the engine loads them without identifying a safe runtime address; supply a 132 MiB arcade NAND or emulate Kuro. Keep B01–B03 ISO procedures as **optional escalation**, not the default workflow.
 - **Standalone boot probe:** the self-authored 160-byte ELF at `tests/fixtures/KURO_PROBE.ELF` may be launched using PCSX2's ELF launch/override path to prove MIPS execution without rebuilding an ISO. This **isn't** a test of the game's ability to load a new file from its disc; B01 is still needed to prove that.
 
-## Experiments — all currently runtime UNTESTED
+## Experiments
+
+The [P00 baseline and B04 menu trace](../tests/manual/RESULTS_P00_B04.md) passed in PCSX2 2.8.2. [P01 and P02](../tests/manual/RESULTS_P01_P02.md) both produced 224 active progressive lines. P03–P06 are pending.
 
 Use a temporary or disconnected memory card for all tests that affect score/rank. Do **not** enable the score and rank tests together with video experiments during initial isolation. Distinguish an opcode/value present in memory from evidence that gameplay responds as intended.
 

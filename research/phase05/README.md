@@ -1,6 +1,6 @@
 # Ibara Complete — Phase 5: Arcade Kuro memory substrate
 
-Independent research prototype; **does not depend on Phase 3 (boot probe) or Phase 4 (menu integration)**. No PS2/PCSX2 hardware execution claimed.
+Independent research prototype. The synthetic memory checks passed as a stand-alone EE executable in PCSX2 2.8.2. Physical PS2 performance remains open.
 
 ## What this actually delivers
 
@@ -37,6 +37,17 @@ python3 src/memory_budget.py --vram-mib 8
 
 On Windows, use a C compiler such as Visual Studio or MinGW for `tests/test_memory.c`, and `py -3` instead of `python3` for Python scripts.
 
+### EE memory smoke test
+
+With the PS2DEV toolchain configured, run from the repository root.
+
+```sh
+mkdir -p outputs/ee-memory
+make -C outputs/ee-memory -f "$PWD/research/phase05/tests/ee/Makefile"
+```
+
+Boot `outputs/ee-memory/ee-memory-smoke.elf` in PCSX2 with a PS2 BIOS. The PS2DEV v2.0.0 build passed with 11,317,248 bytes of reserved buffers live alongside an 8 MiB tile pool, a 64-entry synthetic page cache, and the tile map. The existing tests exercised overlap, bounds, pool overflow, and cache eviction. The test uses synthetic inputs and reports allocation and correctness only. Real tile residency, rendering cost, disc latency, and physical frame timing remain to be measured with a gameplay executable.
+
 To **cross-compile just the memory core** with a suitable LLVM Clang target (not PS2SDK linking):
 
 ```bash
@@ -61,7 +72,7 @@ The checker compares ZIP member length and CRC, regardless of member name. It ne
 
 The source runtime directly indexes `cv1k_vram` as a flat 64 MiB pointer. Our sparse API does not support those direct accesses. All blitter draw/upload and screen reads would require a rewritten backend, and some original arcade operations use custom blending/transparent pixels that are **not** implemented here. This is an engineering feasibility component **not a complete renderer**. Also, a NAND page cache is useful only once its DVD I/O and timing have been tested; reading 132 MiB of graphics on demand may cause unacceptable stalls.
 
-The likely production strategy remains: preserve the retail PS2 Arcade and Arrange engines, load a Kuro-specific EE executable from the game disc, and either adapt Kuro's recompiled logic to PS2-native rendering **or** reproduce Kuro's gameplay differences within the existing PS2 engine if feasible. Neither path is proven yet.
+The [interactive launcher](../../tests/manual/M02_INTERACTIVE_ELF_PROBE.md) can load a stand-alone EE executable from the disc and return to the retail title. The 32 MiB EE limit rules out a dense 64 MiB allocation. A compatible gameplay build would need its own measured working set and disc I/O budget. The synthetic allocation test establishes one bounded footprint and leaves gameplay feasibility open.
 
 ## What a later real-world test must establish
 
