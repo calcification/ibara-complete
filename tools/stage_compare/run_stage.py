@@ -109,6 +109,8 @@ def build_logger_iso(args, work: Path) -> Path:
         defines.append(f"BL_LOCK_SHOT={args.shot_level}")
     if args.noshot:
         defines.append("BL_NOSHOT")
+    if args.all_tables:
+        defines.append("BL_ALL_TABLES")
     defines += args.define
     cmd = [sys.executable, str(ROOT / "scripts/build_ee_hooks.py"), "--elf", str(args.retail_iso)]
     for d in defines:
@@ -183,13 +185,15 @@ def run_ps2(args, out: Path):
 
 def run_bl(args, out: Path):
     print("BL: running MAME ...")
-    env = dict(os.environ, OUTDIR=str(out), STAGE=str(args.stage + 1), BOSSTYPE=str(args.boss_type), MAXFRAMES=str(9000 * args.stage + 3000))
+    env = dict(os.environ, OUTDIR=str(out), STAGE=str(args.stage + 1), BOSSTYPE=str(args.boss_type), MAXFRAMES=str(16000 * args.stage + 3000))
     if args.rank is not None:
         env["RANKLOCK"] = str(args.rank)
     if args.shot_level is not None:
         env["SHOTLOCK"] = str(args.shot_level)
     if args.noshot:
         env["NOSHOT"] = "1"
+    if args.all_tables:
+        env["ALLTABLES"] = "1"
     tmp = out / "bl_tmp"
     tmp.mkdir(exist_ok=True)
     env["OUTDIR"] = str(tmp)
@@ -244,6 +248,7 @@ def main(argv=None):
     ap.add_argument("--anchor-type", type=int, help="enemy type used to align the logs (default: BL's first)")
     ap.add_argument("--skip-bl", action="store_true")
     ap.add_argument("--skip-ps2", action="store_true")
+    ap.add_argument("--all-tables", action="store_true", help="log the part-record tables of every stage up to --stage")
     args = ap.parse_args(argv)
     if args.rank == -1:
         args.rank = None

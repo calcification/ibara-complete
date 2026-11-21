@@ -60,13 +60,18 @@ class CompanionFilesTests(unittest.TestCase):
                 menu.disc, 'NEXT_ORIGINAL_FILE_LBA', 12,
             ):
                 entries, companions, start_lba, end_lba = menu.companion_layout(
-                    [f'DATA.DAT={companion}'], [], sector, near_assets=True,
+                    [f'DATA.DAT={companion}'], [], sector, near_assets=True, boot_sectors=2,
                 )
-            self.assertEqual((start_lba, end_lba), (9, 12))
+            self.assertEqual((start_lba, end_lba), (7, 10))
             elf = menu.disc.parse_record(entries, 0)
             data = menu.disc.parse_record(entries, elf['record_bytes'])
-            self.assertEqual((elf['lba'], data['lba']), (9, 10))
-            self.assertEqual(companions, [(companion, 10 * sector, sector + 1)])
+            self.assertEqual((elf['lba'], data['lba']), (7, 8))
+            self.assertEqual(companions, [(companion, 8 * sector, sector + 1)])
+
+    def test_oversized_payload_cannot_shift_before_reserved_extent(self):
+        with patch.object(menu.disc, 'NEXT_ORIGINAL_FILE_LBA', menu.disc.NEW_FILE_LBA + 1):
+            with self.assertRaisesRegex(ValueError, 'reserved disc extent'):
+                menu.companion_layout([], [], menu.disc.SECTOR + 1, near_assets=True)
 
     def test_rejects_unsafe_disc_layouts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -223,7 +228,8 @@ class BootstrapTests(unittest.TestCase):
         free_sectors = bootstrap.NEXT_ORIGINAL_FILE_LBA - bootstrap.NEW_FILE_LBA
         with companion.open('wb') as file:
             file.truncate(free_sectors * bootstrap.SECTOR)
-        with self.assertRaisesRegex(ValueError, 'reserved disc extent'):
+        with (patch.object(menu, 'menu_elf', return_value=bootstrap.build_probe_elf()),
+              self.assertRaisesRegex(ValueError, 'reserved disc extent')):
             menu.build(self.source, self.output, disc_files=[f'DATA.DAT={companion}'])
         self.assertFalse(self.output.exists())
 
@@ -233,10 +239,10 @@ class BootstrapTests(unittest.TestCase):
         with (patch.object(menu.retail, 'load_input', return_value=(executable, [], boot)),
               patch.object(menu, 'label_writes', return_value=[]),
               patch.object(menu, 'menu_elf', return_value=executable),
-              patch.object(hooks, 'frontend_video_hook') as select):
+              patch.object(hooks, 'standalone_video_hook') as select):
             select.return_value.return_value = executable
             menu.build(self.source, self.output, video_profile='auto')
-        select.assert_called_once_with('auto')
+        select.assert_called_once_with()
         select.return_value.assert_called_once_with(executable)
         self.assertTrue(self.output.is_file())
 
@@ -250,7 +256,8 @@ class BootstrapTests(unittest.TestCase):
             self.assertGreater(target.tell(), 0)
             raise KeyboardInterrupt
 
-        with (patch.object(menu.retail, 'load_input', return_value=(executable, [], {'lba': boot_lba})),
+        boot = {'lba': boot_lba, 'bytes': len(executable)}
+        with (patch.object(menu.retail, 'load_input', return_value=(executable, [], boot)),
               patch.object(menu, 'label_writes', return_value=[]),
               patch.object(menu, 'menu_elf', return_value=executable),
               patch.object(menu, 'write_companion', side_effect=interrupt)):

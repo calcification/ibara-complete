@@ -136,6 +136,13 @@ void spawn_log_frame(void)
 		}
 	}
 #endif
+#ifdef BL_ALL_TABLES /* part-record tables of every stage (tools/stage_compare --all-tables), before the stage filter */
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		if (EE_RAM(u32, a) & 0x80000000u)
+			table_seen(EE_RAM(u32, a + 4), EE_RAM(u32, a + 0x10));
+	}
+#endif
 #ifdef BL_LOG_STAGE /* log one stage only: BL stage byte value, 2 = stage 1 ... 7 = stage 6 (PS2 $gp-28244) */
 	if (EE_RAM(u8, 0x00338E9Cu) != BL_LOG_STAGE)
 		return;
@@ -143,7 +150,9 @@ void spawn_log_frame(void)
 	if (!sl_started) {
 		*count = 0;
 		EE_RAM(u32, CORE_LOG) = 0;
+#ifndef BL_ALL_TABLES
 		EE_RAM(u32, TABLE_LOG) = 0;
+#endif
 		sl_started = 1;
 	}
 	{

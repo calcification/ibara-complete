@@ -102,11 +102,11 @@ def menu_elf(original, video_profile='retail', position=5):
                 edits[DESCRIPTIONS + 8 * row + 4 * k] = (before_desc[k], desc[k])
     if position == 2:  # accept dispatcher: Gallery 2->3, Option 3->4, Exit 4->5
         edits[0x001CA648] = (0x24020004, 0x24020005)  # Exit has only one description sprite.
-        edits[0x001CA7B8] = (0x24020002, 0x24020003)
         edits[0x001CA7C0] = (0, 0x24020002)  # Gallery's handler still returns request code 2.
+        edits[0x0011369C] = (0x24020002, 0x24020003)  # Restore the Gallery cursor after returning.
+        edits[0x001CA7B8] = (0x24020002, 0x24020003)
         edits[0x001CA7C8] = (0x24020003, 0x24020004)
         edits[0x001CA7D8] = (0x24020004, 0x24020005)
-        edits[0x0011369C] = (0x24020002, 0x24020003)  # Restore the Gallery cursor after returning.
         # Returning from OPTION restores Mode Select row 3 (its old index): make it 4. Cancel path stores a plain 3
         # (0x001CD1E8); the EXIT-item path compares the Option cursor with 3 and stores the same register, so the
         # empty delay slot after that compare adds 1 (the branch target reloads v0 before using it, 0x001CD220).
@@ -196,10 +196,14 @@ def read_probe_elf(path):
     return probe
 
 
-def companion_layout(specifications, records, probe_size, *, near_assets=False):
+def companion_layout(specifications, records, probe_size, *, near_assets=False, include_probe=True,
+                     boot_sectors=0):
     occupied_names = {record['name'].split(b';', 1)[0] for record in records}
     occupied_names.add(disc.PROBE_FILENAME.split(b';', 1)[0])
-    end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR
+    end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR if include_probe else disc.NEW_FILE_LBA
+    limit = disc.NEXT_ORIGINAL_FILE_LBA - boot_sectors
+    if end_lba > limit:
+        raise ValueError('The probe ELF does not fit in the reserved disc extent')
     files = []
     for specification in specifications:
         name, separator, path = specification.partition('=')
@@ -215,13 +219,13 @@ def companion_layout(specifications, records, probe_size, *, near_assets=False):
             raise ValueError(f'Companion must be a regular file: {source}')
         size = source.stat().st_size
         sectors = max(1, (size + disc.SECTOR - 1) // disc.SECTOR)
-        if end_lba + sectors > disc.NEXT_ORIGINAL_FILE_LBA:
+        if end_lba + sectors > limit:
             raise ValueError(f'Companion files exceed the reserved disc extent at {name.upper()}')
         files.append((filename + b';1', source, end_lba, size))
         end_lba += sectors
-    shift = disc.NEXT_ORIGINAL_FILE_LBA - end_lba if near_assets else 0
+    shift = limit - end_lba if near_assets and (include_probe or files or boot_sectors) else 0
     start_lba = disc.NEW_FILE_LBA + shift
-    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, start_lba, probe_size)]
+    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, start_lba, probe_size)] if include_probe else []
     companions = []
     for filename, source, lba, size in files:
         payload_records.append(disc.make_file_record(filename, lba + shift, size))
@@ -298,13 +302,28 @@ def label_writes(source, files, text=DEFAULT_LABEL):
 
 
 def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5,
-          executable_hook=None, near_assets=False):
+          executable_hook=None, payload=True, near_assets=False):
+    """payload=False: no separate executable on the disc (instant KURO: executable_hook makes the added row act
+    inside the frontend executable instead of loading one)."""
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
-    probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
+    probe = b'' if not payload else returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
-    rows, companions, start_lba, end_lba = companion_layout(disc_files, records, len(probe), near_assets=near_assets)
     original, files, boot = retail.load_input(source)
+    executable = menu_elf(original, video_profile, position)
+    if executable_hook is None and not payload:
+        raise ValueError('A frontend hook is required when building without a payload')
+    if executable_hook is None and video_profile in VIDEO_HOOK_PROFILES:
+        from build_ee_hooks import standalone_video_hook
+        executable_hook = standalone_video_hook()
+    if executable_hook is not None:
+        executable = executable_hook(bytes(executable))
+    boot_sectors = 0
+    if len(executable) > (boot['bytes'] + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR:
+        boot_sectors = (len(executable) + disc.SECTOR - 1) // disc.SECTOR
+    rows, companions, start_lba, end_lba = companion_layout(
+        disc_files, records, len(probe), include_probe=payload, near_assets=near_assets, boot_sectors=boot_sectors,
+    )
     end = disc.ORIGINAL_ROOT_LEN + len(rows)
     pvd, root = bytearray(pvd), bytearray(root)
     pvd[166:174] = disc.pair32(end)
@@ -313,25 +332,23 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         offset = record['offset'] + 10
         root[offset:offset + 8] = disc.pair32(end)
 
-    executable = menu_elf(original, video_profile, position)
-    if executable_hook is None and video_profile in VIDEO_HOOK_PROFILES:
-        from build_ee_hooks import frontend_video_hook
-        executable_hook = frontend_video_hook(video_profile)
-    if executable_hook is not None:  # e.g. bake the runtime video hook into the frontend executable
-        executable = executable_hook(bytes(executable))
-        capacity = (boot['bytes'] + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
-        if len(executable) > capacity:
-            raise ValueError(f'The frontend executable grew to {len(executable)} bytes; only {capacity} fit its extent')
-        if len(executable) != boot['bytes']:
-            own = [r for r in records if r['name'] == boot['name'].encode() or r['name'] == boot['name']]
-            if len(own) != 1:
-                raise ValueError('Boot executable record not found in the root directory')
-            root[own[0]['offset'] + 10:own[0]['offset'] + 18] = disc.pair32(len(executable))
+    boot_lba = boot['lba']
+    if len(executable) != boot['bytes']:
+        own = [r for r in records if r['name'] == boot['name'].encode()]
+        if len(own) != 1:
+            raise ValueError('Boot executable record not found in the root directory')
+        at = own[0]['offset']
+        if boot_sectors:
+            # The relocated executable follows any probe and companions in the reserved extent.
+            boot_lba = end_lba
+            end_lba += boot_sectors
+            root[at + 2:at + 10] = disc.pair32(boot_lba)
+        root[at + 10:at + 18] = disc.pair32(len(executable))
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
-        (start_lba * disc.SECTOR, probe),
-        (boot['lba'] * disc.SECTOR, executable),
+        *([(start_lba * disc.SECTOR, probe)] if payload else []),
+        (boot_lba * disc.SECTOR, executable),
         *label_writes(source, files, label),
     ]
     with source.open('rb') as original_iso, output.open('x+b') as target:
@@ -384,7 +401,7 @@ def main():
     parser.add_argument('--video-profile', choices=VIDEO_PROFILES, default='retail',
                         help='Video profile for the retail frontend')
     parser.add_argument('--near-assets', action='store_true',
-                        help='Place added files immediately before the original IOP modules for optical testing')
+                        help='Place the probe and companions immediately before the original IOP modules')
     args = parser.parse_args()
     try:
         crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label,

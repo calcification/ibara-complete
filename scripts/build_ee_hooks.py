@@ -56,13 +56,95 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c"}
+LEAF_SOURCES = {"video.c", "options.c", "kuro.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
 # Preserve the handoff over boot autoload. The interactive load at 0x001D3CD4 applies the selected save unchanged.
 VIDEO_APPLY_SITES = [(0x001D1B24, 0x0C043F88, "video_apply")]
 VIDEO_SITES = {VIDEO_SITE} | {a for a, _o, _e in VIDEO_APPLY_SITES}
+
+# ARCADE MODE > CONFIG gets a RANK GAUGE ON/OFF row (ps2/hooks/options.c; research/phase17). Same addresses in
+# the launcher and KURO (KURO is a copy of the retail executable). (address, original, kind, target[, addend]):
+# kind word/jal/j/hi/lo takes a symbol of our image or a number; raw is a plain new word.
+RANK_OPTION_PATCHES = [
+    # label table 0x002A9220: row 6 RANK GAUGE, rows 7-9 FIGHTER TYPE, KEY CONFIG, EXIT (slot 9 was spare)
+    (0x002A9238, 0x00301CC0, "word", "rank_label"),
+    (0x002A923C, 0x00301CE0, "word", 0x00301CC0),
+    (0x002A9240, 0x00301C50, "word", 0x00301CE0),
+    (0x002A9244, 0x00000000, "word", 0x00301C50),
+    # 10 rows: draw loop `slti v0,s2,9`, cursor down `slti at,v0,9`, cursor up wrap `li v0,8`
+    (0x001CBFE4, 0x2A420009, "raw", 0x2A42000A),
+    (0x001CC170, 0x28410009, "raw", 0x2841000A),
+    (0x001CC1FC, 0x24020008, "raw", 0x24020009),
+    # accept dispatcher: FIGHTER TYPE / KEY CONFIG / EXIT handlers now answer rows 7 / 8 / 9 ...
+    (0x001CC270, 0x24020006, "raw", 0x24020007),
+    (0x001CC280, 0x24020007, "raw", 0x24020008),
+    (0x001CC290, 0x24020008, "raw", 0x24020009),
+    # ... and the "no handler" exit goes through the unreachable word 0x001CC4DC to cfg_accept_entry (row 6 toggles)
+    (0x001CC294, 0x1462FEE2, "raw", 0x14620091),
+    (0x001CC4DC, 0x00000000, "j", "cfg_accept_entry"),
+    # value column: the CONTINUE lookup (0x001CBF70-0x001CBF8C) becomes s5 = cfg_value(row, continue, s5)
+    (0x001CBF70, 0x24020005, "raw", 0x93858EFC),   # lbu a1, -28932(gp)
+    (0x001CBF74, 0x16420006, "raw", 0x02402021),   # move a0, s2
+    (0x001CBF78, 0x00000000, "jal", "cfg_value"),
+    (0x001CBF7C, 0x93838EFC, "raw", 0x02A03021),   # move a2, s5 (delay slot)
+    (0x001CBF80, 0x27828C40, "raw", 0x0040A821),   # move s5, v0
+    (0x001CBF84, 0x00031880, "raw", 0x00000000),
+    (0x001CBF88, 0x00431021, "raw", 0x00000000),
+    (0x001CBF8C, 0x8C550000, "raw", 0x00000000),
+    # returning from FIGHTER TYPE (two exits) and KEY CONFIG puts the cursor back on their new rows 7 / 8
+    (0x001CC5E4, 0x00000000, "raw", 0x24030007),   # li v1, 7 (bne delay slot; v1 dead on the other path)
+    (0x001CC5F4, 0xAF82979C, "raw", 0xAF83979C),   # sw v1, -26724(gp)
+    (0x001CC68C, 0x00000000, "raw", 0x24030007),
+    (0x001CC69C, 0xAF82979C, "raw", 0xAF83979C),
+    (0x001CA08C, 0x24020007, "raw", 0x24020008),   # KEY CONFIG: li v0, 7 -> 8
+    # help text table 0x002A9310 (9 rows, no room) -> cfg_desc (10 rows)
+    (0x001CBFFC, 0x3C02002B, "hi", "cfg_desc"),
+    (0x001CC004, 0x24429310, "lo", "cfg_desc"),
+    (0x001CC020, 0x3C02002B, "hi", "cfg_desc", 4),
+    (0x001CC024, 0x24429314, "lo", "cfg_desc", 4),
+]
+
+# ARRANGE MODE gets a PRACTICE row like ARCADE MODE's (ps2/hooks/options.c): GAME START, PRACTICE, CONFIG, EXIT.
+PRACTICE_MODE_PATCHES = [
+    # label table 0x002A9048: row 1 PRACTICE (retail string), rows 2-3 CONFIG, EXIT (slot 3 was spare)
+    (0x002A904C, 0x00301C78, "word", 0x00301C68),
+    (0x002A9050, 0x00301C50, "word", 0x00301C78),
+    (0x002A9054, 0x00000000, "word", 0x00301C50),
+    # ARRANGE CONFIG's title reads the CONFIG slot (0x002A904C, now PRACTICE): `lw a0,-28596(v0)` -> -28592
+    (0x001CCDB8, 0x8C44904C, "raw", 0x8C449050),
+    # leaving ARRANGE CONFIG (cancel 0x001CD008, EXIT 0x001CD0B4) returns to its new row 2: `li v0,1` -> 2
+    (0x001CD008, 0x24020001, "raw", 0x24020002),
+    (0x001CD0B4, 0x24020001, "raw", 0x24020002),
+    # 4 rows: draw loop `slti v0,s1,3`, cursor down `slti at,v0,3`; the cursor-up wrap stores a0 (2 from the state
+    # dispatcher, reused as the last row): `li a0,3` in the delay slot of the state's first branch 0x001CCA7C
+    (0x001CCB50, 0x2A220003, "raw", 0x2A220004),
+    (0x001CCA98, 0x28410003, "raw", 0x28410004),
+    (0x001CCA80, 0x00000000, "raw", 0x24040003),
+    # accept dispatcher: CONFIG / EXIT answer rows 2 / 3; row 1 goes through the unreachable word 0x001CC9B4 to
+    # arr_accept_entry (opens the practice menu)
+    (0x001CCC04, 0x24020001, "raw", 0x24020002),
+    (0x001CCC14, 0x24020002, "raw", 0x24020003),
+    (0x001CCC18, 0x1462FFB2, "raw", 0x1462FF66),
+    (0x001CC9B4, 0x00000000, "j", "arr_accept_entry"),
+    # help text: the 3-row table 0x002A93F0 -> arr_desc (4 rows)
+    (0x001CCB60, 0x3C02002B, "hi", "arr_desc"),
+    (0x001CCB64, 0x244293F0, "lo", "arr_desc"),
+    (0x001CCB84, 0x3C02002B, "hi", "arr_desc", 4),
+    (0x001CCB88, 0x244293F4, "lo", "arr_desc", 4),
+    # practice start: `sw zero, -28076(gp)` (Arrange flag off) -> jal prac_start (Arrange when opened from ARRANGE)
+    (0x001CB3E0, 0xAF809254, "jal", "prac_start"),
+    # leaving the practice menu (cancel 0x001CB2C8, EXIT 0x001CB384): `li v0, 2` (ARCADE MODE) -> jal prac_exit_state
+    # (its delay slot `li a0, 76` is the sound argument; the PRACTICE row 1 is the return row in both menus)
+    (0x001CB2C8, 0x24020002, "jal", "prac_exit_state"),
+    (0x001CB384, 0x24020002, "jal", "prac_exit_state"),
+    # menu header (0x001C9570 `lw v1, -28056(gp)`, delay slot `li v0, 1`): ARRANGE MODE over its practice menu
+    (0x001C9570, 0x8F839268, "jal", "hdr_state"),
+]
+PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
+RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
+BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry")]
 
 HOOKS = {
     "h00_smoke": {
@@ -82,7 +164,8 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c", "video.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c", "video.c",
+                    "options.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
                   ("hud_entry", 0x0012C0E0, "xtc_hud"), ("video_entry", 0x0010E480, "video_frame", "leaf")],
         # The video site (main-loop display call) is only kept with video profile "auto" (bake_payload).
@@ -132,16 +215,18 @@ HOOKS = {
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
                           (0x0013AD14, 0x8F829254, 0x24020001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
+        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },
     "video": {
         "test_id": "V01",
         "title": "VIDEO / Yoko interlaced, Tate 240p (frontend executable)",
         "description": "Baked into the launcher's frontend executable with video profile auto; see ps2/hooks/video.c.",
-        "sources": ["video.c"],
+        "sources": ["video.c", "options.c"],
         "stubs": [("video_entry", 0x0010E480, "video_frame", "leaf")],
         "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
         "requires": [],
         "establishes": [],
+        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES,
         "bake_only": True,
     },
     "bl_xtc": {
@@ -218,7 +303,55 @@ if _HP.exists():
     HOOKS["bl_mode"]["patches"] = HOOKS["bl_mode"]["patches"] + [
         (int(a, 16), int(p["orig"], 16), int(p["new"], 16)) for a, p in json.loads(_HP.read_text()).items()]
 
+# Instant KURO (ps2/hooks/kuro.c): the frontend executable carries the whole image; the Black Label words of
+# bl_mode (hook call sites, rule patches, part-HP tables) become a runtime table that kuro.c switches on entering and
+# leaving KURO. Not in it: bl_mode's Exit-to-launcher hook (0x001CA7F0) and its video sites (static here).
+KURO_PATCHES = [
+    # Mode Select's KURO row: the dispatcher (research/phase04 DISPATCH 0x001D42A0: li v0,row; bne v1,v0,skip;
+    # lui a0 (delay slot); addiu a0 ...; LoadExecPS2) -> its first word after the delay slot jumps to kuro_enter_entry
+    (0x001D42AC, 0x248442D8, "j", "kuro_enter_entry"),
+    # ARCADE MODE's way out (cancel 0x001CA958, EXIT 0x001CAAC4): `li v0,1` -> jal kuro_leave_entry, and the return
+    # row `sw zero,-26724(gp)` -> `sw v1,-26724(gp)` (KURO's row when leaving KURO, else 0)
+    (0x001CA958, 0x24020001, "jal", "kuro_leave_entry"),
+    (0x001CA968, 0xAF80979C, "raw", 0xAF83979C),
+    (0x001CAAC4, 0x24020001, "jal", "kuro_leave_entry"),
+    (0x001CAAD4, 0xAF80979C, "raw", 0xAF83979C),
+]
+KURO_SITES = {a for a, *_ in KURO_PATCHES}
+HOOKS["kuro"] = {
+    "test_id": "K20",
+    "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
+    "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
+    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c"],
+    "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
+              ("hud_entry", 0x0012C0E0, "xtc_hud")],
+    "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
+    "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
+    "dynamic": {
+        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x0012C394, 0x0C04B038, "hud_entry"),
+                  (0x0012C3BC, 0x0C04B038, "hud_entry")],
+        "sym_patches": BL_SYM_PATCHES,
+        "jumps": HOOKS["bl_mode"]["jumps"],
+        "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
+    },
+    "requires": [],
+    "establishes": [],
+    "bake_only": True,
+    "frontend": True,  # sites include words of the launcher builder's dispatcher (not in the retail executable)
+}
+KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n")
+
 EXTRA_DEFINES: list[str] = []  # --define NAME (test builds only; never for committed profiles)
+
+
+def set_sym_word(built: dict, sym: str, value: int) -> None:
+    """Change the initial value of one of our image's words (a symbol of the built image)."""
+    addr = built["syms"][sym]
+    for i, (place, a, _v) in enumerate(built["words"]):
+        if a == addr:
+            built["words"][i] = (place, a, value)
+            return
+    raise AssertionError(f"{sym} is not an image word")
 
 
 def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
@@ -255,8 +388,45 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     for site, original_word, entry in h.get("jumps", []):  # plain `j` into a C leaf that returns to the caller
         assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
+    for site, original_word, kind, target, *add in h.get("sym_patches", []):
+        value = (syms[target] if isinstance(target, str) else target) + (add[0] if add else 0)
+        if kind == "word" or kind == "raw":
+            new = value
+        elif kind == "jal":
+            new = jal(value)
+        elif kind == "j":
+            assert value % 4 == 0 and value >> 28 == site >> 28
+            new = 0x08000000 | (value >> 2) & 0x03FFFFFF
+        elif kind == "hi":
+            new = (original_word & 0xFFFF0000) | ((value + 0x8000) >> 16) & 0xFFFF
+        elif kind == "lo":
+            new = (original_word & 0xFFFF0000) | value & 0xFFFF
+        else:
+            raise AssertionError(f"unknown patch kind {kind}")
+        sites.append((site, original_word, new))
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
+    dyn = h.get("dynamic")
+    if dyn:  # runtime-switched words: a (address, retail, new) table after the image (ps2/hooks/kuro.c)
+        rows = [(a, o, jal(syms[e])) for a, o, e in dyn["sites"]]
+        rows += [(a, o, 0x08000000 | (syms[e] >> 2) & 0x03FFFFFF) for a, o, e in dyn["jumps"]]
+        rows += list(dyn["patches"])
+        for a, o, kind, target in dyn.get("sym_patches", []):
+            assert kind == "jal"
+            rows.append((a, o, jal(syms[target])))
+        seen = {a for a, _o, _n in sites}
+        clash = [f"{a:08X}" for a, _o, _n in rows if a in seen]
+        if clash or len({a for a, _o, _n in rows}) != len(rows):
+            raise AssertionError(f"{key}: runtime words overlap static sites or each other: {clash}")
+        table = (end + 15) & ~15
+        for i, (a, o, n) in enumerate(rows):
+            words += [(0, table + 12 * i, a), (0, table + 12 * i + 4, o), (0, table + 12 * i + 8, n)]
+        end = table + 12 * len(rows)
+        if end > end_limit:
+            raise AssertionError(f"{key}: runtime table ends at {end:08X}, past {end_limit:08X}")
+        built_tmp = {"words": words, "syms": syms}
+        set_sym_word(built_tmp, "kuro_tab", table)
+        set_sym_word(built_tmp, "kuro_tab_n", len(rows))
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 
@@ -363,45 +533,101 @@ PREBUILT = ROOT / "ps2" / "prebuilt"
 
 def export_bake(built: dict) -> dict:
     """JSON-safe description of a baked hook set (our own code words + verified site/patch list)."""
-    return {"base": f"{built['base']:08X}",
-            "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
-            "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
+    out = {"base": f"{built['base']:08X}",
+           "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
+           "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
+    syms = {k: f"{built['syms'][k]:08X}" for k in KURO_EXPORTED_SYMS if k in built.get("syms", {})}
+    if syms:
+        out["syms"] = syms
+    return out
 
 
 def import_bake(spec: dict) -> dict:
     return {"base": int(spec["base"], 16),
             "words": [(0, int(a, 16), int(v, 16)) for a, v in spec["words"]],
-            "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]]}
+            "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]],
+            "syms": {k: int(v, 16) for k, v in spec.get("syms", {}).items()}}
 
 
 VIDEO_HOOK_PROFILES = {"auto"}
 
+# Arcade rank gauge: the RANK gauge routine 0x00129360 (called every frame from the HUD pass at 0x0012E42C) draws
+# only in Arrange (0x00338F44) or Arcade PRACTICE (0x00338FA4); its fill is the shared stored rank 0x00338EB4, so it
+# already works in Arcade. Dropping the PRACTICE test's branch (beqz v1, 0x00129758) shows it in every Arcade game.
+# The gauge sits where Arcade blinks "PRESS START / button" for a side not in the game (Arrange and PRACTICE never
+# show it); the four string loads (0x00205F20, 0x00205F30) are pointed at the game's blank string 0x00205F40.
+RANK_GAUGE_EDITS = [
+    (0x00129394, 0x106000F0, 0x00000000),
+    (0x0012C7C0, 0x24845F20, 0x24845F40),
+    (0x0012C7E4, 0x24845F30, 0x24845F40),
+    (0x0012CA00, 0x24845F20, 0x24845F40),
+    (0x0012CA24, 0x24845F30, 0x24845F40),
+]
 
-def frontend_video_hook(video: str):
-    """Callable for build_menu_probe.build(executable_hook=...): bakes the runtime video hook into the frontend
-    executable for profiles that need it, else None."""
-    if video not in VIDEO_HOOK_PROFILES:
-        return None
+
+def patch_retail_words(elf: bytes, edits) -> bytes:
+    """Apply (address, original, new) word edits to an executable still in the retail file layout."""
+    out = bytearray(elf)
+    for site, orig, new in edits:
+        off = site - build_pnach.ELF_BASE + build_pnach.ELF_FILE_OFFSET
+        found, = struct.unpack_from("<I", out, off)
+        if found != orig:
+            raise AssertionError(f"patch: preimage mismatch @ {site:08X}")
+        struct.pack_into("<I", out, off, new)
+    return bytes(out)
+
+
+def _load_hook(key: str) -> tuple[dict, str]:
     if have_toolchain() and not EXTRA_DEFINES:
         with tempfile.TemporaryDirectory() as tmp:
-            built = build_hook("video", Path(tmp), BAKE_BASE, BAKE_END)
-    else:
-        built = import_bake(json.loads((PREBUILT / "video.json").read_text()))
+            return build_hook(key, Path(tmp), BAKE_BASE, BAKE_END), "built from ps2/hooks with mips-linux-gnu-gcc"
+    path = PREBUILT / f"{key}.json"
+    return import_bake(json.loads(path.read_text())), f"prebuilt {path.relative_to(ROOT)}"
+
+
+def _select_sites(baked: dict, video: str, rank_gauge: bool) -> dict:
+    """Keep the runtime video sites only with their profile, the CONFIG row only with the rank gauge."""
+    drop = set()
+    if video not in VIDEO_HOOK_PROFILES:
+        drop |= VIDEO_SITES
+    if not rank_gauge:
+        drop |= RANK_OPTION_SITES
+    baked["sites"] = [x for x in baked["sites"] if x[0] not in drop]
+    if rank_gauge:  # starts ON; the CONFIG row (options.c) rewrites these words
+        baked["sites"] = baked["sites"] + list(RANK_GAUGE_EDITS)
+    return baked
+
+
+def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2):
+    """Callable for build_menu_probe.build(executable_hook=...): bakes the instant-KURO image (ps2/hooks/kuro.c,
+    with video.c and options.c) into the frontend executable: Black Label switched at runtime from the KURO row,
+    PRACTICE in ARRANGE MODE, the runtime video switch with the auto profile, ARCADE CONFIG > RANK GAUGE with the rank
+    gauge."""
+    built = _load_hook("kuro")[0]
+    drop = set() if rank_gauge else set(RANK_OPTION_SITES)
+    if video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching
+        drop |= {a for a, _o, _e in VIDEO_APPLY_SITES}
+        set_sym_word(built, "video_enabled", 0)
+    built["sites"] = [x for x in built["sites"] if x[0] not in drop] + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
+    set_sym_word(built, "kuro_row", position)
     return lambda elf: bake_elf(elf, built)
 
 
-def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None) -> tuple[bytes, str]:
+def standalone_video_hook():
+    """Enable automatic video without changing the added probe row's dispatch."""
+    built = _load_hook("video")[0]
+    built["sites"] = [site for site in built["sites"] if site[0] in VIDEO_SITES]
+    return lambda elf: bake_elf(elf, built)
+
+
+def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None,
+                 rank_gauge: bool = False) -> tuple[bytes, str]:
     """Baked BLACK LABEL executable. Uses the cross toolchain when present, else the committed prebuilt image."""
-    if have_toolchain() and not EXTRA_DEFINES:
-        with tempfile.TemporaryDirectory() as tmp:
-            baked = build_hook(key, Path(work or tmp), BAKE_BASE, BAKE_END)
-        source = "built from ps2/hooks with mips-linux-gnu-gcc"
+    if work is not None and have_toolchain() and not EXTRA_DEFINES:
+        baked, source = build_hook(key, Path(work), BAKE_BASE, BAKE_END), "built from ps2/hooks with mips-linux-gnu-gcc"
     else:
-        path = PREBUILT / f"{key}.json"
-        baked = import_bake(json.loads(path.read_text()))
-        source = f"prebuilt {path.relative_to(ROOT)}"
-    if video not in VIDEO_HOOK_PROFILES:  # the runtime video hook only belongs with its own profile
-        baked["sites"] = [x for x in baked["sites"] if x[0] not in VIDEO_SITES]
+        baked, source = _load_hook(key)
+    baked = _select_sites(baked, video, rank_gauge)
     vid = video_profile(video)
     taken = {a for a, _o, _n in baked["sites"]}
     clash = [f"{a:08X}" for a, _o, _n in vid if a in taken]
@@ -436,7 +662,7 @@ def main(argv=None) -> int:
         for key, h in HOOKS.items():
             built = build_hook(key, Path(tmp))
             (args.listing_dir / f"{key}.lst").write_text(built["listing"])
-            if elf:
+            if elf and not h.get("frontend"):
                 verify_sites(elf, built)
             if args.bake_elf and args.bake_elf[0] == key:
                 if not elf:

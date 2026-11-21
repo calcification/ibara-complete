@@ -9,6 +9,7 @@
 --   SHOTLOCK  shot level to hold every frame; unset = free
 --   NOSHOT=1  untouched boss: parts of type BOSSTYPE keep their first-seen HP every frame while STAGE is logged
 --             (same rule as the PS2 logger's BL_NOSHOT; the player keeps shooting)
+--   ALLTABLES=1 tables.txt lists the part-record tables of every stage (not only STAGE)
 --   MAXFRAMES frames after the game starts before exiting (default 60000); also exits when STAGE ends
 -- The player is kept invincible (BL +0x288). Output formats (frames count from the first spawn of STAGE):
 --   spawns.txt  frame stage slot type subtype hp score x y segment
@@ -69,6 +70,20 @@ emu.register_frame_done(function()
   if os.getenv("RANKLOCK") then sp:write_u32(RANK, tonumber(os.getenv("RANKLOCK"))) end
   if os.getenv("SHOTLOCK") then sp:write_u8(P1 + 0x25B, tonumber(os.getenv("SHOTLOCK"))) end
   local stage = sp:read_u8(STAGEB)
+  if os.getenv("ALLTABLES") then  -- part-record tables of every stage
+    for i = 0, 191 do
+      local a = EN + i * 0xB4
+      if (sp:read_u32(a) & 0x80000000) ~= 0 then
+        local t = sp:read_u32(a + 4); local tb = sp:read_u32(a + 0x10); local key = t .. ":" .. tb
+        if not tseen[key] then
+          tseen[key] = true
+          for k = 0, 127 do
+            tout:write(string.format("%d %08X %d %d %d\n", t, tb, k, sp:read_u32(tb + 16 * k + 4), sp:read_i16(tb + 16 * k + 14)))
+          end
+        end
+      end
+    end
+  end
   if stage > STAGE and first then left = true end
   if left or frame > t0 + 700 + MAXF then finish(); return end
   if stage ~= STAGE then return end

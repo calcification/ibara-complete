@@ -8,6 +8,8 @@
 > [`research/phase11/`](research/phase11/README.md) and [`tests/manual/C00_CODE_INJECTION.md`](tests/manual/C00_CODE_INJECTION.md).
 > **Runtime (2026-11-20, headless PCSX2 v1.7.4000):** C00 code injection **PASS**; K01 Black Label XTC graze runs in the attract demo (partial evidence). See [`tests/results/2026-11-20_RUNTIME.md`](tests/results/2026-11-20_RUNTIME.md).
 
+> **Play it (easiest):** drag your `Ibara (Japan).iso` onto `patcher/apply_kuro_patch.bat` (Windows) or run `python3 patcher/apply_kuro_patch.py "Ibara (Japan).iso" "Ibara KURO.iso"` → [patcher/README.md](patcher/README.md)
+>
 > **Test the Black Label build:** `python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output 'Ibara Black Label test.iso'` → [docs/BUILD_TEST_ISO.md](docs/BUILD_TEST_ISO.md)
 
 ## Start here: 60-second PCSX2 setup

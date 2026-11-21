@@ -210,3 +210,17 @@ int xtc_shown(unsigned side)
 {
 	return xtc.pl[side & 1].quarters >> 2;
 }
+
+/* Instant KURO (kuro.c): a fresh counter each time KURO mode is entered (the executable is no longer reloaded). */
+void xtc_reset(void)
+{
+	unsigned s;
+	xtc.side = 0u;
+	for (s = 0; s < 2u; s++) {
+		xtc.pl[s].quarters = 0;
+		xtc.pl[s].left = 0;
+		xtc.pl[s].held = 0;
+		xtc.power[s] = 0;
+		xtc.wipe[s] = 0;
+	}
+}
