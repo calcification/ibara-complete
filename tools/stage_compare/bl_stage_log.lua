@@ -68,9 +68,9 @@ emu.register_frame_done(function()
     if on and (not alive[i] or typ[i] ~= t) then hp0[i] = sp:read_u16(a + 0x3C) end
     if NOSHOT and on and t == BOSST and hp0[i] and hp0[i] > 0 then sp:write_u16(a + 0x3C, hp0[i]) end
     alive[i] = on; typ[i] = t
-    if on and t == BOSST and first and (frame - first) % 4 == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
+    if on and t == BOSST and first and (frame - first) % (os.getenv("EVERY") and 1 or 4) == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
       cout:write(string.format("%d %d %d %08X %d %d %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8),
-        sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, sp:read_u8(a + 0x9A), sp:read_u8(a + 0xA6)))
+        sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, sp:read_u8(a + 0x9A), sp:read_u8(a + (os.getenv("HIT") and 0x84 or 0xA6))))
     end
   end
   if not first then return end

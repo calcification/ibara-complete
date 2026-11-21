@@ -109,6 +109,7 @@ def build_logger_iso(args, work: Path) -> Path:
         defines.append(f"BL_LOCK_SHOT={args.shot_level}")
     if args.noshot:
         defines.append("BL_NOSHOT")
+    defines += args.define
     cmd = [sys.executable, str(ROOT / "scripts/build_ee_hooks.py"), "--elf", str(args.retail_iso)]
     for d in defines:
         cmd += ["--define", d]
@@ -230,6 +231,8 @@ def main(argv=None):
     ap.add_argument("--boss-type", type=int, default=5, help="enemy type sampled into *_core.txt (stage 1: 5, 2: 45)")
     ap.add_argument("--noshot", action="store_true", help="untouched boss: refill --boss-type parts' HP every frame in both games")
     ap.add_argument("--seconds", type=int, help="PS2 capture length (wall clock)")
+    ap.add_argument("--define", action="append", default=[],
+                    help="extra logger define, e.g. BL_CORE_EVERY / BL_CORE_HIT (MAME side: set EVERY=1 / HIT=1)")
     ap.add_argument("--anchor-type", type=int, help="enemy type used to align the logs (default: BL's first)")
     ap.add_argument("--skip-bl", action="store_true")
     ap.add_argument("--skip-ps2", action="store_true")

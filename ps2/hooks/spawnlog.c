@@ -182,7 +182,12 @@ void spawn_log_frame(void)
 #elif defined(BL_CORE_FLAGS) /* every type-5 part every 16 frames, flags in x (low) / y (high) */
 		if (on && t == 5 && sl_first && !((sl_frame - sl_first) & 15)) {
 #else
-		if (on && t == BL_BOSS_TYPE && sl_first && !((sl_frame - sl_first) & 3) &&
+#ifdef BL_CORE_EVERY
+#define CORE_MASK 0u
+#else
+#define CORE_MASK 3u
+#endif
+		if (on && t == BL_BOSS_TYPE && sl_first && !((sl_frame - sl_first) & CORE_MASK) &&
 		    (EE_RAM(u32, a + 8) < 3u || EE_RAM(u32, a + 0x40) >= 50000u)) {
 #endif
 			volatile u32 *ccount = (volatile u32 *)CORE_LOG;
@@ -193,7 +198,11 @@ void spawn_log_frame(void)
 				c[*ccount].hp = EE_RAM(u16, a + 0x3C);
 				c[*ccount].subtype = EE_RAM(u32, a + 8);
 				c[*ccount].mode = EE_RAM(u8, a + 0x9A);
+#ifdef BL_CORE_HIT /* hit-flash timer (+0x84) instead of the step byte */
+				c[*ccount].step = EE_RAM(u8, a + 0x84);
+#else
 				c[*ccount].step = EE_RAM(u8, a + 0xA6);
+#endif
 #if defined(BL_CORE_TURRET) /* x = parent's step byte (+0xA6) | stage counter << 8, y = turret timer (+0x9B) */
 				c[*ccount].x = (s16)(EE_RAM(u8, EN_BASE + EN_STRIDE * (u32)EE_RAM(s16, a + 0x7C) + 0xA6) | EE_RAM(u8, 0x00338E9Cu) << 8);
 				c[*ccount].y = EE_RAM(u8, a + 0x9B);
