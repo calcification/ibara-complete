@@ -31,4 +31,31 @@ Only these offsets go in the repository; the patcher will read the pixels from t
 * Textures are objects (`0x00341780` page table → `0x00339DB0` objects); the HUD page is a TIM2 in EE RAM
   (`0x00984E00`, 256 × 256 PSMT8, 256-entry CLUT, **all 256 entries used**), uploaded by its object's DMA packets
   (`obj+36` → `0x009A57C0` image, `0x009A58C0` CLUT) when drawn. So the 133-colour art cannot go into that page's
-  palette; it needs its own 16-bit texture (an object of ours with its own upload packets) — open.
+  palette unchanged; the user chose palette-matched art over a separate 16-bit texture.
+
+## KURO implementation (`ps2/hooks/bl_rankbar.c`, K28)
+
+* The HUD pass's `jal 0x00129360` (`0x0012E42C`) calls `bl_rank_bar` in KURO (a KURO table word). Without art it
+  calls the Arrange gauge, as before.
+* Art: `bl_bar_blob` (tag `BLRANKBAR-ART-01` + 80 × 14 big-endian words) is zero in the repository and in the patch;
+  `patcher/apply_kuro_patch.py --bl-rom` / `scripts/build_black_label_iso.py --bl-rom` copy it from the user's
+  `ibarablk_u2` (size and CRC checked) after the disc is verified. Patch + ROM gives a disc byte-identical to the
+  direct build with the ROM.
+* Painting: each colour → nearest entry of the page's CLUT (CSM1 order, weighted RGB distance); frame (80 × 6),
+  plate (41 × 8) and a 70 × 2 grey fill strip go over Arrange's own gauge art (page x 0-127, y 160-171), saved first
+  and put back when KURO switches off. Fully transparent rows are *not* free: painting rows 195-196 showed a
+  coloured box over the 1P score (a1 = 828 sprites stretch texels from there).
+* Drawing: three `0x00110B70` sprites (frame, plate, fill) through `bar_sprite`, which loads x, y, w, h into
+  f12-f15 (our code is o32 soft-float). BL geometry: y 80-159 (centred), fill art x 5, rows 2-3, length and colours
+  as above (GS modulate: tint = t × 128 / 124), rank-0 flash (tint `0xFFFFFF` on `$gp-28692` bit 1), proximity fade
+  (flags `0x10000000 | 0x2040000 | a << 8 | a`), slide 16 px while `$gp-29064` is set. x = 301: PS2's high-score
+  line sits higher than the arcade's, 9 px more puts the bar right under it. PS2's stage name (HUD text row 37,
+  cols 5-18) is blanked in KURO while the bar shows (BL has none there).
+* The file is built without s-registers (LEAF_SOURCES): the first version used them and the HUD pass that calls it
+  keeps 128-bit values in s-registers, so the o32 32-bit save/restore corrupted its later sprites (a box of HUD
+  texture over the 1P score).
+
+PCSX2 (K28): KURO game: frame, blue fill at low rank, RANK plate centred under TOP; no box over the 1P score; after a
+KURO Game Over (KURO off) a plain Arcade game shows Arrange's gauge art intact. `make_patch.py` literal-run limit
+4 → 8 KiB (our hook image is one ~6.5 KB run).
+

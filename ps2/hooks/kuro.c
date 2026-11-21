@@ -42,6 +42,8 @@ void xtc_reset(void);
 #define FIGHTER_TYPE 0x004E5050u
 static u32 kuro_ship[2];
 
+void bl_rank_bar_off(void);
+
 static void kuro_set(u32 on)
 {
 	const struct kuro_word *w = kuro_tab;
@@ -56,6 +58,8 @@ static void kuro_set(u32 on)
 			*t &= 3u;
 		}
 	}
+	if (!on)
+		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
 	for (i = 0; i < n; i++, w++) {
 		volatile u32 *p = (volatile u32 *)w->addr;
 		const u32 from = on ? w->retail : w->kuro, to = on ? w->kuro : w->retail;

@@ -6,9 +6,15 @@ this project has done so far. Your ISO is only read; no game data is in this fol
 
 ## Use
 
-* **Windows:** install Python 3 (python.org), then drag `Ibara (Japan).iso` onto `apply_kuro_patch.bat`.
-  `Ibara KURO.iso` appears next to it.
-* **Any system:** `python3 apply_kuro_patch.py "Ibara (Japan).iso" "Ibara KURO.iso"`
+* **Windows:** install Python 3 (python.org), then drag `Ibara (Japan).iso` onto `apply_kuro_patch.bat` — select
+  your `ibarablk.zip` too and drag both together to get the Black Label RANK bar artwork. `Ibara KURO.iso` appears
+  next to the ISO.
+* **Any system:** `python3 apply_kuro_patch.py "Ibara (Japan).iso" "Ibara KURO.iso" [--bl-rom ibarablk.zip]`
+
+**`--bl-rom` (optional):** your own Ibara Kuro Black Label arcade ROM set (MAME's `ibarablk.zip`, or the
+`ibarablk_u2` file from it; checked by size and CRC `5e46be44`). KURO's centred Black Label RANK bar uses its frame
+and plate artwork, copied from your ROM into the new ISO after verification; nothing from that ROM is in this folder.
+Without it, KURO shows Arrange's RANK gauge instead.
 
 Needs ~3.7 GB of free space. The output is checked against the SHA-256 of the disc the patch was made from, and
 deleted if it doesn't match. Keep it to yourself: it contains the game.
@@ -21,10 +27,14 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **Video:** Yoko stays interlaced with texture filtering off; TATE R / TATE L switch to 240p progressive, live from
   OPTION → SCREEN SETTING → SCREEN MODE.
 * **RANK gauge in Arcade:** ARCADE MODE → CONFIG → RANK GAUGE ON/OFF (starts ON). ON shows Arrange's RANK gauge
-  (top right) in Arcade, in both Arcade and KURO, and hides the blinking "PRESS START" for the empty side,
+  (top right) in Arcade (and in KURO when no `--bl-rom` was given), and hides the blinking "PRESS START" for the empty side,
   as in Arrange and Practice. Not saved to the memory card.
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE; KURO's practice is
   KURO → PRACTICE.
+* **KURO Black Label RANK bar** (with `--bl-rom`): always shown in KURO, centred under the high score as in Black
+  Label — fill length, rank colours, the white flash at maximum rank and the fade when your ship is near it follow
+  Black Label's code; the frame and plate use your ROM's artwork with each colour matched to the nearest colour of
+  the PS2 HUD palette (close, not exact). The PS2 stage-name line is hidden there in KURO (Black Label has none).
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, enemy bullets
@@ -39,7 +49,7 @@ In game: Cross = shot, Circle = bomb, Square = weapon change (KURO). Menus: Circ
 `ibara_kuro.patch` is made by `scripts/make_patch.py` from a disc built with `scripts/build_black_label_iso.py`
 (default options). It holds copy instructions into your disc plus the bytes that exist nowhere in the retail
 executable (our hook code, edited words, directory records, the menu label); `make_patch.py` refuses to write a
-patch with more than 64 KiB of such bytes or any run over 4 KiB. Regenerate it whenever the build changes:
+patch with more than 64 KiB of such bytes or any run over 8 KiB. Regenerate it whenever the build changes:
 
 ```bash
 python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output built.iso

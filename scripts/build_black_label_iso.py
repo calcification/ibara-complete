@@ -50,6 +50,8 @@ def main(argv=None) -> int:
     ap.add_argument("--rank-gauge", choices=("arcade", "arrange"), default="arcade",
                     help="arcade (default): ARCADE MODE > CONFIG gets a RANK GAUGE ON/OFF row (starts ON) that shows "
                          "Arrange's RANK gauge in Arcade (launcher and KURO); arrange: retail behaviour, no row")
+    ap.add_argument("--bl-rom", type=Path, help="your own ibarablk ROM (zip or ibarablk_u2): copies the Black Label RANK "
+                    "bar's artwork into the disc (research/phase19); without it KURO shows Arrange's gauge")
     args = ap.parse_args(argv)
 
     if args.output.exists():
@@ -71,6 +73,25 @@ def main(argv=None) -> int:
     print("3/3 building the disc (this copies ~3.7 GB) ...")
     crc, sha = build_menu_probe.build(args.source, args.output, label=args.label, video_profile=args.video_profile,
                                       position=args.position, executable_hook=hook, payload=False)
+    if args.bl_rom:
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "patcher"))
+        import apply_kuro_patch
+        art = apply_kuro_patch.read_bl_art(args.bl_rom)
+        at, pos, tag = None, 0, apply_kuro_patch.BL_ART_TAG
+        with args.output.open("rb") as f:
+            while at is None:
+                chunk = f.read(1 << 26)
+                if not chunk:
+                    break
+                k = chunk.find(tag)
+                if k >= 0:
+                    at = pos + k
+                pos += len(chunk) - len(tag)
+                f.seek(pos)
+        if at is None:
+            raise ValueError("RANK bar art slot not found in the built disc")
+        apply_kuro_patch.inject_bl_art(args.output, at, art)
+        print(f"Black Label RANK bar artwork copied from {args.bl_rom} (disc offset {at:#x})")
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle: ARCADE MODE's menu with Black Label rules. EXIT returns to Mode Select.")

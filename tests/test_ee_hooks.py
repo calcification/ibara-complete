@@ -165,7 +165,7 @@ class BuildTests(unittest.TestCase):
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
-                "hdr_state", "bomb_d_kind"}
+                "hdr_state", "bomb_d_kind", "bl_rank_bar", "bl_rank_bar_off", "bar_sprite"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)

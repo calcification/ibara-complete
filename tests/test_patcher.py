@@ -24,6 +24,24 @@ class PatchTest(unittest.TestCase):
             self.assertEqual(sum(op[2] if op[0] == 0 else len(op[1]) for op in ops), length)
             self.assertLessEqual(at + length, dst_size)
 
+    def test_patch_has_an_empty_rank_bar_art_slot(self):
+        # the art slot is in the patch's literal bytes, tag then 2,240 zero bytes (art comes from the user's ROM)
+        _s, _d, _m, _sha, _note, records = apply_kuro_patch.read_patch(ROOT / "patcher" / "ibara_kuro.patch")
+        lits = [op[1] for _a, _n, ops in records for op in ops if op[0] == 1]
+        hits = [b for b in lits if apply_kuro_patch.BL_ART_TAG in b]
+        self.assertEqual(len(hits), 1)
+        k = hits[0].index(apply_kuro_patch.BL_ART_TAG) + len(apply_kuro_patch.BL_ART_TAG)
+        art = hits[0][k:k + 2 * apply_kuro_patch.BL_ART_W * apply_kuro_patch.BL_ART_H]
+        self.assertTrue(len(art) < 2 * 80 * 14 or not any(art))  # zero art (or zero bytes encoded as copies)
+
+    def test_bl_rom_is_checked(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            bad = Path(d) / "ibarablk_u2"
+            bad.write_bytes(b"\0" * 1024)
+            with self.assertRaises(SystemExit):
+                apply_kuro_patch.read_bl_art(bad)
+
     def test_rank_gauge_edits_are_word_aligned_and_distinct(self):
         import build_ee_hooks
         addrs = [a for a, _o, _n in build_ee_hooks.RANK_GAUGE_EDITS]

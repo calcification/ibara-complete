@@ -44,7 +44,7 @@ matching the stored rank (`0xDFBA87` → about 12 %), no text under it (R01).
 `patcher/` (stdlib Python) applies `ibara_kuro.patch` made by `scripts/make_patch.py`. xdelta3 was tried first: its
 source window is capped at 2 GiB, KURO.ELF lies ~2.9 GB before the retail executable it copies, and the delta came
 out with ~300 KB of literal game code, so it was not used. `make_patch.py` instead copies from anywhere in the
-retail executable and refuses literal runs over 4 KiB or 64 KiB in total. Current patch: 4.3 KB, 7.5 KB of literal
+retail executable and refuses literal runs over 4 KiB (8 KiB since phase 19) or 64 KiB in total. Current patch: 4.3 KB, 7.5 KB of literal
 bytes (hook images, edited HP-table words, the KURO label, directory records, zero runs).
 
 ## In-game options (2026-11-21)
