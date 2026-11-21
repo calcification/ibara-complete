@@ -26,10 +26,14 @@ DEFAULT_PAD = dict(zip(CONTROLS, ('up', 'down', 'left', 'right', 'cross', 'circl
 SUPPORTED_METRICS = {
     'player_x', 'player_y', 'score', 'rank', 'xtc', 'hostile_bullets',
     'enemies', 'enemy_state', 'enemy_type', 'enemy_hp', 'stage', 'rng', 'observed_input',
-    'bomb_stock', 'lives',
+    'bomb_stock', 'lives', 'player_can_be_hit', 'invincibility_timer',
 }
 
-
+PS2_TRACE_FIELDS = (
+    'observed_input', 'player_x', 'player_y', 'score', 'rank', 'hostile_bullets', 'enemies',
+    'enemy_type', 'enemy_state', 'enemy_hp', 'stage', 'bomb_stock', 'lives', 'xtc',
+    'player_can_be_hit', 'invincibility_timer',
+)
 ENEMY_METRICS = {'enemy_type', 'enemy_state', 'enemy_hp'}
 
 
@@ -272,7 +276,7 @@ def main():
                        help='search from the checkpoint buffer length through eight rows afterward')
     probe.add_argument('--address', type=lambda value: int(value, 0), default=0x01F00000)
     probe.add_argument('--fields', nargs='+', choices=sorted(SUPPORTED_METRICS),
-                       default=['observed_input', 'player_x', 'player_y', 'score'])
+                       help='column layout for older captures')
     args = parser.parse_args()
     try:
         if args.command == 'pcsx2-input':
@@ -358,16 +362,23 @@ def probe_frame_count(data, base):
     if not 0 <= base <= min(len(data), 32 * 1024 * 1024) - 8:
         raise ValueError('invalid EE capture address')
     magic, frames = struct.unpack_from('<II', data, base)
-    if magic != 0x46524231 or frames > 2048:
+    if magic not in (0x46524231, 0x46524232) or frames > 2048:
         raise ValueError('invalid PS2 probe buffer')
     return frames
 
 
 def probe_to_csv(ram, output, skip, count, base, fields, *, alignment=None):
-    if len(set(fields)) != len(fields) or 'observed_input' not in fields:
-        raise ValueError('expected unique fields including observed_input')
     data = read_ee(ram)
     frames = probe_frame_count(data, base)
+    version_two = struct.unpack_from('<I', data, base)[0] == 0x46524232
+    if version_two:
+        if fields is not None and tuple(fields) != PS2_TRACE_FIELDS:
+            raise ValueError('version 2 EE captures use the fixed game trace layout; omit --fields')
+        fields = PS2_TRACE_FIELDS
+    elif fields is None:
+        fields = ['observed_input', 'player_x', 'player_y', 'score']
+    if len(set(fields)) != len(fields) or 'observed_input' not in fields:
+        raise ValueError('expected unique fields including observed_input')
     if not 0 <= skip <= frames or skip + count > frames:
         raise ValueError('invalid or incomplete PS2 probe buffer')
     row = struct.Struct('<' + ''.join('i' if field in {'player_x', 'player_y'} else 'I' for field in fields))

@@ -95,6 +95,20 @@ class ReplayTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'control change'):
             replay.select_trace_start([0, 0, 0], [0, 0], 0, 1)
 
+    def test_current_game_capture_has_fixed_layout_with_invulnerability(self):
+        with tempfile.TemporaryDirectory() as directory:
+            memory = Path(directory) / 'ram.bin'
+            output = Path(directory) / 'trace.csv'
+            frame = (32, -2, 80, 120, 16, 2, 1, 13, 3, 4, 2, 1, 2, 2, 0, 30)
+            memory.write_bytes(struct.pack('<IIIii13I', 0x46524232, 1, *frame))
+            replay.probe_to_csv(memory, output, 0, 1, 0, None)
+            row, = replay.load_csv(output, 1)
+            self.assertEqual(row['observed_input'], 32)
+            self.assertEqual(row['player_x'], -2)
+            self.assertEqual((row['player_can_be_hit'], row['invincibility_timer']), (0, 30))
+            with self.assertRaisesRegex(ValueError, 'fixed game trace layout'):
+                replay.probe_to_csv(memory, output, 0, 1, 0, ['observed_input'])
+
 
 if __name__ == '__main__':
     unittest.main()

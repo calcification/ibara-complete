@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "name": "neutral",
+  "anchor": "stage1_cancel_target_with_hostile_bullets",
+  "segments": [
+    [300, []]
+  ]
+}
