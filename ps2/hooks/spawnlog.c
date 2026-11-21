@@ -107,10 +107,27 @@ void spawn_log_frame(void)
 		if (!shot_frame)
 			*n = 0;
 		shot_frame++;
+		{ /* per-frame alive counts: slot 0xFF, type field = type-0 count, +8 = type-2 count */
+			unsigned c0 = 0, c2 = 0;
+			for (k = 0; k < 160; k++) {
+				const u32 a = 0x0044C9C0u + 0x34u * k;
+				if ((EE_RAM(u32, a) >> 30) == 3u) {
+					if ((EE_RAM(u32, a + 4) & 0xFF) == 0)
+						c0++;
+					else if ((EE_RAM(u32, a + 4) & 0xFF) == 2)
+						c2++;
+				}
+			}
+			if (*n < 30000u) {
+				e[2 * *n] = (shot_frame + 1) << 8 | 0xFF;
+				e[2 * *n + 1] = (c0 & 0xFF) << 16 | (c2 & 0xFF) << 8;
+				(*n)++;
+			}
+		}
 		for (k = 0; k < 160; k++) {
 			const u32 a = 0x0044C9C0u + 0x34u * k;
 			const int on = (EE_RAM(u32, a) >> 30) == 3u;
-			if (on && !shot_alive[k] && *n < 12000u) {
+			if (on && !shot_alive[k] && *n < 30000u) {
 				e[2 * *n] = shot_frame << 8 | k;
 				e[2 * *n + 1] = (EE_RAM(u32, a + 4) & 0xFF) << 16 | (EE_RAM(u32, a + 8) & 0xFF) << 8 | (EE_RAM(u32, a + 12) & 0xFF);
 				(*n)++;

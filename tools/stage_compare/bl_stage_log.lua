@@ -40,6 +40,16 @@ at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1); shooting = t
 local sout = os.getenv("SHOTS") and io.open(dir .. "/shots.txt", "w"); local salive = {}; local sframe = 0
 local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34): frame slot type +8 +C
   sframe = sframe + 1
+  local c0, c2 = 0, 0   -- per-frame alive counts (both BL pools): line "frame 255 count0 count2 0"
+  for k = 0, 159 do
+    local a = 0x0C2380D0 + 0x34 * k
+    if (sp:read_u32(a) >> 30) == 3 then if (sp:read_u32(a + 4) & 0xFF) == 2 then c2 = c2 + 1 elseif (sp:read_u32(a + 4) & 0xFF) == 0 then c0 = c0 + 1 end end
+  end
+  for k = 0, 63 do
+    local a = 0x0C2A6D9C + 0x34 * k
+    if (sp:read_u32(a) >> 30) == 3 then if (sp:read_u32(a + 4) & 0xFF) == 0 then c0 = c0 + 1 end end
+  end
+  sout:write(string.format("%d 255 %d %d 0\n", sframe, c0, c2))
   for k = 0, 159 do
     local a = 0x0C2380D0 + 0x34 * k
     local on = (sp:read_u32(a) >> 30) == 3
@@ -54,7 +64,7 @@ emu.register_frame_done(function()
   frame = frame + 1
   if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
   if frame <= t0 + 700 then return end
-  if sout and sframe < 12000 then shot_frame() end
+  if sout and sframe < 30000 then shot_frame() end
   sp:write_u8(P1 + 0x288, 240)
   if os.getenv("RANKLOCK") then sp:write_u32(RANK, tonumber(os.getenv("RANKLOCK"))) end
   if os.getenv("SHOTLOCK") then sp:write_u8(P1 + 0x25B, tonumber(os.getenv("SHOTLOCK"))) end

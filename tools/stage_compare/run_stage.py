@@ -137,7 +137,7 @@ def extract_ps2(p2s: Path, out: Path):
         for i in range(c):
             fr, slot, hp, sub, x, y, mode, step = struct.unpack_from("<IHHIhhBB", r, 0x1F60010 + 20 * i)
             f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y} {mode} {step}\n")
-    ns = min(struct.unpack_from("<I", r, 0x1FD0000)[0], 12000)
+    ns = min(struct.unpack_from("<I", r, 0x1FD0000)[0], 30000)
     if ns:  # BL_SHOT_LOG: frame slot type +8 +C
         with open(out / "ps2_shots.txt", "w") as f:
             for i in range(ns):
