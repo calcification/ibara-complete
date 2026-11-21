@@ -179,7 +179,7 @@ class BuildTests(unittest.TestCase):
         tab, n = words[b["syms"]["kuro_tab"]], words[b["syms"]["kuro_tab_n"]]
         rows = [(words[tab + 12 * i], words[tab + 12 * i + 4], words[tab + 12 * i + 8]) for i in range(n)]
         bl = hooks.HOOKS["bl_mode"]
-        self.assertEqual(n, 3 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]))
+        self.assertEqual(n, 3 + 1 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]))
         addrs = [a for a, _o, _n in rows]
         self.assertEqual(len(addrs), len(set(addrs)))
         self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})

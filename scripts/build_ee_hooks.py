@@ -144,6 +144,7 @@ PRACTICE_MODE_PATCHES = [
 ]
 PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
 RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
+BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry")]
 
 HOOKS = {
     "h00_smoke": {
@@ -214,7 +215,7 @@ HOOKS = {
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
                           (0x0013AD14, 0x8F829254, 0x24020001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
-        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES,
+        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },
     "video": {
         "test_id": "V01",
@@ -329,6 +330,7 @@ HOOKS["kuro"] = {
     "dynamic": {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x0012C394, 0x0C04B038, "hud_entry"),
                   (0x0012C3BC, 0x0C04B038, "hud_entry")],
+        "sym_patches": BL_SYM_PATCHES,
         "jumps": HOOKS["bl_mode"]["jumps"],
         "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
     },
@@ -409,6 +411,9 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         rows = [(a, o, jal(syms[e])) for a, o, e in dyn["sites"]]
         rows += [(a, o, 0x08000000 | (syms[e] >> 2) & 0x03FFFFFF) for a, o, e in dyn["jumps"]]
         rows += list(dyn["patches"])
+        for a, o, kind, target in dyn.get("sym_patches", []):
+            assert kind == "jal"
+            rows.append((a, o, jal(syms[target])))
         seen = {a for a, _o, _n in sites}
         clash = [f"{a:08X}" for a, _o, _n in rows if a in seen]
         if clash or len({a for a, _o, _n in rows}) != len(rows):
