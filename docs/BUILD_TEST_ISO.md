@@ -19,9 +19,12 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
   else is refused. CHD/CSO: convert back to ISO first.
 * Default video is `auto` (below). `--video-profile 240p_cave_beta` is 240p in every mode (matches the published
   Cave 240p patch; verified on one real PS2); `--video-profile retail` is the original interlaced output.
-* Default `--rank-gauge arcade`: Arrange's RANK gauge (top right) is also shown in Arcade, in the launcher and in
-  KURO, and the blinking "PRESS START button" for the empty side is hidden there (Arrange and Practice hide it too).
-  `--rank-gauge arrange` keeps the retail behaviour.
+* Default `--rank-gauge arcade`: ARCADE MODE → CONFIG has a **RANK GAUGE** ON/OFF row (starts ON). ON shows
+  Arrange's RANK gauge (top right) in Arcade, in the launcher and in KURO, and hides the blinking "PRESS START
+  button" for the empty side (Arrange and Practice hide it too). The setting carries between the launcher and KURO
+  but is not saved to the memory card. `--rank-gauge arrange` keeps the retail behaviour (no row).
+* ARCADE MODE → PRACTICE has a **GAME MODE** row: ARCADE or ARRANGE (inside KURO: KURO or ARRANGE). ARRANGE
+  practises Arrange from the chosen stage.
 * No MIPS compiler needed: the committed `ps2/prebuilt/bl_mode.json` is used (byte-identical to a source
   build; a test keeps it in sync). With `gcc-mips-linux-gnu` installed the hooks are rebuilt from `ps2/hooks`.
 * Output is ~3.7 GB and contains game data: keep it local; never upload it.

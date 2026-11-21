@@ -46,3 +46,30 @@ source window is capped at 2 GiB, KURO.ELF lies ~2.9 GB before the retail execut
 out with ~300 KB of literal game code, so it was not used. `make_patch.py` instead copies from anywhere in the
 retail executable and refuses literal runs over 4 KiB or 64 KiB in total. Current patch: 4.3 KB, 7.5 KB of literal
 bytes (hook images, edited HP-table words, the KURO label, directory records, zero runs).
+
+## In-game options (2026-11-21)
+
+**ARCADE MODE > CONFIG > RANK GAUGE** (ps2/hooks/options.c, `RANK_OPTION_PATCHES`): a 10th row (row 6, after
+CONTINUE). Label table `0x002A9220` (rows 7-9 moved into its spare slot), row count 9 → 10 (`0x001CBFE4`,
+`0x001CC170`, `0x001CC1FC`), dispatcher rows 6/7/8 → 7/8/9 and row 6 through the unreachable word `0x001CC4DC` to a
+toggle; value column through `cfg_value` at the CONTINUE lookup `0x001CBF70`; help text from our own 10-row table;
+FIGHTER TYPE / KEY CONFIG return to rows 7 / 8 (`0x001CC5E4/5F4`, `0x001CC68C/69C`, `0x001CA08C`). The toggle rewrites
+the 5 gauge words and flushes the caches; the value travels in the LoadExecPS2 argument ("S=<mode><gauge>").
+PCSX2: row shown with its help text; OFF → retail HUD (PRESS START, no gauge); ON → gauge; OFF carried into KURO;
+FIGHTER TYPE and KEY CONFIG open and return to their rows (O01).
+
+**ARCADE MODE > PRACTICE > GAME MODE** (`PRACTICE_MODE_PATCHES`): practice start `0x001CB3C0` sets PRACTICE
+(`0x00338FA4`) and clears the Arrange flag (`0x00338F44`) at `0x001CB3E0`; that store now writes the chosen mode. With
+both flags the game runs Arrange from the chosen stage: Arrange HUD, formation label, sub-weapon plates, Arrange high
+score; Game Over returns to PRACTICE; Arcade's GAME START clears the flag again (`0x001CAD04`). Row 4 before EXIT
+(label slot 5 was spare, help table had 2 spare slots), 6 rows (`0x001CB0A4`, `0x001CB298`; the up-wrap stores a2 =
+the state number 4, so `li a2,5` at `0x001CAD48`), EXIT → row 5, row 4 via the unreachable `0x001CBB4C` to a toggle,
+values via `prac_value` at `0x001CB058`. PCSX2: ARRANGE stage 3 (flags 1/1, scene 4) in the launcher; KURO shows
+KURO / ARRANGE and runs Arrange practice; a later Arcade game has both flags 0 (O02).
+
+Not done: KURO in the launcher's PRACTICE (KURO is a separate executable; practising it means KURO → ARCADE →
+PRACTICE, or the planned merge of KURO into the main executable). Settings are not saved to the memory card.
+
+The frontend executable now carries ~1.8 KB of hook code, more than the 976 bytes left in its disc extent, so the
+launcher builder writes it to the free extent after KURO.ELF and points the boot record there (the retail copy is
+left in place).

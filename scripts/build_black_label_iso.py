@@ -48,8 +48,8 @@ def main(argv=None) -> int:
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
     ap.add_argument("--rank-gauge", choices=("arcade", "arrange"), default="arcade",
-                    help="arcade (default): Arrange's RANK gauge also in Arcade (launcher and KURO); "
-                         "arrange: retail behaviour (Arrange and Arcade PRACTICE only)")
+                    help="arcade (default): ARCADE MODE > CONFIG gets a RANK GAUGE ON/OFF row (starts ON) that shows "
+                         "Arrange's RANK gauge in Arcade (launcher and KURO); arrange: retail behaviour, no row")
     ap.add_argument("--keep-elf", type=Path, help="also save the baked BLACK LABEL executable here")
     args = ap.parse_args(argv)
 

@@ -27,7 +27,10 @@
  * the start-up block that crt0 hands to SetupThread (0x004E52C0: argc, argv[]) and adopts the mode at start-up.
  * MODE_ARG lies in the zero padding after the retail code (launcher builder, research/phase04, which stores "S=0";
  * bl_return.c writes the "S=" in KURO); its digit is refreshed every frame so the argument carries the current mode. */
-#define MODE_ARG    0x001D42F8u  /* "S=<digit>\0" */
+#define MODE_ARG    0x001D42F8u  /* "S=<screen mode digit><rank gauge digit>\0" (0x001D42F8-0x001D42FC) */
+
+extern u32 opt_gauge;     /* options.c: RANK GAUGE setting, carried with the screen mode */
+void opt_set(u32 on);
 #define ARGS_BLOCK  0x004E52C0u
 #define SETTINGS_RECORD 0x004956F4u /* screen mode in the settings record (card / defaults) */
 #define VIDEO_STD   0x00337D00u /* $gp-32752 (s8): 2 selects omode 3 (PAL) in the boot GS reset (0x001AD238) */
@@ -113,8 +116,11 @@ void video_apply(u32 mode)
 		vs.carried = 0xFFu;
 		if (argc - 2u < 7u) {
 			const u8 *arg = (const u8 *)EE_RAM(u32, ARGS_BLOCK + 4u * argc); /* filled by the kernel */
-			if (arg[0] == 'S' && (u8)(arg[2] - '0') <= 2u) /* "S=<digit>" */
+			if (arg[0] == 'S' && (u8)(arg[2] - '0') <= 2u) { /* "S=<mode><gauge>" */
 				vs.carried = arg[2] - (u8)'0';
+				if (arg[3] == '0')
+					opt_set(0u); /* RANK GAUGE OFF in the other executable (options.c) */
+			}
 		}
 	}
 	if (vs.carried <= 2u) {
@@ -133,6 +139,7 @@ void video_frame(void)
 	if (vs.carried == 0xFEu)
 		video_apply(EE_RAM(u32, SCREEN_MODE));
 	EE_RAM(u8, MODE_ARG + 2u) = (u8)('0' + (EE_RAM(u32, SCREEN_MODE) & 3u));
+	EE_RAM(u8, MODE_ARG + 3u) = (u8)('0' + opt_gauge);
 	m = EE_RAM(u32, SCREEN_MODE);
 	tate = (m == 1u || m == 2u);
 	if (tate != vs.tate) {

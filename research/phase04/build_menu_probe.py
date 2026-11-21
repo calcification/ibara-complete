@@ -304,21 +304,28 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         root[offset:offset + 8] = disc.pair32(end)
 
     executable = menu_elf(original, video_profile, position)
+    boot_lba = boot['lba']
     if executable_hook is not None:  # e.g. bake the runtime video hook into the frontend executable
         executable = executable_hook(bytes(executable))
         capacity = (boot['bytes'] + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
-        if len(executable) > capacity:
-            raise ValueError(f'The frontend executable grew to {len(executable)} bytes; only {capacity} fit its extent')
         if len(executable) != boot['bytes']:
             own = [r for r in records if r['name'] == boot['name'].encode() or r['name'] == boot['name']]
             if len(own) != 1:
                 raise ValueError('Boot executable record not found in the root directory')
+            if len(executable) > capacity:
+                # Too big for its extent (the next retail file follows it): place the executable in the free
+                # extent after the payload and companions, like KURO.ELF; the retail copy stays where it was.
+                boot_lba = end_lba
+                end_lba += (len(executable) + disc.SECTOR - 1) // disc.SECTOR
+                if end_lba > disc.NEXT_ORIGINAL_FILE_LBA:
+                    raise ValueError('No free disc extent left for the frontend executable')
+                root[own[0]['offset'] + 2:own[0]['offset'] + 10] = disc.pair32(boot_lba)
             root[own[0]['offset'] + 10:own[0]['offset'] + 18] = disc.pair32(len(executable))
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
         (disc.NEW_FILE_LBA * disc.SECTOR, probe),
-        (boot['lba'] * disc.SECTOR, executable),
+        (boot_lba * disc.SECTOR, executable),
         *label_writes(source, files, label),
     ]
     with source.open('rb') as original_iso, output.open('x+b') as target:

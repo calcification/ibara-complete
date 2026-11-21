@@ -56,13 +56,90 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c"}
+LEAF_SOURCES = {"video.c", "options.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
 # start-up settings loads: jal 0x0010FE20 (store the applied screen mode) -> video_apply (carried screen mode)
 VIDEO_APPLY_SITES = [(0x001D1B24, 0x0C043F88, "video_apply"), (0x001D3CD4, 0x0C043F88, "video_apply")]
 VIDEO_SITES = {VIDEO_SITE} | {a for a, _o, _e in VIDEO_APPLY_SITES}
+
+# ARCADE MODE > CONFIG gets a RANK GAUGE ON/OFF row (ps2/hooks/options.c; research/phase17). Same addresses in
+# the launcher and KURO (KURO is a copy of the retail executable). (address, original, kind, target[, addend]):
+# kind word/jal/j/hi/lo takes a symbol of our image or a number; raw is a plain new word.
+RANK_OPTION_PATCHES = [
+    # label table 0x002A9220: row 6 RANK GAUGE, rows 7-9 FIGHTER TYPE, KEY CONFIG, EXIT (slot 9 was spare)
+    (0x002A9238, 0x00301CC0, "word", "rank_label"),
+    (0x002A923C, 0x00301CE0, "word", 0x00301CC0),
+    (0x002A9240, 0x00301C50, "word", 0x00301CE0),
+    (0x002A9244, 0x00000000, "word", 0x00301C50),
+    # 10 rows: draw loop `slti v0,s2,9`, cursor down `slti at,v0,9`, cursor up wrap `li v0,8`
+    (0x001CBFE4, 0x2A420009, "raw", 0x2A42000A),
+    (0x001CC170, 0x28410009, "raw", 0x2841000A),
+    (0x001CC1FC, 0x24020008, "raw", 0x24020009),
+    # accept dispatcher: FIGHTER TYPE / KEY CONFIG / EXIT handlers now answer rows 7 / 8 / 9 ...
+    (0x001CC270, 0x24020006, "raw", 0x24020007),
+    (0x001CC280, 0x24020007, "raw", 0x24020008),
+    (0x001CC290, 0x24020008, "raw", 0x24020009),
+    # ... and the "no handler" exit goes through the unreachable word 0x001CC4DC to cfg_accept_entry (row 6 toggles)
+    (0x001CC294, 0x1462FEE2, "raw", 0x14620091),
+    (0x001CC4DC, 0x00000000, "j", "cfg_accept_entry"),
+    # value column: the CONTINUE lookup (0x001CBF70-0x001CBF8C) becomes s5 = cfg_value(row, continue, s5)
+    (0x001CBF70, 0x24020005, "raw", 0x93858EFC),   # lbu a1, -28932(gp)
+    (0x001CBF74, 0x16420006, "raw", 0x02402021),   # move a0, s2
+    (0x001CBF78, 0x00000000, "jal", "cfg_value"),
+    (0x001CBF7C, 0x93838EFC, "raw", 0x02A03021),   # move a2, s5 (delay slot)
+    (0x001CBF80, 0x27828C40, "raw", 0x0040A821),   # move s5, v0
+    (0x001CBF84, 0x00031880, "raw", 0x00000000),
+    (0x001CBF88, 0x00431021, "raw", 0x00000000),
+    (0x001CBF8C, 0x8C550000, "raw", 0x00000000),
+    # returning from FIGHTER TYPE (two exits) and KEY CONFIG puts the cursor back on their new rows 7 / 8
+    (0x001CC5E4, 0x00000000, "raw", 0x24030007),   # li v1, 7 (bne delay slot; v1 dead on the other path)
+    (0x001CC5F4, 0xAF82979C, "raw", 0xAF83979C),   # sw v1, -26724(gp)
+    (0x001CC68C, 0x00000000, "raw", 0x24030007),
+    (0x001CC69C, 0xAF82979C, "raw", 0xAF83979C),
+    (0x001CA08C, 0x24020007, "raw", 0x24020008),   # KEY CONFIG: li v0, 7 -> 8
+    # help text table 0x002A9310 (9 rows, no room) -> cfg_desc (10 rows)
+    (0x001CBFFC, 0x3C02002B, "hi", "cfg_desc"),
+    (0x001CC004, 0x24429310, "lo", "cfg_desc"),
+    (0x001CC020, 0x3C02002B, "hi", "cfg_desc", 4),
+    (0x001CC024, 0x24429314, "lo", "cfg_desc", 4),
+]
+
+# ARCADE MODE > PRACTICE gets a GAME MODE row (ARCADE / ARRANGE; in KURO: KURO / ARRANGE), ps2/hooks/options.c.
+PRACTICE_MODE_PATCHES = [
+    # label table 0x002A9030: row 4 GAME MODE, row 5 EXIT (slot 5 was spare)
+    (0x002A9040, 0x00301C50, "word", "prac_label"),
+    (0x002A9044, 0x00000000, "word", 0x00301C50),
+    # help table 0x002A9190 (two spare slots): row 4 new text + retail "選択できます。", row 5 EXIT's lines
+    (0x002A91B0, 0x00301EF0, "word", "prac_help"),
+    (0x002A91B4, 0x00301F10, "word", 0x00301FD8),
+    (0x002A91B8, 0x00000000, "word", 0x00301EF0),
+    (0x002A91BC, 0x00000000, "word", 0x00301F10),
+    # 6 rows: draw loop `slti v0,s0,5`, cursor down `slti at,v0,5`; cursor-up wrap stores a2 (the state number 4,
+    # reused as the last row): `li a2,5` in the delay slot of the state's entry branch 0x001CAD44
+    (0x001CB0A4, 0x2A020005, "raw", 0x2A020006),
+    (0x001CB298, 0x28410005, "raw", 0x28410006),
+    (0x001CAD48, 0x00000000, "raw", 0x24060005),
+    # accept dispatcher: EXIT answers row 5; row 4 goes through the unreachable word 0x001CBB4C to prac_accept_entry
+    (0x001CB378, 0x24020004, "raw", 0x24020005),
+    (0x001CB37C, 0x1462FEF0, "raw", 0x146201F3),
+    (0x001CBB4C, 0x00000000, "j", "prac_accept_entry"),
+    # value column: the PLAY DATA LIST lookup (0x001CB058-0x001CB07C) becomes a0 = prac_value(row, a0, data)
+    (0x001CB058, 0x24020003, "raw", 0x8F8692B0),   # lw a2, -27984(gp)
+    (0x001CB05C, 0x16020008, "raw", 0x00802821),   # move a1, a0
+    (0x001CB060, 0x00000000, "jal", "prac_value"),
+    (0x001CB064, 0x8F8392B0, "raw", 0x02002021),   # move a0, s0 (delay slot)
+    (0x001CB068, 0x3C02002B, "raw", 0x00402021),   # move a0, v0
+    (0x001CB06C, 0x24429150, "raw", 0x00000000),
+    (0x001CB070, 0x00031880, "raw", 0x00000000),
+    (0x001CB074, 0x00431021, "raw", 0x00000000),
+    (0x001CB078, 0x8C440004, "raw", 0x00000000),
+    # practice start: `sw zero, -28076(gp)` (Arrange flag off) -> jal prac_start (stores the chosen mode)
+    (0x001CB3E0, 0xAF809254, "jal", "prac_start"),
+]
+PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
+RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
 
 HOOKS = {
     "h00_smoke": {
@@ -82,7 +159,8 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c", "video.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c", "video.c",
+                    "options.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
                   ("hud_entry", 0x0012C0E0, "xtc_hud"), ("video_entry", 0x0010E480, "video_frame", "leaf")],
         # The video site (main-loop display call) is only kept with video profile "auto" (bake_payload).
@@ -132,16 +210,18 @@ HOOKS = {
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
                           (0x0013AD14, 0x8F829254, 0x24020001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
+        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES,
     },
     "video": {
         "test_id": "V01",
         "title": "VIDEO / Yoko interlaced, Tate 240p (frontend executable)",
         "description": "Baked into the launcher's frontend executable with video profile auto; see ps2/hooks/video.c.",
-        "sources": ["video.c"],
+        "sources": ["video.c", "options.c"],
         "stubs": [("video_entry", 0x0010E480, "video_frame", "leaf")],
         "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
         "requires": [],
         "establishes": [],
+        "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES,
         "bake_only": True,
     },
     "bl_xtc": {
@@ -255,6 +335,22 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     for site, original_word, entry in h.get("jumps", []):  # plain `j` into a C leaf that returns to the caller
         assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
+    for site, original_word, kind, target, *add in h.get("sym_patches", []):
+        value = (syms[target] if isinstance(target, str) else target) + (add[0] if add else 0)
+        if kind == "word" or kind == "raw":
+            new = value
+        elif kind == "jal":
+            new = jal(value)
+        elif kind == "j":
+            assert value % 4 == 0 and value >> 28 == site >> 28
+            new = 0x08000000 | (value >> 2) & 0x03FFFFFF
+        elif kind == "hi":
+            new = (original_word & 0xFFFF0000) | ((value + 0x8000) >> 16) & 0xFFFF
+        elif kind == "lo":
+            new = (original_word & 0xFFFF0000) | value & 0xFFFF
+        else:
+            raise AssertionError(f"unknown patch kind {kind}")
+        sites.append((site, original_word, new))
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
@@ -402,39 +498,49 @@ def patch_retail_words(elf: bytes, edits) -> bytes:
     return bytes(out)
 
 
-def frontend_video_hook(video: str, rank_gauge: bool = False):
-    """Callable for build_menu_probe.build(executable_hook=...): bakes the runtime video hook into the frontend
-    executable for profiles that need it and applies the Arcade rank gauge edit when asked, else None."""
-    edits = list(RANK_GAUGE_EDITS) if rank_gauge else []
-    if video not in VIDEO_HOOK_PROFILES:
-        return (lambda elf: patch_retail_words(elf, edits)) if edits else None
+def _load_hook(key: str) -> tuple[dict, str]:
     if have_toolchain() and not EXTRA_DEFINES:
         with tempfile.TemporaryDirectory() as tmp:
-            built = build_hook("video", Path(tmp), BAKE_BASE, BAKE_END)
-    else:
-        built = import_bake(json.loads((PREBUILT / "video.json").read_text()))
-    return lambda elf: bake_elf(patch_retail_words(elf, edits), built)
+            return build_hook(key, Path(tmp), BAKE_BASE, BAKE_END), "built from ps2/hooks with mips-linux-gnu-gcc"
+    path = PREBUILT / f"{key}.json"
+    return import_bake(json.loads(path.read_text())), f"prebuilt {path.relative_to(ROOT)}"
+
+
+def _select_sites(baked: dict, video: str, rank_gauge: bool) -> dict:
+    """Keep the runtime video sites only with their profile, the CONFIG row only with the rank gauge."""
+    drop = set()
+    if video not in VIDEO_HOOK_PROFILES:
+        drop |= VIDEO_SITES
+    if not rank_gauge:
+        drop |= RANK_OPTION_SITES
+    baked["sites"] = [x for x in baked["sites"] if x[0] not in drop]
+    if rank_gauge:  # starts ON; the CONFIG row (options.c) rewrites these words
+        baked["sites"] = baked["sites"] + list(RANK_GAUGE_EDITS)
+    return baked
+
+
+def frontend_video_hook(video: str, rank_gauge: bool = False):
+    """Callable for build_menu_probe.build(executable_hook=...): bakes the frontend hook into the frontend executable:
+    PRACTICE > GAME MODE always, the runtime video switch with the auto profile, ARCADE CONFIG > RANK GAUGE with the
+    rank gauge."""
+    built = _select_sites(_load_hook("video")[0], video, rank_gauge)
+    return lambda elf: bake_elf(elf, built)
 
 
 def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None,
                  rank_gauge: bool = False) -> tuple[bytes, str]:
     """Baked BLACK LABEL executable. Uses the cross toolchain when present, else the committed prebuilt image."""
-    if have_toolchain() and not EXTRA_DEFINES:
-        with tempfile.TemporaryDirectory() as tmp:
-            baked = build_hook(key, Path(work or tmp), BAKE_BASE, BAKE_END)
-        source = "built from ps2/hooks with mips-linux-gnu-gcc"
+    if work is not None and have_toolchain() and not EXTRA_DEFINES:
+        baked, source = build_hook(key, Path(work), BAKE_BASE, BAKE_END), "built from ps2/hooks with mips-linux-gnu-gcc"
     else:
-        path = PREBUILT / f"{key}.json"
-        baked = import_bake(json.loads(path.read_text()))
-        source = f"prebuilt {path.relative_to(ROOT)}"
-    if video not in VIDEO_HOOK_PROFILES:  # the runtime video hook only belongs with its own profile
-        baked["sites"] = [x for x in baked["sites"] if x[0] not in VIDEO_SITES]
+        baked, source = _load_hook(key)
+    baked = _select_sites(baked, video, rank_gauge)
     vid = video_profile(video)
     taken = {a for a, _o, _n in baked["sites"]}
     clash = [f"{a:08X}" for a, _o, _n in vid if a in taken]
     if clash:
         raise AssertionError(f"video profile overlaps hook sites: {clash}")
-    baked["sites"] = list(baked["sites"]) + list(vid) + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
+    baked["sites"] = list(baked["sites"]) + list(vid)
     return bake_elf(retail, baked), source
 
 

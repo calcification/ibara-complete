@@ -129,7 +129,10 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len([a for a, (o, n) in patches.items() if o == 0x8F879254 and n == 0x24070001]), 16)
         b = hooks.build_hook("bl_mode", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
-        self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]) + len(h["jumps"]) + len(h["patches_extra"]))
+        self.assertEqual(len(b["sites"]), len(h["sites"]) + len(h["patches"]) + len(h["jumps"]) + len(h["patches_extra"])
+                         + len(h["sym_patches"]))
+        addrs = [site for site, _o, _n in b["sites"]]
+        self.assertEqual(len(addrs), len(set(addrs)), "two patches on one word")
         jumps = {site: new for site, _o, new in b["sites"] if site == 0x00122120}
         self.assertEqual(jumps[0x00122120], 0x08000000 | (b["syms"]["bl_fire_timer"] >> 2) & 0x03FFFFFF)
 
@@ -140,14 +143,17 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(hooks.export_bake(b), committed,
                          "ps2/prebuilt/bl_mode.json is stale: run python3 scripts/build_ee_hooks.py")
 
-    def test_video_hook_is_leaf_safe_and_fits_frontend_slack(self):
+    def test_video_hook_is_leaf_safe(self):
         import re
         b = hooks.build_hook("video", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         # HOOK_AFTER_LEAF does not preserve callee-saved registers: the hook code must not touch them.
         uses = [l for l in b["listing"].splitlines() if re.search(r"\t.*\b(s[0-7]|s8|fp)\b", l)]
         self.assertEqual(uses, [], "video hook uses callee-saved registers; it needs the full HOOK_AFTER stub")
-        # The frontend executable grows by 0x80 + the image and must stay in its last disc sector (976 bytes free).
-        self.assertLessEqual(0x80 + b["size"], 976, "video hook no longer fits the frontend executable's extent")
+        # (The frontend executable no longer has to fit its retail extent: the launcher builder moves it to free
+        # disc space when it grows, research/phase04/build_menu_probe.py.)
+        self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
+        for site in hooks.RANK_OPTION_SITES | hooks.PRACTICE_MODE_SITES:
+            self.assertIn(site, {a for a, _o, _n in b["sites"]})
         h = hooks.HOOKS["bl_mode"]
         self.assertIn((hooks.VIDEO_SITE, 0x0C043920, "video_entry"), h["sites"])
 
