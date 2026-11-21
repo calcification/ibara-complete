@@ -49,3 +49,19 @@ TYPE config and clear the byte.
 **Art delivery plan.** Pages pre-laid-out by the patcher from the user's ROM (vram_map offsets + an atlas layout,
 both coordinates only) into an extra loadable segment of the frontend executable at `0x01F20000` (zeros on the
 disc without `--bl-rom`; the executable's disc extent has ample free space, the ISO size is unchanged).
+
+## The select flow (captures, 2026-11-22)
+
+`bl_select_capture.lua` (one player; Right / Left, button, Down ×4, Up, button):
+
+1. **Ship:** left / right picks straight (シスター・シミリス, 直進型) or spread (ディオ・スピロッソ, 拡散型); a fly-in
+   transition (~30 frames) on each change; prompt 左右で機体を選択.
+2. **Type:** the button opens TYPE A / B / C / D (up / down; prompt 上下でカスタムタイプ選択) with SPEED / POWER bars and
+   the bomb kind (拡散 / 爆発 / 直進 / 全方位 ...) — BL chooses the type here, not in a settings menu.
+3. **Confirm:** the button flashes the ship; the panels dissolve into the girder background, the ship launches, a
+   pilot illustration plays, then stage 1.
+
+The free side shows the 参戦可能 / PRESS START join panel; with two players each side runs the same two steps.
+Per frame the P1 panel is ~40-50 ops; steady states have no single loop period (several independent animations:
+pulsing highlights, blinking text, bobbing arrows), so the PS2 version will animate elements individually rather than
+replay frame lists.
