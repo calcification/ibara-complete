@@ -32,8 +32,14 @@ Tools: `tools/stage_compare/run_stage.py` with `--define BL_CORE_EVERY BL_CORE_H
   on its own held counter (`$gp-28068`, `0x0013AECC`), which Arcade used to reset every frame; the held-fire patch
   above makes it count, so the boost now applies in the BLACK LABEL build too.
 
+## Shot cap (ported)
+Per-frame alive counts: BL keeps 42–47 type-0 shots alive (slots 0–31 of its pool), PS2 Arcade 20–25 (slots 0–15).
+PS2's fire routine `0x0013ACC0` caps one player at 32 slots in Arrange and 16 in Arcade (two players: 10, as in BL
+`0C073830`). The BLACK LABEL build keeps 32 (`0x0013AD14` → `li v0,1`). Stage-1 boss with shot level 2: hits
+mostly every 6 frames like BL; damage window 2,284 frames vs BL 2,062 (2,944 before, 3,210 originally).
+
 ## Open
-* Stage-1 boss damage window: PS2 2,944 frames vs BL 2,062 after the held-fire port (was 3,210). Per-frame hits:
+* (resolved by the shot cap) Stage-1 boss damage window: PS2 2,944 frames vs BL 2,062 after the held-fire port (was 3,210). Per-frame hits:
   BL mostly every 6 frames (the flash-timer limit), PS2 spread over 6–10. Candidates: on-screen shot cap per pool
   (BL splits shots over two pools, PS2 shares one), and Arcade's per-press path (rank +16 per press).
 * Option-pod weapons (MG etc.): PS2's pods fire type-0 shots on the 8-frame beat; in BL the type-0 shots come from

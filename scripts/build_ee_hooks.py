@@ -115,7 +115,11 @@ HOOKS = {
         # on-screen shot count; PS2 Arcade keeps the 8-frame interval (+0x262). PS2's shooter 0x0013B2F0 already has
         # BL's rule on its Arrange path (held >= 8 frames -> interval 2); the held-frame path is taken for Arcade too
         # (0x0013B310 lw v1,$gp-28076 -> li v1,1). The new-press path (Arcade rank on press) is unchanged.
-        "patches_extra": [(0x0013B310, 0x8F839254, 0x24030001)],
+        "patches_extra": [(0x0013B310, 0x8F839254, 0x24030001),
+        # BL shot cap (Phase 16): BL's type-0 shot spawner (0C073830) allows 32 slots for one player (10 for two);
+        # PS2's fire routine 0x0013ACC0 allows 32 in Arrange but halves it to 16 in Arcade (0x0013AD14
+        # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
+                          (0x0013AD14, 0x8F829254, 0x24020001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
     },
     "bl_xtc": {
