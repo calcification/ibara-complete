@@ -194,6 +194,58 @@ static void bcount_frame(void)
 	(*n)++;
 }
 #endif
+#ifdef BL_MIDLOG
+/* TEST BUILDS ONLY: "dying" periods of big enemy parts (alive, HP 0, score >= 1000) and boss-gauge changes:
+ * records (frame, type | subtype << 16, slot | kind << 8 (0 start, 1 end, 2 gauge), flags or gauge state/HP)
+ * of 4 x u32 at 0x01FD0010, count at 0x01FD0000. */
+static u8 ml_dying[EN_COUNT];
+static u32 ml_frame, ml_gauge;
+static void ml_put(u32 a, u32 b, u32 c, u32 d)
+{
+	volatile u32 *n = (volatile u32 *)0x01FD0000u;
+	if (*n >= 4000u)
+		return;
+	EE_RAM(u32, 0x01FD0010u + 16u * *n) = a;
+	EE_RAM(u32, 0x01FD0014u + 16u * *n) = b;
+	EE_RAM(u32, 0x01FD0018u + 16u * *n) = c;
+	EE_RAM(u32, 0x01FD001Cu + 16u * *n) = d;
+	(*n)++;
+}
+static u16 ml_hp[EN_COUNT];
+static void midlog_frame(void)
+{
+	u32 i, g;
+	if (!ml_frame)
+		EE_RAM(u32, 0x01FD0000u) = 0;
+	ml_frame++;
+	for (i = 0; i < EN_COUNT; i++) { /* kills: HP > 0 last frame, 0 now (alive or freed), score >= 1000 */
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		const u32 fl = EE_RAM(u32, a);
+		const u16 hp = EE_RAM(u16, a + 0x3C);
+		if (ml_hp[i] && hp == 0 && EE_RAM(u32, a + 0x40) >= 1000u)
+			ml_put(ml_frame, EE_RAM(u32, a + 4) | EE_RAM(u32, a + 8) << 16, i | (fl & 0x80000000u ? 0u : 1u) << 8,
+			       EE_RAM(u32, a + 0x40));
+		ml_hp[i] = (fl & 0x80000000u) ? hp : 0;
+		(void)ml_dying;
+	}
+	{ /* the cancel hook arming (bc_left 16): kind 3, enemy bullets alive this frame */
+		extern u32 bc_left __attribute__((weak)); /* absent from builds without bl_enemy.c */
+		static u32 last_left;
+		if (&bc_left && bc_left == 15u && last_left != 16u && last_left != 15u) {
+			u32 b = 0;
+			for (g = 0; g < 256u; g++)
+				if (EE_RAM(u32, PS2_BULLETS_BASE + g * PS2_BULLET_STRIDE) & BULLET_CAN_HIT)
+					b++;
+			ml_put(ml_frame, EE_RAM(u8, 0x00338E9Cu), 3u << 8, b);
+		}
+		last_left = &bc_left ? bc_left : 0u;
+	}
+	g = EE_RAM(u32, 0x00338B5Cu) << 16 | (EE_RAM(u32, 0x00338B60u) ? 1u : 0u);
+	if (g != ml_gauge)
+		ml_put(ml_frame, 0, 2u << 8, EE_RAM(u32, 0x00338B5Cu) << 16 | (EE_RAM(u32, 0x00338B60u) & 0xFFFFu));
+	ml_gauge = g;
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -213,6 +265,9 @@ void spawn_log_frame(void)
 #endif
 #ifdef BL_BCOUNT
 	bcount_frame();
+#endif
+#ifdef BL_MIDLOG
+	midlog_frame();
 #endif
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;

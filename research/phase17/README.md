@@ -112,14 +112,32 @@ KURO's menu and a KURO game. Not done: a KURO header picture (needs new artwork 
 differences. Tables that matched on few or no scores were checked entry by entry: effect parts with 1-entry tables
 (HP equal) and records past the logged range. So stages 3–6 need no other part-HP change.
 
-## Bullet cancel after a boss (2026-11-21)
+## Bullet cancel after bosses and mid-bosses (2026-11-21)
 
-MAME (`bcount.lua`, write tap with `-nodrc`): BL erases every enemy bullet 2 frames after a boss core dies (stage 1:
-19 → 0, no score change). The erasing is BL-only code: cancel-all `0C0BC310` (per bullet `0C0BB980` / `0C0BB9F0`)
-called from the main loop `0C06C630` while counter `0C2B07FC` is non-zero; ~25 boss and mid-boss death paths set
-it to 16. PS2 Arcade leaves the bullets flying (49 bullets drift off over ~130 frames). PS2 keeps its Arrange boss
-gauge variables in every mode: state `$gp-29076` (`0x00338B5C`, 1 while a boss is up) and HP `$gp-29072`
-(`0x00338B60`), which reaches 0 on the core-kill frame. `bl_boss_cancel_frame` (KURO, every game frame) clears all
-enemy bullet records for 16 frames from that moment. PCSX2 stage 1: core killed at 7517, bullets 32 → 0 at 7518,
-the game continues into stage 2. Not covered: mid-bosses (stage 2 has two BL cancels; PS2's gauge stays idle
-there) — they need their own death hooks.
+MAME (`tools/stage_compare/bl_cancel_log.lua`, write tap with `-nodrc`): BL erases every enemy bullet when certain
+parts die (stage-1 boss: 19 → 0 two frames after the core, no score change). The erasing is BL-only code:
+cancel-all `0C0BC310` (per bullet `0C0BB980` / `0C0BB9F0`) called from the main loop `0C06C630` while counter
+`0C2B07FC` is non-zero. Logging every write of 16 to the counter and every kill (HP > 0 → 0, record alive or
+freed, score ≥ 1000) through stages 1–6, each write but one follows the kill of one part (stage byte, type, subtype):
+
+| Stage | Parts (type/subtype) | Notes |
+|---|---|---|
+| 1 | 11/0, 11/1 (tanks, 5,000) | counter rewritten every frame of the 141-frame death |
+| 1 | 5/0 (boss core) | rewritten every 3 frames for ~216 frames |
+| 2 | 34/0, 33/0 (mid-boss cores, record freed at once) | 33/0 also dies in stage 5 there with no cancel |
+| 2 | 45/3D, 45/31, 45/2A, 45/0 (boss parts and core) | 45/33 dies without a cancel |
+| 3 | 48/4, 48/7, 48/0, 51/2, 51/0 | |
+| 4 | 41/0, 42/0 | |
+| 5 | 65/0, 65/6 | one more write at frame 55448 with no part kill — not covered |
+| 6 | 69/0, 74/0, 74/2 | |
+
+The PS2 kill log (`run_stage.py --stage 6 --define BL_MIDLOG`) shows the same parts dying in the same order (the
+type-11 death animation is 141 frames there too), so the types and subtypes carry over. `bl_boss_cancel_frame`
+(KURO, every game frame) keeps each part's HP from the previous frame; a listed part (for the current stage
+byte `0x00338E9C`) whose HP goes from > 0 to 0, or a HOLD part alive with HP 0, arms 16 frames of clearing every
+enemy bullet record. A first version keyed on the Arrange boss gauge (`0x00338B5C/60`) only covered the 6 bosses.
+
+PCSX2, stages 1–6 with the hook (K24): 20 clears, each the frame after the listed kill; enemy bullets left the
+frame after the first clear: 0 in 18, 6 and 5 in the stage-5 and stage-6 boss deaths (cleared over the next
+frames); stage 5's 33/0 kill no longer clears. Stage 3 showed one clear fewer than the five parts (48/4 and 48/7
+were not both killed in that run). The game played on through the stage-6 boss.

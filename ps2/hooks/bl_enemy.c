@@ -32,25 +32,49 @@ u32 bl_fire_timer(u32 part, u32 factor, u32 base)
 	return 1;
 }
 
-/* BL bullet cancel after a boss (F10). BL's main loop (0C06C630) calls its cancel-all (0C0BC310, BL-only) while the
- * counter 0C2B07FC is non-zero, and the boss / mid-boss routines set that counter to 16 when they die (MAME: stage-1
- * boss core killed at frame 7037, all 19 bullets gone at 7039, no score). PS2 has no such counter; its boss-gauge
- * variables are kept in every mode (the gauge is only drawn in Arrange): state $gp-29076 (0x00338B5C) non-zero
- * while a boss is up, HP $gp-29072 (0x00338B60), which reaches 0 on the core-kill frame. So: when the gauge HP goes
- * from > 0 to 0 with a boss up, every enemy bullet record is cleared for 16 frames. Called every game frame from
- * xtc_frame (KURO only). research/phase17. */
-#define BOSS_STATE 0x00338B5Cu
-#define BOSS_HP    0x00338B60u
-static u32 bc_last_hp;
-static u32 bc_left;
+/* BL bullet cancel after bosses and mid-bosses (F10). BL's main loop (0C06C630) runs its cancel-all (0C0BC310,
+ * BL-only) while the counter 0C2B07FC is non-zero; ~25 death paths set it to 16 (no score for the bullets).
+ * MAME, stages 1-6 (write tap on the counter + per-frame kill log: HP from > 0 to 0, alive or freed): every write
+ * but one follows the kill of one particular part, given here as (stage byte, type, subtype). The part types and
+ * subtypes are the same on PS2 (PCSX2 kill log, same stages), so each frame the PS2 pool is checked for those
+ * kills and every enemy bullet record is cleared for 16 frames. HOLD parts keep BL's counter at 16 for their whole
+ * death animation (stage-1 type 11 tanks: 141 frames, as on PS2; stage-1 boss core: ~216), so they re-arm it
+ * every frame while alive with HP 0. Not covered: one stage-5 write with no part kill (MAME frame 55448).
+ * Called every game frame from xtc_frame (KURO only). research/phase17. */
+#define EN_BASE   0x0045A840u /* 192 x 0xB4: +00 flags (bit 31 alive), +04 type, +08 subtype, +3C HP */
+#define EN_STRIDE 0xB4u
+#define EN_COUNT  192u
+#define HOLD      0x80u
+
+static const u8 bc_trig[][4] = { /* stage byte (2 = stage 1), type, subtype, HOLD */
+	{2, 11, 0, HOLD}, {2, 11, 1, HOLD}, {2, 5, 0, HOLD},                       /* stage 1 */
+	{3, 34, 0, 0}, {3, 33, 0, 0},                                              /* stage 2 mid-bosses */
+	{3, 45, 0x3D, 0}, {3, 45, 0x31, 0}, {3, 45, 0x2A, 0}, {3, 45, 0, 0},       /* stage 2 boss */
+	{4, 48, 4, 0}, {4, 48, 7, 0}, {4, 48, 0, 0}, {4, 51, 2, 0}, {4, 51, 0, 0}, /* stage 3 */
+	{5, 41, 0, 0}, {5, 42, 0, 0},                                              /* stage 4 */
+	{6, 65, 0, 0}, {6, 65, 6, 0},                                              /* stage 5 */
+	{7, 69, 0, 0}, {7, 74, 0, 0}, {7, 74, 2, 0},                               /* stage 6 */
+};
+static u16 bc_hp[EN_COUNT]; /* HP last frame, 0 when not alive */
+u32 bc_left; /* frames of clearing left (read by the BL_MIDLOG test logger) */
 
 void bl_boss_cancel_frame(void)
 {
-	const u32 hp = EE_RAM(u32, BOSS_HP);
-	u32 i;
-	if (EE_RAM(u32, BOSS_STATE) != 0u && bc_last_hp != 0u && hp == 0u)
-		bc_left = 16u;
-	bc_last_hp = hp;
+	const u32 stage = EE_RAM(u8, PS2_STAGE_COUNT);
+	u32 i, k;
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		const u32 alive = EE_RAM(u32, a) & 0x80000000u;
+		const u32 hp = EE_RAM(u16, a + 0x3C);
+		if (hp == 0u && (bc_hp[i] || alive)) {
+			const u32 type = EE_RAM(u32, a + 4), sub = EE_RAM(u32, a + 8);
+			for (k = 0; k < sizeof bc_trig / sizeof bc_trig[0]; k++)
+				if (bc_trig[k][0] == stage && bc_trig[k][1] == type && bc_trig[k][2] == sub &&
+				    (bc_hp[i] || (alive && (bc_trig[k][3] & HOLD))))
+					bc_left = 16u;
+		}
+		bc_hp[i] = alive ? (u16)hp : 0u;
+	}
 	if (!bc_left)
 		return;
 	bc_left--;

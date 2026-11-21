@@ -27,8 +27,8 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   KURO → PRACTICE.
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
-  and fire timing (stages 1–2), held fire, 32-shot cap, MG pod aiming and BL pod fire rules, enemy bullets cleared when a boss dies. Practice works inside KURO. Not yet: later stages' bosses,
-  mid-boss bullet clear, ship select, graze sphere.
+  and fire timing (stages 1–2), held fire, 32-shot cap, MG pod aiming and BL pod fire rules, enemy bullets cleared when a boss or mid-boss dies. Practice works inside KURO. Not yet: later stages' bosses,
+  ship select, graze sphere.
 
 In game: Cross = shot, Circle = bomb, Square = weapon change (KURO). Menus: Circle confirms, Cross cancels.
 
