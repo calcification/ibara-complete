@@ -15,15 +15,16 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 
 ## What's on the disc
 
-* **Mode Select:** ARCADE, ARRANGE, **KURO** (Black Label, third row), GALLERY, OPTION, EXIT. EXIT inside KURO
-  returns to the normal game.
+* **Mode Select:** ARCADE, ARRANGE, **KURO** (Black Label, third row), GALLERY, OPTION, EXIT. KURO switches the
+  Black Label rules on instantly (no reload) and opens its menu: GAME START, PRACTICE, CONFIG, EXIT (the header still
+  reads ARCADE MODE). EXIT switches them off again.
 * **Video:** Yoko stays interlaced with texture filtering off; TATE R / TATE L switch to 240p progressive, live from
-  OPTION → SCREEN SETTING → SCREEN MODE. The setting carries between the normal game and KURO.
+  OPTION → SCREEN SETTING → SCREEN MODE.
 * **RANK gauge in Arcade:** ARCADE MODE → CONFIG → RANK GAUGE ON/OFF (starts ON). ON shows Arrange's RANK gauge
-  (top right) in Arcade, in both the normal game and KURO, and hides the blinking "PRESS START" for the empty side,
-  as in Arrange and Practice. Carried between the normal game and KURO; not saved to the memory card.
+  (top right) in Arcade, in both Arcade and KURO, and hides the blinking "PRESS START" for the empty side,
+  as in Arrange and Practice. Not saved to the memory card.
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE; KURO's practice is
-  KURO → ARCADE MODE → PRACTICE (and KURO's ARRANGE MODE → PRACTICE).
+  KURO → PRACTICE.
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
   and fire timing (stages 1–2), held fire, 32-shot cap. Practice works inside KURO. Not yet: later stages' bosses,

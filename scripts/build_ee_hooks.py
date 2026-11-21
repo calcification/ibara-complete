@@ -56,7 +56,7 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c", "options.c"}
+LEAF_SOURCES = {"video.c", "options.c", "kuro.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
@@ -302,7 +302,54 @@ if _HP.exists():
     HOOKS["bl_mode"]["patches"] = HOOKS["bl_mode"]["patches"] + [
         (int(a, 16), int(p["orig"], 16), int(p["new"], 16)) for a, p in json.loads(_HP.read_text()).items()]
 
+# Instant KURO (ps2/hooks/kuro.c): the frontend executable carries the whole image; the Black Label words of
+# bl_mode (hook call sites, rule patches, part-HP tables) become a runtime table that kuro.c switches on entering and
+# leaving KURO. Not in it: bl_mode's Exit-to-launcher hook (0x001CA7F0) and its video sites (static here).
+KURO_PATCHES = [
+    # Mode Select's KURO row: the dispatcher (research/phase04 DISPATCH 0x001D42A0: li v0,row; bne v1,v0,skip;
+    # lui a0 (delay slot); addiu a0 ...; LoadExecPS2) -> its first word after the delay slot jumps to kuro_enter_entry
+    (0x001D42AC, 0x248442D8, "j", "kuro_enter_entry"),
+    # ARCADE MODE's way out (cancel 0x001CA958, EXIT 0x001CAAC4): `li v0,1` -> jal kuro_leave_entry, and the return
+    # row `sw zero,-26724(gp)` -> `sw v1,-26724(gp)` (KURO's row when leaving KURO, else 0)
+    (0x001CA958, 0x24020001, "jal", "kuro_leave_entry"),
+    (0x001CA968, 0xAF80979C, "raw", 0xAF83979C),
+    (0x001CAAC4, 0x24020001, "jal", "kuro_leave_entry"),
+    (0x001CAAD4, 0xAF80979C, "raw", 0xAF83979C),
+]
+KURO_SITES = {a for a, *_ in KURO_PATCHES}
+HOOKS["kuro"] = {
+    "test_id": "K20",
+    "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
+    "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
+    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c"],
+    "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
+              ("hud_entry", 0x0012C0E0, "xtc_hud")],
+    "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
+    "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
+    "dynamic": {
+        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x0012C394, 0x0C04B038, "hud_entry"),
+                  (0x0012C3BC, 0x0C04B038, "hud_entry")],
+        "jumps": HOOKS["bl_mode"]["jumps"],
+        "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
+    },
+    "requires": [],
+    "establishes": [],
+    "bake_only": True,
+    "frontend": True,  # sites include words of the launcher builder's dispatcher (not in the retail executable)
+}
+KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n")
+
 EXTRA_DEFINES: list[str] = []  # --define NAME (test builds only; never for committed profiles)
+
+
+def set_sym_word(built: dict, sym: str, value: int) -> None:
+    """Change the initial value of one of our image's words (a symbol of the built image)."""
+    addr = built["syms"][sym]
+    for i, (place, a, _v) in enumerate(built["words"]):
+        if a == addr:
+            built["words"][i] = (place, a, value)
+            return
+    raise AssertionError(f"{sym} is not an image word")
 
 
 def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
@@ -357,6 +404,24 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         sites.append((site, original_word, new))
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
+    dyn = h.get("dynamic")
+    if dyn:  # runtime-switched words: a (address, retail, new) table after the image (ps2/hooks/kuro.c)
+        rows = [(a, o, jal(syms[e])) for a, o, e in dyn["sites"]]
+        rows += [(a, o, 0x08000000 | (syms[e] >> 2) & 0x03FFFFFF) for a, o, e in dyn["jumps"]]
+        rows += list(dyn["patches"])
+        seen = {a for a, _o, _n in sites}
+        clash = [f"{a:08X}" for a, _o, _n in rows if a in seen]
+        if clash or len({a for a, _o, _n in rows}) != len(rows):
+            raise AssertionError(f"{key}: runtime words overlap static sites or each other: {clash}")
+        table = (end + 15) & ~15
+        for i, (a, o, n) in enumerate(rows):
+            words += [(0, table + 12 * i, a), (0, table + 12 * i + 4, o), (0, table + 12 * i + 8, n)]
+        end = table + 12 * len(rows)
+        if end > end_limit:
+            raise AssertionError(f"{key}: runtime table ends at {end:08X}, past {end_limit:08X}")
+        built_tmp = {"words": words, "syms": syms}
+        set_sym_word(built_tmp, "kuro_tab", table)
+        set_sym_word(built_tmp, "kuro_tab_n", len(rows))
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 
@@ -463,15 +528,20 @@ PREBUILT = ROOT / "ps2" / "prebuilt"
 
 def export_bake(built: dict) -> dict:
     """JSON-safe description of a baked hook set (our own code words + verified site/patch list)."""
-    return {"base": f"{built['base']:08X}",
-            "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
-            "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
+    out = {"base": f"{built['base']:08X}",
+           "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
+           "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
+    syms = {k: f"{built['syms'][k]:08X}" for k in KURO_EXPORTED_SYMS if k in built.get("syms", {})}
+    if syms:
+        out["syms"] = syms
+    return out
 
 
 def import_bake(spec: dict) -> dict:
     return {"base": int(spec["base"], 16),
             "words": [(0, int(a, 16), int(v, 16)) for a, v in spec["words"]],
-            "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]]}
+            "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]],
+            "syms": {k: int(v, 16) for k, v in spec.get("syms", {}).items()}}
 
 
 VIDEO_HOOK_PROFILES = {"auto"}
@@ -523,11 +593,18 @@ def _select_sites(baked: dict, video: str, rank_gauge: bool) -> dict:
     return baked
 
 
-def frontend_video_hook(video: str, rank_gauge: bool = False):
-    """Callable for build_menu_probe.build(executable_hook=...): bakes the frontend hook into the frontend executable:
-    PRACTICE > GAME MODE always, the runtime video switch with the auto profile, ARCADE CONFIG > RANK GAUGE with the
-    rank gauge."""
-    built = _select_sites(_load_hook("video")[0], video, rank_gauge)
+def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2):
+    """Callable for build_menu_probe.build(executable_hook=...): bakes the instant-KURO image (ps2/hooks/kuro.c,
+    with video.c and options.c) into the frontend executable: Black Label switched at runtime from the KURO row,
+    PRACTICE in ARRANGE MODE, the runtime video switch with the auto profile, ARCADE CONFIG > RANK GAUGE with the rank
+    gauge."""
+    built = _load_hook("kuro")[0]
+    drop = set() if rank_gauge else set(RANK_OPTION_SITES)
+    if video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching
+        drop |= {a for a, _o, _e in VIDEO_APPLY_SITES}
+        set_sym_word(built, "video_enabled", 0)
+    built["sites"] = [x for x in built["sites"] if x[0] not in drop] + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
+    set_sym_word(built, "kuro_row", position)
     return lambda elf: bake_elf(elf, built)
 
 
@@ -573,7 +650,7 @@ def main(argv=None) -> int:
         for key, h in HOOKS.items():
             built = build_hook(key, Path(tmp))
             (args.listing_dir / f"{key}.lst").write_text(built["listing"])
-            if elf:
+            if elf and not h.get("frontend"):
                 verify_sites(elf, built)
             if args.bake_elf and args.bake_elf[0] == key:
                 if not elf:

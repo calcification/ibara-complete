@@ -78,3 +78,28 @@ KURO is practised inside KURO (KURO → ARCADE MODE → PRACTICE). Settings are 
 The frontend executable now carries ~1.8 KB of hook code, more than the 976 bytes left in its disc extent, so the
 launcher builder writes it to the free extent after KURO.ELF and points the boot record there (the retail copy is
 left in place).
+
+## Instant KURO (2026-11-21)
+
+KURO is no longer a second executable started with LoadExecPS2. The frontend executable carries the whole hook
+image (`ps2/hooks/kuro.c` with video.c, options.c and the Black Label sources); the builder turns bl_mode's 83 Black
+Label words (3 hook call sites, the fire-timer jump, rule patches, 51 part-HP words) into a table after the image,
+(address, retail, Black Label). `kuro_set` writes one column (only over the other column's value) and flushes the
+caches. KURO.ELF is gone from the disc.
+
+* Entering: Mode Select's KURO dispatcher (launcher builder DISPATCH 0x001D42A0) jumps at 0x001D42AC — after its
+  branch's delay slot — to `kuro_enter_entry`: XTC reset, table on, state 2 (ARCADE MODE's menu), as the Arcade row.
+  First try patched 0x001D42A8, the delay slot itself: LoadExecPS2 still ran and the console rebooted.
+* Leaving: ARCADE MODE's cancel (0x001CA958) and EXIT (0x001CAAC4) call `kuro_leave_entry` (table off; Mode Select
+  row = KURO's when leaving KURO, else 0, through `sw v1,-26724(gp)` at 0x001CA968 / 0x001CAAD4).
+* Safety net, every frame: off at state <= 1 (title, Mode Select) or on the attract flag `$gp-28276` rising (set
+  with the demo's Arcade rules at 0x0013DDBC); a game keeps its submenu's state (3 / 4), so state alone misses the
+  attract sequence after a Game Over.
+* The per-frame wrapper (`frame_hook`: video_frame then kuro_frame) is assembly with a 16-byte frame: as C it had a
+  24-byte frame and the game hung at its first NOW LOADING (bisected: the same image with the stub calling
+  video_frame directly booted).
+
+PCSX2 (K20): KURO opens in ~0.3 s; inside, all 83 words Black Label, XTC 126 grazes holding shot; EXIT / cancel →
+Mode Select on KURO, all 83 retail, next Arcade game retail; KURO game left to Game Over → attract: all retail; KURO
+again: all Black Label; KURO PRACTICE stage 2: Black Label, scene 3; Tate from a saved card: 224p in Mode Select,
+KURO's menu and a KURO game. Not done: a KURO header picture (needs new artwork in the header texture).

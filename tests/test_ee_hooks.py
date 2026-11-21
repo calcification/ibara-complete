@@ -157,6 +157,35 @@ class BuildTests(unittest.TestCase):
         h = hooks.HOOKS["bl_mode"]
         self.assertIn((hooks.VIDEO_SITE, 0x0C043920, "video_entry"), h["sites"])
 
+    def test_instant_kuro_image(self):
+        import re
+        b = hooks.build_hook("kuro", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
+        self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
+        # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
+        leaf = {"frame_hook", "kuro_frame", "kuro_set", "kuro_enter", "kuro_leave", "kuro_enter_entry",
+                "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
+                "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
+                "hdr_state"}
+        cur, bad = None, []
+        for line in b["listing"].splitlines():
+            m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)
+            if m:
+                cur = m.group(1)
+            elif cur in leaf and re.search(r"\t.*\b(s[0-7]|s8|fp)\b", line):
+                bad.append(line)
+        self.assertEqual(bad, [])
+        # The runtime table: every bl_mode word except its Exit-to-launcher hook and video sites, no overlaps.
+        words = {a: v for _p, a, v in b["words"]}
+        tab, n = words[b["syms"]["kuro_tab"]], words[b["syms"]["kuro_tab_n"]]
+        rows = [(words[tab + 12 * i], words[tab + 12 * i + 4], words[tab + 12 * i + 8]) for i in range(n)]
+        bl = hooks.HOOKS["bl_mode"]
+        self.assertEqual(n, 3 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]))
+        addrs = [a for a, _o, _n in rows]
+        self.assertEqual(len(addrs), len(set(addrs)))
+        self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})
+        self.assertNotIn(0x001CA7F0, addrs)
+        self.assertTrue(all(o != k for _a, o, k in rows))
+
     def test_bake_keeps_program_headers_after_elf_header(self):
         # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000
         body = bytearray(0x30000)

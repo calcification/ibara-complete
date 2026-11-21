@@ -191,11 +191,11 @@ def read_probe_elf(path):
     return probe
 
 
-def companion_layout(specifications, records, probe_size):
+def companion_layout(specifications, records, probe_size, include_probe=True):
     occupied_names = {record['name'].split(b';', 1)[0] for record in records}
     occupied_names.add(disc.PROBE_FILENAME.split(b';', 1)[0])
-    end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR
-    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, probe_size)]
+    end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR if include_probe else disc.NEW_FILE_LBA
+    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, probe_size)] if include_probe else []
     companions = []
     for specification in specifications:
         name, separator, path = specification.partition('=')
@@ -288,12 +288,14 @@ def label_writes(source, files, text=DEFAULT_LABEL):
 
 
 def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5,
-          executable_hook=None):
+          executable_hook=None, payload=True):
+    """payload=False: no separate executable on the disc (instant KURO: executable_hook makes the added row act
+    inside the frontend executable instead of loading one)."""
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
-    probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
+    probe = b'' if not payload else returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
-    rows, companions, end_lba = companion_layout(disc_files, records, len(probe))
+    rows, companions, end_lba = companion_layout(disc_files, records, len(probe), include_probe=payload)
     original, files, boot = retail.load_input(source)
     end = disc.ORIGINAL_ROOT_LEN + len(rows)
     pvd, root = bytearray(pvd), bytearray(root)
@@ -324,7 +326,7 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
-        (disc.NEW_FILE_LBA * disc.SECTOR, probe),
+        *([(disc.NEW_FILE_LBA * disc.SECTOR, probe)] if payload else []),
         (boot_lba * disc.SECTOR, executable),
         *label_writes(source, files, label),
     ]
