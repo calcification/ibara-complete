@@ -23,8 +23,9 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
   Arrange's RANK gauge (top right) in Arcade, in the launcher and in KURO, and hides the blinking "PRESS START
   button" for the empty side (Arrange and Practice hide it too). The setting carries between the launcher and KURO
   but is not saved to the memory card. `--rank-gauge arrange` keeps the retail behaviour (no row).
-* ARCADE MODE → PRACTICE has a **GAME MODE** row: ARCADE or ARRANGE (inside KURO: KURO or ARRANGE). ARRANGE
-  practises Arrange from the chosen stage.
+* ARRANGE MODE has its own **PRACTICE** row (GAME START, PRACTICE, CONFIG, EXIT), like ARCADE MODE: the same
+  practice menu (stage select, start position, play data) under the ARRANGE MODE header, playing Arrange. Inside
+  KURO the same; KURO's own rules are practised from KURO → ARCADE MODE → PRACTICE.
 * No MIPS compiler needed: the committed `ps2/prebuilt/bl_mode.json` is used (byte-identical to a source
   build; a test keeps it in sync). With `gcc-mips-linux-gnu` installed the hooks are rebuilt from `ps2/hooks`.
 * Output is ~3.7 GB and contains game data: keep it local; never upload it.

@@ -106,37 +106,41 @@ RANK_OPTION_PATCHES = [
     (0x001CC024, 0x24429314, "lo", "cfg_desc", 4),
 ]
 
-# ARCADE MODE > PRACTICE gets a GAME MODE row (ARCADE / ARRANGE; in KURO: KURO / ARRANGE), ps2/hooks/options.c.
+# ARRANGE MODE gets a PRACTICE row like ARCADE MODE's (ps2/hooks/options.c): GAME START, PRACTICE, CONFIG, EXIT.
 PRACTICE_MODE_PATCHES = [
-    # label table 0x002A9030: row 4 GAME MODE, row 5 EXIT (slot 5 was spare)
-    (0x002A9040, 0x00301C50, "word", "prac_label"),
-    (0x002A9044, 0x00000000, "word", 0x00301C50),
-    # help table 0x002A9190 (two spare slots): row 4 new text + retail "選択できます。", row 5 EXIT's lines
-    (0x002A91B0, 0x00301EF0, "word", "prac_help"),
-    (0x002A91B4, 0x00301F10, "word", 0x00301FD8),
-    (0x002A91B8, 0x00000000, "word", 0x00301EF0),
-    (0x002A91BC, 0x00000000, "word", 0x00301F10),
-    # 6 rows: draw loop `slti v0,s0,5`, cursor down `slti at,v0,5`; cursor-up wrap stores a2 (the state number 4,
-    # reused as the last row): `li a2,5` in the delay slot of the state's entry branch 0x001CAD44
-    (0x001CB0A4, 0x2A020005, "raw", 0x2A020006),
-    (0x001CB298, 0x28410005, "raw", 0x28410006),
-    (0x001CAD48, 0x00000000, "raw", 0x24060005),
-    # accept dispatcher: EXIT answers row 5; row 4 goes through the unreachable word 0x001CBB4C to prac_accept_entry
-    (0x001CB378, 0x24020004, "raw", 0x24020005),
-    (0x001CB37C, 0x1462FEF0, "raw", 0x146201F3),
-    (0x001CBB4C, 0x00000000, "j", "prac_accept_entry"),
-    # value column: the PLAY DATA LIST lookup (0x001CB058-0x001CB07C) becomes a0 = prac_value(row, a0, data)
-    (0x001CB058, 0x24020003, "raw", 0x8F8692B0),   # lw a2, -27984(gp)
-    (0x001CB05C, 0x16020008, "raw", 0x00802821),   # move a1, a0
-    (0x001CB060, 0x00000000, "jal", "prac_value"),
-    (0x001CB064, 0x8F8392B0, "raw", 0x02002021),   # move a0, s0 (delay slot)
-    (0x001CB068, 0x3C02002B, "raw", 0x00402021),   # move a0, v0
-    (0x001CB06C, 0x24429150, "raw", 0x00000000),
-    (0x001CB070, 0x00031880, "raw", 0x00000000),
-    (0x001CB074, 0x00431021, "raw", 0x00000000),
-    (0x001CB078, 0x8C440004, "raw", 0x00000000),
-    # practice start: `sw zero, -28076(gp)` (Arrange flag off) -> jal prac_start (stores the chosen mode)
+    # label table 0x002A9048: row 1 PRACTICE (retail string), rows 2-3 CONFIG, EXIT (slot 3 was spare)
+    (0x002A904C, 0x00301C78, "word", 0x00301C68),
+    (0x002A9050, 0x00301C50, "word", 0x00301C78),
+    (0x002A9054, 0x00000000, "word", 0x00301C50),
+    # ARRANGE CONFIG's title reads the CONFIG slot (0x002A904C, now PRACTICE): `lw a0,-28596(v0)` -> -28592
+    (0x001CCDB8, 0x8C44904C, "raw", 0x8C449050),
+    # leaving ARRANGE CONFIG (cancel 0x001CD008, EXIT 0x001CD0B4) returns to its new row 2: `li v0,1` -> 2
+    (0x001CD008, 0x24020001, "raw", 0x24020002),
+    (0x001CD0B4, 0x24020001, "raw", 0x24020002),
+    # 4 rows: draw loop `slti v0,s1,3`, cursor down `slti at,v0,3`; the cursor-up wrap stores a0 (2 from the state
+    # dispatcher, reused as the last row): `li a0,3` in the delay slot of the state's first branch 0x001CCA7C
+    (0x001CCB50, 0x2A220003, "raw", 0x2A220004),
+    (0x001CCA98, 0x28410003, "raw", 0x28410004),
+    (0x001CCA80, 0x00000000, "raw", 0x24040003),
+    # accept dispatcher: CONFIG / EXIT answer rows 2 / 3; row 1 goes through the unreachable word 0x001CC9B4 to
+    # arr_accept_entry (opens the practice menu)
+    (0x001CCC04, 0x24020001, "raw", 0x24020002),
+    (0x001CCC14, 0x24020002, "raw", 0x24020003),
+    (0x001CCC18, 0x1462FFB2, "raw", 0x1462FF66),
+    (0x001CC9B4, 0x00000000, "j", "arr_accept_entry"),
+    # help text: the 3-row table 0x002A93F0 -> arr_desc (4 rows)
+    (0x001CCB60, 0x3C02002B, "hi", "arr_desc"),
+    (0x001CCB64, 0x244293F0, "lo", "arr_desc"),
+    (0x001CCB84, 0x3C02002B, "hi", "arr_desc", 4),
+    (0x001CCB88, 0x244293F4, "lo", "arr_desc", 4),
+    # practice start: `sw zero, -28076(gp)` (Arrange flag off) -> jal prac_start (Arrange when opened from ARRANGE)
     (0x001CB3E0, 0xAF809254, "jal", "prac_start"),
+    # leaving the practice menu (cancel 0x001CB2C8, EXIT 0x001CB384): `li v0, 2` (ARCADE MODE) -> jal prac_exit_state
+    # (its delay slot `li a0, 76` is the sound argument; the PRACTICE row 1 is the return row in both menus)
+    (0x001CB2C8, 0x24020002, "jal", "prac_exit_state"),
+    (0x001CB384, 0x24020002, "jal", "prac_exit_state"),
+    # menu header (0x001C9570 `lw v1, -28056(gp)`, delay slot `li v0, 1`): ARRANGE MODE over its practice menu
+    (0x001C9570, 0x8F839268, "jal", "hdr_state"),
 ]
 PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
 RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}

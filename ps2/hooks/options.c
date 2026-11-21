@@ -92,32 +92,35 @@ __asm__(
 	".size cfg_accept_entry, . - cfg_accept_entry\n"
 	".set pop\n");
 
-/* ARCADE MODE > PRACTICE: a GAME MODE row (row 4, before EXIT): ARCADE or ARRANGE (in KURO: KURO or ARRANGE).
- * The retail practice start (0x001CB3C0) sets the PRACTICE flag and clears the Arrange flag ($gp-28076) at
- * 0x001CB3E0; that store becomes `jal prac_start`, which stores prac_arrange instead. With both flags set the game
- * runs Arrange from the chosen stage (Arrange HUD, formations, sub-weapons; Game Over returns to PRACTICE), the same
- * way Arcade practice works (research/phase17). Arcade's GAME START clears the flag again (0x001CAD04). */
-u32 prac_arrange; /* 0 ARCADE (or KURO), 1 ARRANGE */
-__attribute__((weak)) const char prac_name0[] = "ARCADE"; /* bl_return.c: "KURO" */
-static const char prac_name1[] = "ARRANGE";
-const char prac_label[] = "GAME MODE"; /* label-table word 0x002A9040 */
-/* Help line 1, Shift-JIS "練習するゲームモードを" (line 2: retail "選択できます。") */
-const char prac_help[] = "\x97\xfb\x8f\x4b\x82\xb7\x82\xe9\x83\x51\x81\x5b\x83\x80\x83\x82\x81\x5b\x83\x68\x82\xf0";
+/* ARRANGE MODE gets a PRACTICE row (row 1, as in ARCADE MODE): GAME START, PRACTICE, CONFIG, EXIT.
+ * It opens the retail practice menu (state 4, the one ARCADE MODE uses) with prac_arrange set. The retail practice
+ * start (0x001CB3C0) sets the PRACTICE flag and clears the Arrange flag ($gp-28076) at 0x001CB3E0; that store
+ * becomes `jal prac_start`, which stores prac_arrange instead. With both flags set the game runs Arrange from the
+ * chosen stage (Arrange HUD, formations, sub-weapons; Game Over returns to the practice menu; research/phase17).
+ * Leaving the practice menu (EXIT or cancel) returns to the menu it came from, on its PRACTICE row (prac_exit_state),
+ * and clears prac_arrange; ARCADE MODE's own practice therefore always runs Arcade (in KURO: KURO). */
+u32 prac_arrange; /* 1 while the practice menu was opened from ARRANGE MODE */
 
-/* Value text of a PRACTICE row: replaces the PLAY DATA LIST lookup at 0x001CB058 (row, value so far, play-data
- * index -1..4). */
-const char *prac_value(u32 row, const char *cur, s32 data)
-{
-	if (row == 3u)
-		return ((const char *const *)0x002A9150u)[data + 1]; /* DEFAULT, DATA 1..5 */
-	if (row == 4u)
-		return prac_arrange ? prac_name1 : prac_name0;
-	return cur;
-}
+#define FRONT_STATE  0x00338F58u /* $gp-28056: frontend state (2 ARCADE MODE, 4 PRACTICE, 9 ARRANGE MODE) */
+#define FRONT_ROW    0x0033948Cu /* $gp-26724: cursor row on entering a state */
+#define FRONT_EDIT   0x00338F5Cu /* $gp-28052: row being edited (-1 none) */
+#define FRONT_ANIM   0x00338F64u /* $gp-28044: state transition counter */
 
-void prac_toggle(void)
+/* Help text for ARRANGE MODE's 4 rows (retail 0x002A93F0 holds 3 rows, with the next table right after it). */
+const char *const arr_desc[8] = {
+	(const char *)0x00302630u, (const char *)0x00301D70u, /* GAME START */
+	(const char *)0x00301FA0u, (const char *)0x00301D70u, /* PRACTICE: retail "練習モードでゲームを / 開始します。" */
+	(const char *)0x00302650u, (const char *)0x00301DE0u, /* CONFIG */
+	(const char *)0x00301E00u, (const char *)0x00301E20u, /* EXIT */
+};
+
+void arr_practice(void)
 {
-	prac_arrange ^= 1u;
+	prac_arrange = 1u;
+	EE_RAM(u32, FRONT_STATE) = 4u; /* as ARCADE MODE's PRACTICE handler (0x001CAB0C) */
+	EE_RAM(u32, FRONT_ROW) = 0u;
+	EE_RAM(s32, FRONT_EDIT) = -1;
+	EE_RAM(u32, FRONT_ANIM) = 0u;
 	GAME_SOUND(95, 36);
 }
 
@@ -132,16 +135,46 @@ __asm__(
 	"	jr	$31\n"
 	"	sw	$1, -28076($28)\n"
 	".size prac_start, . - prac_start\n"
-	/* reached from the PRACTICE accept dispatcher for a row without a retail handler (v1 = cursor row) */
-	".globl prac_accept_entry\n"
-	".type prac_accept_entry, @function\n"
-	"prac_accept_entry:\n"
-	"	li	$2, 4\n"
+	/* replaces `li v0, 2` (state ARCADE MODE) on both ways out of the practice menu: v0 = 9 (ARRANGE MODE) when it
+	 * was opened from there, else 2; clears the flag. Only v0 and $at are used. */
+	".globl prac_exit_state\n"
+	".type prac_exit_state, @function\n"
+	"prac_exit_state:\n"
+	"	lui	$1, %hi(prac_arrange)\n"
+	"	lw	$2, %lo(prac_arrange)($1)\n"
+	"	sw	$0, %lo(prac_arrange)($1)\n"
+	"	beqz	$2, 1f\n"
+	"	li	$2, 2\n"
+	"	li	$2, 9\n"
+	"1:	jr	$31\n"
+	"	nop\n"
+	".size prac_exit_state, . - prac_exit_state\n"
+	/* reached from ARRANGE MODE's accept dispatcher for a row without a retail handler (v1 = cursor row) */
+	".globl arr_accept_entry\n"
+	".type arr_accept_entry, @function\n"
+	"arr_accept_entry:\n"
+	"	li	$2, 1\n"
 	"	bne	$3, $2, 1f\n"
 	"	nop\n"
-	"	jal	prac_toggle\n"
+	"	jal	arr_practice\n"
 	"	nop\n"
-	"1:	j	0x001CAF40\n"
+	"1:	j	0x001CCAE4\n"
 	"	nop\n"
-	".size prac_accept_entry, . - prac_accept_entry\n"
+	".size arr_accept_entry, . - arr_accept_entry\n"
+	/* replaces `lw v1, -28056(gp)` in the menu header selector 0x001C9570 (states 2-8 ARCADE MODE, 9-12 ARRANGE
+	 * MODE): reports the practice menu (4) as 9 while it belongs to ARRANGE MODE. Only v1 and $at are used. */
+	".globl hdr_state\n"
+	".type hdr_state, @function\n"
+	"hdr_state:\n"
+	"	lw	$3, -28056($28)\n"
+	"	li	$1, 4\n"
+	"	bne	$3, $1, 1f\n"
+	"	lui	$1, %hi(prac_arrange)\n"
+	"	lw	$1, %lo(prac_arrange)($1)\n"
+	"	beqz	$1, 1f\n"
+	"	nop\n"
+	"	li	$3, 9\n"
+	"1:	jr	$31\n"
+	"	nop\n"
+	".size hdr_state, . - hdr_state\n"
 	".set pop\n");

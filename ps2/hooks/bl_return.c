@@ -7,9 +7,6 @@
  */
 #include "ibara_ps2.h"
 
-/* PRACTICE > GAME MODE names this build's own rules (options.c; weak default "ARCADE" in the launcher). */
-const char prac_name0[] = "KURO";
-
 static const char launcher_path[] = "cdrom0:\\SLPM_663.01;1";
 /* One argument for the launcher: "S=<screen mode><rank gauge>", kept current by video.c at 0x001D42F8 (zero padding in this
  * executable); without the video hook the string stays empty and the launcher ignores it. */

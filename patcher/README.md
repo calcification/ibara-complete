@@ -22,7 +22,8 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **RANK gauge in Arcade:** ARCADE MODE → CONFIG → RANK GAUGE ON/OFF (starts ON). ON shows Arrange's RANK gauge
   (top right) in Arcade, in both the normal game and KURO, and hides the blinking "PRESS START" for the empty side,
   as in Arrange and Practice. Carried between the normal game and KURO; not saved to the memory card.
-* **Practice for Arrange:** ARCADE MODE → PRACTICE → GAME MODE: ARCADE or ARRANGE (inside KURO: KURO or ARRANGE).
+* **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE; KURO's practice is
+  KURO → ARCADE MODE → PRACTICE (and KURO's ARRANGE MODE → PRACTICE).
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
   and fire timing (stages 1–2), held fire, 32-shot cap. Practice works inside KURO. Not yet: later stages' bosses,

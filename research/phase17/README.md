@@ -58,17 +58,22 @@ the 5 gauge words and flushes the caches; the value travels in the LoadExecPS2 a
 PCSX2: row shown with its help text; OFF → retail HUD (PRESS START, no gauge); ON → gauge; OFF carried into KURO;
 FIGHTER TYPE and KEY CONFIG open and return to their rows (O01).
 
-**ARCADE MODE > PRACTICE > GAME MODE** (`PRACTICE_MODE_PATCHES`): practice start `0x001CB3C0` sets PRACTICE
-(`0x00338FA4`) and clears the Arrange flag (`0x00338F44`) at `0x001CB3E0`; that store now writes the chosen mode. With
-both flags the game runs Arrange from the chosen stage: Arrange HUD, formation label, sub-weapon plates, Arrange high
-score; Game Over returns to PRACTICE; Arcade's GAME START clears the flag again (`0x001CAD04`). Row 4 before EXIT
-(label slot 5 was spare, help table had 2 spare slots), 6 rows (`0x001CB0A4`, `0x001CB298`; the up-wrap stores a2 =
-the state number 4, so `li a2,5` at `0x001CAD48`), EXIT → row 5, row 4 via the unreachable `0x001CBB4C` to a toggle,
-values via `prac_value` at `0x001CB058`. PCSX2: ARRANGE stage 3 (flags 1/1, scene 4) in the launcher; KURO shows
-KURO / ARRANGE and runs Arrange practice; a later Arcade game has both flags 0 (O02).
+**ARRANGE MODE > PRACTICE** (`PRACTICE_MODE_PATCHES`; replaces a first version that put a GAME MODE row in Arcade's
+practice menu — the user preferred practice nested in each mode). The practice start `0x001CB3C0` sets PRACTICE
+(`0x00338FA4`) and clears the Arrange flag (`0x00338F44`) at `0x001CB3E0`; that store now writes `prac_arrange`.
+With both flags the game runs Arrange from the chosen stage (Arrange HUD, formation label, sub-weapon plates, Arrange
+high score; Game Over returns to the practice menu). ARRANGE MODE (state 9) gets 4 rows: label slot 3 was spare,
+help text moved to our own table, rows 3 → 4 (`0x001CCB50`, `0x001CCA98`; the up-wrap stores a0 = 2 from the
+dispatcher, so `li a0,3` at `0x001CCA80`), CONFIG/EXIT → rows 2/3, row 1 via the unreachable `0x001CC9B4` opens state 4
+with `prac_arrange` = 1. Leaving the practice menu (`0x001CB2C8`, `0x001CB384`) goes back to state 9 or 2 on row 1
+and clears the flag. The header selector (`0x001C9570`: states 2-8 ARCADE MODE, 9-12 ARRANGE MODE) sees state 4 as 9
+while practising Arrange. ARRANGE CONFIG's title read its old label slot (`0x001CCDB8` → slot 2) and its exits return
+to row 2 (`0x001CD008`, `0x001CD0B4`). PCSX2: ARRANGE → PRACTICE (ARRANGE MODE header), STAGE 3 → flags 1/1, scene 4,
+Arrange HUD; Game Over → practice menu; EXIT → ARRANGE MODE on PRACTICE; ARCADE → PRACTICE afterwards: ARCADE MODE
+header, flags 0/1; ARRANGE CONFIG title and return row; up-wrap to EXIT; ARRANGE GAME START: flags 1/0; inside KURO,
+ARRANGE → PRACTICE runs Arrange (O02).
 
-Not done: KURO in the launcher's PRACTICE (KURO is a separate executable; practising it means KURO → ARCADE →
-PRACTICE, or the planned merge of KURO into the main executable). Settings are not saved to the memory card.
+KURO is practised inside KURO (KURO → ARCADE MODE → PRACTICE). Settings are not saved to the memory card.
 
 The frontend executable now carries ~1.8 KB of hook code, more than the 976 bytes left in its disc extent, so the
 launcher builder writes it to the free extent after KURO.ELF and points the boot record there (the retail copy is
