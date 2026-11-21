@@ -33,8 +33,7 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   KURO → PRACTICE.
 * **KURO Black Label RANK bar** (with `--bl-rom`): always shown in KURO, centred under the high score as in Black
   Label — fill length, rank colours, the white flash at maximum rank and the fade when your ship is near it follow
-  Black Label's code; the frame and plate use your ROM's artwork with each colour matched to the nearest colour of
-  the PS2 HUD palette (close, not exact). The PS2 stage-name line is hidden there in KURO (Black Label has none).
+  Black Label's code; the frame and plate use your ROM's artwork, colours exact. The PS2 stage-name line is hidden there in KURO (Black Label has none).
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, enemy bullets

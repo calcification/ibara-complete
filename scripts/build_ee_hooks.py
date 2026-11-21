@@ -56,7 +56,7 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c"}
+LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c", "bl_tex.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
@@ -358,7 +358,7 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_rankbar.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
               ("hud_entry", 0x0012C0E0, "xtc_hud")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,

@@ -59,3 +59,19 @@ PCSX2 (K28): KURO game: frame, blue fill at low rank, RANK plate centred under T
 KURO Game Over (KURO off) a plain Arcade game shows Arrange's gauge art intact. `make_patch.py` literal-run limit
 4 → 8 KiB (our hook image is one ~6.5 KB run).
 
+
+## Exact colours: our own 16-bit texture pages (2026-11-22)
+
+Replaces the palette-matched art (user's request). `ps2/hooks/bl_tex.c`:
+
+* Upload descriptors are prebuilt GS packets (A+D: BITBLTBUF, TRXPOS, TRXREG, TRXDIR; IMAGE from `+0x00`; TEX0 at
+  `+0x88`; texture size words `+0x70..`); GS texture memory is a cache: hundreds of pages share ~19 slots of 260 blocks
+  (e.g. 0x8C0, 0x9C4, ... 0xFDC; 0x3480 ... 0x3EA8) and are uploaded when drawn.
+* Our page: PSMCT16 (RGBA 5551 = the arcade's pixels with R/B swapped), 256 × 128 uploaded (= 64 KB, one slot: the
+  HUD page's, block 0xBCC), declared 256 × 256 in TEX0 and in the size words: `0x00110B70` maps texture coordinates
+  over 256 × 256 (rectangle × 1/256, constant `0x002ACCE0`), and the size words scale them (128 there drew every row
+  twice). Object: a clone of the HUD page's, registered at object index 1114 (the loader uses 0-1112) under the free
+  page entry row 1 / col 5; one object serves every page (a sprite keeps the descriptor it was drawn with,
+  `0x001C9320`). Pixels at `0x01F20000` (six 64 KB pages; untouched by the game in the test loggers' six-stage runs).
+* Rank bar: the 80 × 14 art and a 70 × 2 grey fill strip on page 0, one sprite for the art and one for the fill.
+  PCSX2: exact frame/plate colours, blue fill; Arrange's gauge and stage name normal in Arcade after KURO.
