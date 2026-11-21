@@ -19,3 +19,27 @@ Scores are identical everywhere. After the patches, every stage-2 type's HP dist
   Next: same method as stage 1 — sampler on the boss core (HP, mode bytes), no-shot timeline, then find the step
   that differs (phase length or attack choice).
 * Type 8 (boss debris): PS2 spawns ~2× BL's; follows from the longer fight.
+
+## Stage-2 boss: same logic, slower PS2 damage (2026-11-21)
+
+Boss sampler (`--boss-type 45`, shot level 2 in both games):
+* The boss's parts break in the same order in both games (0x33 and 0x31, then 0x2A, then the core); movement
+  and phase timing match. The PS2 fight is longer only because each part takes ~20% longer to break, and at
+  ~frame 11,400 the PS2 boss reaches its escape timer and flies off (x 106 → −94) with HP left; BL kills it first.
+* Damage is applied as 1 HP per 4-frame sample in both games, and each part takes the same number of damaging
+  samples (e.g. 117 for part 0x2A): the PS2 player simply lands damage on fewer samples.
+* **Pod formation (ported, `ps2/hooks/bl_player.c`):** BL sets the player's three pod bytes from a per-weapon table
+  on every pickup/change (BL `0C077140`, table `0C17F51B`: rocket 2,2,2 · burner 4,4,0 · gatling 0,0,0 ·
+  homing 3,3,7 · napalm 1,1,1 · MG 2,2,2 · 5-way 4,4,2). PS2 has the same bytes (+0x26A..+0x26C) but Arrange fills
+  them from the player-chosen formation (table `0x00212FF0`), which the BLACK LABEL build disables, so they stayed
+  at 0. Pod *positions* are identical either way (±28 px beside the ship, one 28 px behind; BL pods at
+  `0C2974C8`, PS2 at `0x0044C8A0 + side×0x90 + pod×0x30`). PS2's pod handler (`0x001342D8`) knows codes 0–5;
+  BL's homing uses code 7, which PS2 treats as 0 — a BL addition still to port.
+* With BL's codes the PS2 damage gap remains (part 0x33 now starts breaking later, the core ends lower before the
+  escape). The remaining cause is most likely the **weapons themselves**: Phase 11 lists BL's player-shot routines
+  as changed from arcade Ibara (`0C078F70` 578 insns, `0C077230` = PS2 projectile writer `0x0011A580`,
+  `0C078E40`, `0C079600`, `0C07A410` …; table in docs/BLACK_LABEL_FEATURES.md §1b).
+
+**Next:** port the option-weapon shot routines (start with MG, the weapon used in these tests): log the player's
+projectiles in both games (type, damage field, rate) and diff, then port per weapon. Stage 1 showed the same ~10%
+gap, so this is one global fix, not per-stage work.
