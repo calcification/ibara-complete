@@ -35,6 +35,9 @@ output/
 outputs/
 build/
 *.bak
+*.inp
+*.p2m2
+*.p2s
 # Only original test code we wrote is excepted.
 !tests/fixtures/KURO_PROBE.ELF
 !research/phase05/results/cv1k_memory_mips3.o

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "movement",
+  "anchor": "stage1_player_control",
+  "segments": [
+    [30, []],
+    [60, ["left", "shot"]],
+    [60, ["right", "shot"]],
+    [45, ["up", "shot"]],
+    [45, ["down", "shot"]],
+    [60, ["shot"]]
+  ]
+}
