@@ -18,12 +18,14 @@ jobs:
         run: python tests/test_bootstrap.py
       - name: Regenerate tiny patch profiles
         run: python scripts/build_pnach.py
-      - name: Install EE cross toolchain (r5900 hook builds)
-        run: sudo apt-get update && sudo apt-get install -y gcc-mips-linux-gnu
-      - name: Injected EE hook builds and PNACH profiles
-        run: python tests/test_ee_hooks.py
-      - name: Phase 12 MIPS extractor and cross-ISA scorer
-        run: python tests/test_phase12.py
+      - name: EE hook builds and MIPS extractor (Debian 12 cross toolchain)
+        run: |
+          docker run --rm --volume "$GITHUB_WORKSPACE:/repo" --workdir /repo debian:12-slim sh -ec '
+            apt-get update
+            apt-get install -y --no-install-recommends gcc-mips-linux-gnu python3
+            PYTHONDONTWRITEBYTECODE=1 python3 tests/test_ee_hooks.py
+            PYTHONDONTWRITEBYTECODE=1 python3 tests/test_phase12.py
+          '
       - name: Phase 5 standalone memory and trace tests
         run: python scripts/run_audits.py --selftest --out validation-output
       - name: Validate test manifest

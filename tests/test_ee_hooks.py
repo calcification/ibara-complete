@@ -141,6 +141,7 @@ class BuildTests(unittest.TestCase):
                          "ps2/prebuilt/bl_mode.json is stale: run python3 scripts/build_ee_hooks.py")
 
     def test_video_hook_is_leaf_safe_and_fits_frontend_slack(self):
+        import json
         import re
         b = hooks.build_hook("video", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         # HOOK_AFTER_LEAF does not preserve callee-saved registers: the hook code must not touch them.
@@ -148,6 +149,9 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(uses, [], "video hook uses callee-saved registers; it needs the full HOOK_AFTER stub")
         # The frontend executable grows by 0x80 + the image and must stay in its last disc sector (976 bytes free).
         self.assertLessEqual(0x80 + b["size"], 976, "video hook no longer fits the frontend executable's extent")
+        committed = json.loads((ROOT / "ps2/prebuilt/video.json").read_text())
+        self.assertEqual(hooks.export_bake(b), committed, "ps2/prebuilt/video.json is stale")
+        self.assertNotIn(0x001D3CD4, {address for address, _, _ in b["sites"]})
         h = hooks.HOOKS["bl_mode"]
         self.assertIn((hooks.VIDEO_SITE, 0x0C043920, "video_entry"), h["sites"])
 

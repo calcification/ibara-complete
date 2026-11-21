@@ -48,10 +48,17 @@ def main(argv=None) -> int:
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
     ap.add_argument("--keep-elf", type=Path, help="also save the baked BLACK LABEL executable here")
+    ap.add_argument("--near-assets", action="store_true",
+                    help="place the KURO executable next to the original IOP modules for optical testing")
     args = ap.parse_args(argv)
 
     if args.output.exists():
         ap.error(f"{args.output} already exists; choose a new name")
+    if args.keep_elf is not None:
+        if args.keep_elf.resolve() in {args.source.resolve(), args.output.resolve()}:
+            ap.error("--keep-elf must use a path separate from the source and output ISOs")
+        if args.keep_elf.exists():
+            ap.error(f"{args.keep_elf} already exists; choose a new ELF path")
     try:
         import build_menu_probe
     except ImportError as exc:
@@ -73,10 +80,11 @@ def main(argv=None) -> int:
         elf = Path(tmp) / "KURO.ELF"
         elf.write_bytes(payload)
         if args.keep_elf:
-            args.keep_elf.write_bytes(payload)
+            with args.keep_elf.open("xb") as destination:
+                destination.write(payload)
         crc, sha = build_menu_probe.build(args.source, args.output, elf, label=args.label,
                                           video_profile=args.video_profile, position=args.position,
-                                          executable_hook=build_ee_hooks.frontend_video_hook(args.video_profile))
+                                          near_assets=args.near_assets)
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle. EXIT inside returns to the launcher.")

@@ -21,6 +21,7 @@
 
 #define SCREEN_MODE 0x00338AF0u /* $gp-29184: mode used by the display code (0 Yoko, 1 Tate R, 2 Tate L) */
 #define SCREEN_SETTING 0x00338F68u /* $gp-28040: the OPTION menu value (the menu copies it to SCREEN_MODE) */
+#define FRONTEND_STATE 0x00338F58u /* 1 once Mode Select is running */
 /* Screen mode carried across the launcher <-> KURO executable switch (LoadExecPS2 reloads the game, whose memory
  * and settings start from defaults): the switching executable passes "S=<mode>" as an argument (launcher: its KURO
  * dispatcher, argv at 0x001D42F4 -> MODE_ARG; KURO: bl_return.c), and each executable reads its own arguments from
@@ -32,14 +33,15 @@
 #define SETTINGS_RECORD 0x004956F4u /* screen mode in the settings record (card / defaults) */
 #define VIDEO_STD   0x00337D00u /* $gp-32752 (s8): 2 selects omode 3 (PAL) in the boot GS reset (0x001AD238) */
 
-/* Code words switched between Yoko (retail) and Tate (cave-ps2-240p beta): the 4 half-pixel offset immediates
- * (-8) and the 3 field-state stores (write $zero). The GS-reset interlace
- * flag (0x001AD250) is not switched: the reset only runs at boot, and SetGsCrt below sets the scan mode. */
-static const u32 swap_addr[7] = {0x001AECD4u, 0x001AED3Cu, 0x001AED88u, 0x001AEDD4u,
-				 0x001B29D4u, 0x001B2A60u, 0x001B2A80u};
-static const u32 swap_word[2][7] = {
-	{0x24AA7900u, 0x26527900u, 0x24427900u, 0x24427900u, 0xAF829574u, 0xAF839550u, 0xAF829574u}, /* Yoko */
-	{0x24AA78F8u, 0x265278F8u, 0x244278F8u, 0x244278F8u, 0xAF809574u, 0xAF809550u, 0xAF809574u}, /* Tate */
+/* The four coordinate immediates change the low halfword of their instruction. The three field-state
+ * stores change the high halfword, two bytes later on the little-endian EE. */
+#define SWAP_BASE 0x001A8000u
+static const u16 swap_offset[7] = {
+	0x6CD4u, 0x6D3Cu, 0x6D88u, 0x6DD4u, 0xA9D6u, 0xAA62u, 0xAA82u
+};
+static const u16 swap_word[2][7] = {
+	{0x7900u, 0x7900u, 0x7900u, 0x7900u, 0xAF82u, 0xAF83u, 0xAF82u}, /* Yoko */
+	{0x78F8u, 0x78F8u, 0x78F8u, 0x78F8u, 0xAF80u, 0xAF80u, 0xAF80u}, /* Tate */
 };
 
 /* All mutable state in one block (the frontend executable has only a few hundred bytes for this hook). */
@@ -102,19 +104,16 @@ static void fix_display_env(u32 tate)
 }
 
 
-/* Replaces `jal 0x0010FE20` (store the applied screen mode, $gp-29184) at the two start-up settings loads
- * (0x001D1B24, 0x001D3CD4: boot and memory-card load, after 0x0013E680 copied the settings record to the globals);
- * also called on the first frame (no card: those loads never run). The mode passed as an "S=<digit>" argument
- * by the other executable overrides them; OPTION changes go through 0x001CD770 and stand. Leaf, temporaries only. */
+/* The carried mode overrides saved settings during startup. The first frame also applies it when
+ * there is no card. Mode Select ends the override before the user can load settings explicitly. */
 void video_apply(u32 mode)
 {
 	if (vs.carried == 0xFEu) {
-		const u32 argc = EE_RAM(u32, ARGS_BLOCK); /* our argument is the last one (after the program path) */
 		vs.carried = 0xFFu;
-		if (argc - 2u < 7u) {
-			const u8 *arg = (const u8 *)EE_RAM(u32, ARGS_BLOCK + 4u * argc); /* filled by the kernel */
-			if (arg[0] == 'S' && (u8)(arg[2] - '0') <= 2u) /* "S=<digit>" */
-				vs.carried = arg[2] - (u8)'0';
+		if (EE_RAM(u32, ARGS_BLOCK) == 2u) { /* executable path, then our argument */
+			const u8 *arg = (const u8 *)EE_RAM(u32, ARGS_BLOCK + 8u);
+			if (arg[0] == 'S' && arg[1] == '=' && (u8)(arg[2] - '0') <= 2u && arg[3] == 0)
+				vs.carried = arg[2] - '0';
 		}
 	}
 	if (vs.carried <= 2u) {
@@ -132,13 +131,15 @@ void video_frame(void)
 
 	if (vs.carried == 0xFEu)
 		video_apply(EE_RAM(u32, SCREEN_MODE));
+	if (EE_RAM(u32, FRONTEND_STATE) == 1u)
+		vs.carried = 0xFFu; /* Mode Select is reachable after boot autoload has finished. */
 	EE_RAM(u8, MODE_ARG + 2u) = (u8)('0' + (EE_RAM(u32, SCREEN_MODE) & 3u));
 	m = EE_RAM(u32, SCREEN_MODE);
 	tate = (m == 1u || m == 2u);
 	if (tate != vs.tate) {
 		vs.tate = tate; /* committed first: nothing is kept in registers across the kernel calls */
 		for (i = 0; i < 7u; i++)
-			EE_RAM(u32, swap_addr[i]) = swap_word[tate][i];
+			EE_RAM(u16, SWAP_BASE + swap_offset[i]) = swap_word[tate][i];
 		vs.crt[0] = tate ? 0u : 1u;
 		vs.crt[1] = 2u + (EE_RAM(u8, VIDEO_STD) == 2u); /* omode 2 NTSC, 3 PAL (as the boot GS reset) */
 		switch_crt();

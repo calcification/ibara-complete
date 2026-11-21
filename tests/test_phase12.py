@@ -35,7 +35,8 @@ class ExtractorTests(unittest.TestCase):
         d = Path(cls.tmp.name)
         (d / "t.c").write_text(SRC)
         subprocess.run(["mips-linux-gnu-gcc", "-march=r5900", "-EL", "-mabi=32", "-msoft-float", "-mno-abicalls",
-                        "-fno-pic", "-G0", "-O1", "-fno-inline", "-ffreestanding", "-nostdlib", "-Wl,-Ttext=0x00100000",
+                        "-fno-pic", "-G0", "-O1", "-fno-inline", "-ffreestanding", "-nostdlib", "-no-pie",
+                        "-Wl,-Ttext=0x00100000",
                         "-Wl,-e,top", str(d / "t.c"), "-o", str(d / "t.elf")], check=True)
         syms = subprocess.run(["mips-linux-gnu-nm", str(d / "t.elf")], capture_output=True, text=True, check=True).stdout
         cls.sym = {l.split()[2]: int(l.split()[0], 16) for l in syms.splitlines() if len(l.split()) == 3}

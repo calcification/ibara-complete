@@ -101,14 +101,18 @@ def menu_elf(original, video_profile='retail', position=5):
             if desc[k] != before_desc[k]:
                 edits[DESCRIPTIONS + 8 * row + 4 * k] = (before_desc[k], desc[k])
     if position == 2:  # accept dispatcher: Gallery 2->3, Option 3->4, Exit 4->5
+        edits[0x001CA648] = (0x24020004, 0x24020005)  # Exit has only one description sprite.
         edits[0x001CA7B8] = (0x24020002, 0x24020003)
+        edits[0x001CA7C0] = (0, 0x24020002)  # Gallery's handler still returns request code 2.
         edits[0x001CA7C8] = (0x24020003, 0x24020004)
         edits[0x001CA7D8] = (0x24020004, 0x24020005)
+        edits[0x0011369C] = (0x24020002, 0x24020003)  # Restore the Gallery cursor after returning.
         # Returning from OPTION restores Mode Select row 3 (its old index): make it 4. Cancel path stores a plain 3
         # (0x001CD1E8); the EXIT-item path compares the Option cursor with 3 and stores the same register, so the
         # empty delay slot after that compare adds 1 (the branch target reloads v0 before using it, 0x001CD220).
         edits[0x001CD1E8] = (0x24020003, 0x24020004)
         edits[0x001CD35C] = (0x00000000, 0x24420001)
+    auto_video = video_profile in VIDEO_HOOK_PROFILES
     sections = {
         INIT: (
             0x3C080050, 0x24090038,  # t0 = animation array base, t1 = row anchor
@@ -119,16 +123,17 @@ def menu_elf(original, video_profile='retail', position=5):
             0x24020000 | position,  # v0 = row of the added entry
             branch_not_equal(3, 2, DISPATCH + 4, DISPATCH + 32),
             0x3C04001D, 0x248442D8,  # a0 = disc path
-            0x24050001, 0x2486001C,  # argc = 1, argv = PAYLOAD_ARGV (a0 + 0x1C)
+            *((0x24050001, 0x2486001C) if auto_video else (0x00002821, 0x00003021)),
             LOAD_EXEC_PS2, SYSCALL,
             jump(0x001CA5AC), 0,  # Resume normal drawing if the syscall returns.
         ),
         LABEL: (0x30700002, 0x0F6F0000, 0, 0),  # Texture 2, bottom-origin UV, 112×16.
         PATH: struct.unpack('<6I', (b'cdrom0:\\' + disc.PROBE_FILENAME).ljust(24, b'\0')),
         EMPTY_DESCRIPTION: (0,),
-        PAYLOAD_ARGV: (PAYLOAD_ARG,),
-        PAYLOAD_ARG: (0x00303D53,),  # "S=0\0"
     }
+    if auto_video:
+        sections[PAYLOAD_ARGV] = (PAYLOAD_ARG,)
+        sections[PAYLOAD_ARG] = (0x00303D53,)  # "S=0\0"
     for address, words in sections.items():
         for index, word in enumerate(words):
             destination = address + 4 * index
@@ -191,12 +196,11 @@ def read_probe_elf(path):
     return probe
 
 
-def companion_layout(specifications, records, probe_size):
+def companion_layout(specifications, records, probe_size, *, near_assets=False):
     occupied_names = {record['name'].split(b';', 1)[0] for record in records}
     occupied_names.add(disc.PROBE_FILENAME.split(b';', 1)[0])
     end_lba = disc.NEW_FILE_LBA + (probe_size + disc.SECTOR - 1) // disc.SECTOR
-    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, disc.NEW_FILE_LBA, probe_size)]
-    companions = []
+    files = []
     for specification in specifications:
         name, separator, path = specification.partition('=')
         if (not separator or not path or
@@ -213,13 +217,19 @@ def companion_layout(specifications, records, probe_size):
         sectors = max(1, (size + disc.SECTOR - 1) // disc.SECTOR)
         if end_lba + sectors > disc.NEXT_ORIGINAL_FILE_LBA:
             raise ValueError(f'Companion files exceed the reserved disc extent at {name.upper()}')
-        payload_records.append(disc.make_file_record(filename + b';1', end_lba, size))
-        companions.append((source, end_lba * disc.SECTOR, size))
+        files.append((filename + b';1', source, end_lba, size))
         end_lba += sectors
+    shift = disc.NEXT_ORIGINAL_FILE_LBA - end_lba if near_assets else 0
+    start_lba = disc.NEW_FILE_LBA + shift
+    payload_records = [disc.make_file_record(disc.PROBE_FILENAME, start_lba, probe_size)]
+    companions = []
+    for filename, source, lba, size in files:
+        payload_records.append(disc.make_file_record(filename, lba + shift, size))
+        companions.append((source, (lba + shift) * disc.SECTOR, size))
     directory_entries = b''.join(payload_records)
     if disc.ORIGINAL_ROOT_LEN + len(directory_entries) > disc.SECTOR:
         raise ValueError('Added files exceed the available root directory space')
-    return directory_entries, companions, end_lba
+    return directory_entries, companions, start_lba, end_lba + shift
 
 
 def write_companion(target, path, offset, size, chunk_size):
@@ -288,12 +298,12 @@ def label_writes(source, files, text=DEFAULT_LABEL):
 
 
 def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5,
-          executable_hook=None):
+          executable_hook=None, near_assets=False):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
     probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
-    rows, companions, end_lba = companion_layout(disc_files, records, len(probe))
+    rows, companions, start_lba, end_lba = companion_layout(disc_files, records, len(probe), near_assets=near_assets)
     original, files, boot = retail.load_input(source)
     end = disc.ORIGINAL_ROOT_LEN + len(rows)
     pvd, root = bytearray(pvd), bytearray(root)
@@ -304,6 +314,9 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         root[offset:offset + 8] = disc.pair32(end)
 
     executable = menu_elf(original, video_profile, position)
+    if executable_hook is None and video_profile in VIDEO_HOOK_PROFILES:
+        from build_ee_hooks import frontend_video_hook
+        executable_hook = frontend_video_hook(video_profile)
     if executable_hook is not None:  # e.g. bake the runtime video hook into the frontend executable
         executable = executable_hook(bytes(executable))
         capacity = (boot['bytes'] + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
@@ -317,15 +330,15 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
-        (disc.NEW_FILE_LBA * disc.SECTOR, probe),
+        (start_lba * disc.SECTOR, probe),
         (boot['lba'] * disc.SECTOR, executable),
         *label_writes(source, files, label),
     ]
     with source.open('rb') as original_iso, output.open('x+b') as target:
         try:
             zeros = bytes(4 * 1024 * 1024)
-            original_iso.seek(disc.NEW_FILE_LBA * disc.SECTOR)
-            remaining = (end_lba - disc.NEW_FILE_LBA) * disc.SECTOR
+            original_iso.seek(start_lba * disc.SECTOR)
+            remaining = (end_lba - start_lba) * disc.SECTOR
             while remaining:
                 size = min(remaining, len(zeros))
                 if original_iso.read(size) != zeros[:size]:
@@ -370,11 +383,13 @@ def main():
                         help='Row of the added entry: 5 = bottom (default), 2 = third, after Arcade and Arrange')
     parser.add_argument('--video-profile', choices=VIDEO_PROFILES, default='retail',
                         help='Video profile for the retail frontend')
+    parser.add_argument('--near-assets', action='store_true',
+                        help='Place added files immediately before the original IOP modules for optical testing')
     args = parser.parse_args()
     try:
         crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label,
                             video_profile=args.video_profile, disc_files=args.disc_file,
-                            position=args.position)
+                            position=args.position, near_assets=args.near_assets)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(f'Created {args.output}')

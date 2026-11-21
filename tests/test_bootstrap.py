@@ -14,6 +14,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'research/phase04'))
 import build_menu_probe as menu
+import build_ee_hooks as hooks
 
 bootstrap = menu.disc
 
@@ -28,7 +29,7 @@ class CompanionFilesTests(unittest.TestCase):
             empty = Path(directory) / 'empty'
             empty.touch()
             with patch.object(menu.disc, 'NEW_FILE_LBA', 1):
-                entries, companions, end_lba = menu.companion_layout(
+                entries, companions, start_lba, end_lba = menu.companion_layout(
                     [f'pattern.dat={source}', f'empty={empty}'], [], sector + 1,
                 )
             offset = 0
@@ -41,6 +42,7 @@ class CompanionFilesTests(unittest.TestCase):
                 self.assertEqual((record['name'], record['lba'], record['size']), (name, lba, size))
                 offset += record['record_bytes']
             self.assertEqual(offset, len(entries))
+            self.assertEqual(start_lba, 1)
             self.assertEqual(end_lba, 6)
             with tempfile.TemporaryFile() as target:
                 target.truncate(end_lba * sector)
@@ -48,6 +50,23 @@ class CompanionFilesTests(unittest.TestCase):
                     menu.write_companion(target, path, location, size, 1024)
                 target.seek(3 * sector)
                 self.assertEqual(target.read(), contents + bytes(3 * sector - len(contents)))
+
+    def test_near_assets_extents_are_packed_against_original_files(self):
+        sector = menu.disc.SECTOR
+        with tempfile.TemporaryDirectory() as directory:
+            companion = Path(directory) / 'file.dat'
+            companion.write_bytes(bytes(sector + 1))
+            with patch.object(menu.disc, 'NEW_FILE_LBA', 1), patch.object(
+                menu.disc, 'NEXT_ORIGINAL_FILE_LBA', 12,
+            ):
+                entries, companions, start_lba, end_lba = menu.companion_layout(
+                    [f'DATA.DAT={companion}'], [], sector, near_assets=True,
+                )
+            self.assertEqual((start_lba, end_lba), (9, 12))
+            elf = menu.disc.parse_record(entries, 0)
+            data = menu.disc.parse_record(entries, elf['record_bytes'])
+            self.assertEqual((elf['lba'], data['lba']), (9, 10))
+            self.assertEqual(companions, [(companion, 10 * sector, sector + 1)])
 
     def test_rejects_unsafe_disc_layouts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -207,6 +226,19 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'reserved disc extent'):
             menu.build(self.source, self.output, disc_files=[f'DATA.DAT={companion}'])
         self.assertFalse(self.output.exists())
+
+    def test_launcher_auto_installs_frontend_hook_when_called_directly(self):
+        executable = bootstrap.build_probe_elf()
+        boot = {'lba': bootstrap.EXPECTED_CRC['SLPM_663.01;1'][0], 'bytes': len(executable)}
+        with (patch.object(menu.retail, 'load_input', return_value=(executable, [], boot)),
+              patch.object(menu, 'label_writes', return_value=[]),
+              patch.object(menu, 'menu_elf', return_value=executable),
+              patch.object(hooks, 'frontend_video_hook') as select):
+            select.return_value.return_value = executable
+            menu.build(self.source, self.output, video_profile='auto')
+        select.assert_called_once_with('auto')
+        select.return_value.assert_called_once_with(executable)
+        self.assertTrue(self.output.is_file())
 
     def test_launcher_cleans_up_interrupted_build(self):
         companion = self.source.with_suffix('.dat')

@@ -60,8 +60,8 @@ LEAF_SOURCES = {"video.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
-# start-up settings loads: jal 0x0010FE20 (store the applied screen mode) -> video_apply (carried screen mode)
-VIDEO_APPLY_SITES = [(0x001D1B24, 0x0C043F88, "video_apply"), (0x001D3CD4, 0x0C043F88, "video_apply")]
+# Preserve the handoff over boot autoload. The interactive load at 0x001D3CD4 applies the selected save unchanged.
+VIDEO_APPLY_SITES = [(0x001D1B24, 0x0C043F88, "video_apply")]
 VIDEO_SITES = {VIDEO_SITE} | {a for a, _o, _e in VIDEO_APPLY_SITES}
 
 HOOKS = {
