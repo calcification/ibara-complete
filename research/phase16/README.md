@@ -23,8 +23,18 @@ Tools: `tools/stage_compare/run_stage.py` with `--define BL_CORE_EVERY BL_CORE_H
 * Result, stage-1 boss: PS2 main-shot streams (type 2, +8 1..4) now 176 per 2,000 frames vs BL 140; boss damage
   window 2,944 frames (was 3,210; BL 2,062).
 
-## Open: option pods
-PS2's three MG pods fire type-0 shots (+8 0 and 3, 560 per 2,000 frames). BL's pods produce no shots in that
-pool while held, yet BL deals more damage, so BL's pod weapons work differently (another pool, or only while the
-pods are "out" — BL's XTC rule also mentions pods being out). Next: find BL's pod-weapon shots (write taps from the
-pod objects at `0C2974C8`) and compare with PS2's MG.
+## Shot pools and the held boost (BL ↔ PS2)
+* BL has two shot pools of 0x34-byte records: `0C2380D0` (type 2, streams +8 1..4) and `0C2A6D9C` (32 per side:
+  type 0 shots, spawned by `0C073830`, plus their impact "burst" records +8 0xA..0xD at 2.25 px/frame). PS2 keeps
+  both kinds in one pool from `0x0044C9C0`; PS2's collision for them (`0x0012B660`) also slows shots on impact.
+* BL `+0x270` is the held-shot frame counter (0..8, reset on release; `bl_held_counter.lua`). When it is 8, the
+  type-0 spawner adds half the speed (13.5 instead of 9 px/frame). PS2's fire routine `0x0013ACC0` has the same rule
+  on its own held counter (`$gp-28068`, `0x0013AECC`), which Arcade used to reset every frame; the held-fire patch
+  above makes it count, so the boost now applies in the BLACK LABEL build too.
+
+## Open
+* Stage-1 boss damage window: PS2 2,944 frames vs BL 2,062 after the held-fire port (was 3,210). Per-frame hits:
+  BL mostly every 6 frames (the flash-timer limit), PS2 spread over 6–10. Candidates: on-screen shot cap per pool
+  (BL splits shots over two pools, PS2 shares one), and Arcade's per-press path (rank +16 per press).
+* Option-pod weapons (MG etc.): PS2's pods fire type-0 shots on the 8-frame beat; in BL the type-0 shots come from
+  the same spawner as above. Which object fires them in BL (ship or pods) is not yet settled.
