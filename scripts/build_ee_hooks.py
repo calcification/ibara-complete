@@ -73,7 +73,7 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
                   ("hud_entry", 0x0012C0E0, "xtc_hud")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x001CA7F0, 0x0C04DC38, "ret_entry"),

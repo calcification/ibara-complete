@@ -148,6 +148,9 @@ static void test_shot_levels(u32 rec)
 void spawn_log_frame(void);
 #endif
 
+/* BLACK LABEL build only (ps2/hooks/bl_player.c); absent in the XTC-only test profile. */
+void bl_player_frame(u32 rec) __attribute__((weak));
+
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
 {
@@ -171,6 +174,8 @@ void xtc_frame(void)
 #ifdef BL_TEST_ALL_WEAPONS
 		test_grant_weapons(rec);
 #endif
+		if (bl_player_frame)
+			bl_player_frame(rec);
 #ifdef BL_TEST_SHOT_LEVELS
 		if (s == 0 && (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT) &&
 		    EE_RAM(u32, 0x00338F40u) == 0) /* rank helpers do nothing while $gp-0x6DB0 (0x00338F40) is set */
