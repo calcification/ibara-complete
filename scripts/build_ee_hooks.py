@@ -55,6 +55,15 @@ FACTS = {
     "pad_held": "verified",             # +0x24C held, shot 0x10: 0x0012DA3C / 0x0013B2F0 static
 }
 
+# Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
+LEAF_SOURCES = {"video.c"}
+LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
+
+VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
+# start-up settings loads: jal 0x0010FE20 (store the applied screen mode) -> video_apply (carried screen mode)
+VIDEO_APPLY_SITES = [(0x001D1B24, 0x0C043F88, "video_apply"), (0x001D3CD4, 0x0C043F88, "video_apply")]
+VIDEO_SITES = {VIDEO_SITE} | {a for a, _o, _e in VIDEO_APPLY_SITES}
+
 HOOKS = {
     "h00_smoke": {
         "test_id": "C00",
@@ -73,11 +82,13 @@ HOOKS = {
         "test_id": "K03",
         "title": "BLACK LABEL build: XTC + Exit returns to the launcher",
         "description": "Baked into the sixth-entry executable only (never a PNACH: Exit would reload the disc).",
-        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c"],
+        "sources": ["xtc.c", "xtc_hud.c", "bl_return.c", "spawnlog.c", "bl_enemy.c", "bl_player.c", "video.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame"), ("ret_entry", 0x001370E0, "bl_return_to_launcher"),
-                  ("hud_entry", 0x0012C0E0, "xtc_hud")],
+                  ("hud_entry", 0x0012C0E0, "xtc_hud"), ("video_entry", 0x0010E480, "video_frame", "leaf")],
+        # The video site (main-loop display call) is only kept with video profile "auto" (bake_payload).
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x001CA7F0, 0x0C04DC38, "ret_entry"),
-                  (0x0012C394, 0x0C04B038, "hud_entry"), (0x0012C3BC, 0x0C04B038, "hud_entry")],
+                  (0x0012C394, 0x0C04B038, "hud_entry"), (0x0012C3BC, 0x0C04B038, "hud_entry"),
+                  (VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
         "requires": ["site_frame_collide", "player_score", "rank_inv", "cave_free", "bullet_layout",
                      "player_xy", "pad_held"],
         "establishes": [],
@@ -121,6 +132,17 @@ HOOKS = {
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
                           (0x0013AD14, 0x8F829254, 0x24020001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
+    },
+    "video": {
+        "test_id": "V01",
+        "title": "VIDEO / Yoko interlaced, Tate 240p (frontend executable)",
+        "description": "Baked into the launcher's frontend executable with video profile auto; see ps2/hooks/video.c.",
+        "sources": ["video.c"],
+        "stubs": [("video_entry", 0x0010E480, "video_frame", "leaf")],
+        "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
+        "requires": [],
+        "establishes": [],
+        "bake_only": True,
     },
     "bl_xtc": {
         "test_id": "K01",
@@ -205,14 +227,15 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     stub_src = work / f"{key}_stubs.S"
     lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
     defsyms = []
-    for entry, original, chook in h["stubs"]:
+    for entry, original, chook, *kind in h["stubs"]:
         sym = f"retail_{original:08X}"
-        lines.append(f"HOOK_AFTER {entry}, {sym}, {chook}")
+        lines.append(f"{'HOOK_AFTER_LEAF' if kind == ['leaf'] else 'HOOK_AFTER'} {entry}, {sym}, {chook}")
         defsyms += ["--defsym", f"{sym}=0x{original:08X}"]
     stub_src.write_text("\n".join(lines) + "\n")
     for src in [stub_src] + [PS2 / "hooks" / s for s in h["sources"]]:
         obj = work / (src.stem + ".o")
-        run([CROSS + "gcc", *CFLAGS, *[f"-D{d}" for d in EXTRA_DEFINES], "-c", str(src), "-o", str(obj)])
+        extra = LEAF_CFLAGS if src.name in LEAF_SOURCES else []
+        run([CROSS + "gcc", *CFLAGS, *extra, *[f"-D{d}" for d in EXTRA_DEFINES], "-c", str(src), "-o", str(obj)])
         objs.append(str(obj))
     elf = work / f"{key}.elf"
     run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",
@@ -351,6 +374,22 @@ def import_bake(spec: dict) -> dict:
             "sites": [(int(a, 16), int(o, 16), int(n, 16)) for a, o, n in spec["sites"]]}
 
 
+VIDEO_HOOK_PROFILES = {"auto"}
+
+
+def frontend_video_hook(video: str):
+    """Callable for build_menu_probe.build(executable_hook=...): bakes the runtime video hook into the frontend
+    executable for profiles that need it, else None."""
+    if video not in VIDEO_HOOK_PROFILES:
+        return None
+    if have_toolchain() and not EXTRA_DEFINES:
+        with tempfile.TemporaryDirectory() as tmp:
+            built = build_hook("video", Path(tmp), BAKE_BASE, BAKE_END)
+    else:
+        built = import_bake(json.loads((PREBUILT / "video.json").read_text()))
+    return lambda elf: bake_elf(elf, built)
+
+
 def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None) -> tuple[bytes, str]:
     """Baked BLACK LABEL executable. Uses the cross toolchain when present, else the committed prebuilt image."""
     if have_toolchain() and not EXTRA_DEFINES:
@@ -361,6 +400,8 @@ def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", wor
         path = PREBUILT / f"{key}.json"
         baked = import_bake(json.loads(path.read_text()))
         source = f"prebuilt {path.relative_to(ROOT)}"
+    if video not in VIDEO_HOOK_PROFILES:  # the runtime video hook only belongs with its own profile
+        baked["sites"] = [x for x in baked["sites"] if x[0] not in VIDEO_SITES]
     vid = video_profile(video)
     taken = {a for a, _o, _n in baked["sites"]}
     clash = [f"{a:08X}" for a, _o, _n in vid if a in taken]
@@ -379,7 +420,7 @@ def main(argv=None) -> int:
     ap.add_argument("--define", action="append", default=[], help="extra -D for test bakes (blocks PNACH output)")
     ap.add_argument("--bake-video", default="retail",
                     help="video profile for the baked copy (research/phase04 VIDEO_PROFILES: retail, 240p_core, "
-                         "240p_halfpixel, 240p_cave_beta); match the launcher's --video-profile")
+                         "240p_halfpixel, 240p_cave_beta, auto); match the launcher's --video-profile")
     ap.add_argument("--bake-elf", nargs=2, metavar=("HOOK", "OUT"),
                     help="write a retail-ELF copy with HOOK built in (needs --elf), for the sixth menu entry")
     args = ap.parse_args(argv)
@@ -406,6 +447,8 @@ def main(argv=None) -> int:
                 clash = [f"{a:08X}" for a, _o, _n in video if a in taken]
                 if clash:
                     raise AssertionError(f"video profile overlaps hook sites: {clash}")
+                if args.bake_video not in VIDEO_HOOK_PROFILES:
+                    baked["sites"] = [x for x in baked["sites"] if x[0] not in VIDEO_SITES]
                 baked["sites"] = baked["sites"] + list(video)
                 Path(args.bake_elf[1]).write_bytes(bake_elf(elf, baked))
                 print(f"{h['test_id']} {key}: baked at {BAKE_BASE:08X} (video {args.bake_video}) into {args.bake_elf[1]}")

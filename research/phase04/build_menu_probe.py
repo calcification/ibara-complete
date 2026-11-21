@@ -24,6 +24,8 @@ DISPATCH = 0x001D42A0
 LABEL = 0x001D42C8
 PATH = 0x001D42D8
 EMPTY_DESCRIPTION = 0x001D42F0
+PAYLOAD_ARGV = 0x001D42F4  # argv[1] for the payload: pointer to PAYLOAD_ARG
+PAYLOAD_ARG = 0x001D42F8   # "S=0" (screen mode), refreshed by ps2/hooks/video.c when present
 RETAIL_BASE = 0x00100000
 RETAIL_LOAD_OFFSET = 0x80
 LABEL_BOX = (112, 192, 224, 208)
@@ -39,7 +41,12 @@ VIDEO_PROFILES = {
     '240p_core': video.VIDEO_EDITS,
     '240p_halfpixel': video.VIDEO_EDITS + video.HALFPIXEL_EDITS,
     '240p_cave_beta': video.VIDEO_EDITS + video.HALFPIXEL_EDITS + FIELD_STATE_EDITS,
+    # Yoko interlaced without texture filtering, Tate 240p: static part only (no bilinear 0x001AF11C, the two Tate
+    # display tables 0x001DD200 / 0x001DD240). The interlace flag, half-pixel and field-state words are switched at
+    # runtime by ps2/hooks/video.c, which the builders add with this profile (VIDEO_HOOK_PROFILES).
+    'auto': [e for e in video.VIDEO_EDITS if e[0] == 0x001AF11C or 0x001DD200 <= e[0] < 0x001DD280],
 }
+VIDEO_HOOK_PROFILES = {'auto'}
 LOAD_EXEC_PS2 = 0x24030006  # addiu v1, zero, 6
 SYSCALL = 0x0000000C
 
@@ -97,6 +104,11 @@ def menu_elf(original, video_profile='retail', position=5):
         edits[0x001CA7B8] = (0x24020002, 0x24020003)
         edits[0x001CA7C8] = (0x24020003, 0x24020004)
         edits[0x001CA7D8] = (0x24020004, 0x24020005)
+        # Returning from OPTION restores Mode Select row 3 (its old index): make it 4. Cancel path stores a plain 3
+        # (0x001CD1E8); the EXIT-item path compares the Option cursor with 3 and stores the same register, so the
+        # empty delay slot after that compare adds 1 (the branch target reloads v0 before using it, 0x001CD220).
+        edits[0x001CD1E8] = (0x24020003, 0x24020004)
+        edits[0x001CD35C] = (0x00000000, 0x24420001)
     sections = {
         INIT: (
             0x3C080050, 0x24090038,  # t0 = animation array base, t1 = row anchor
@@ -107,13 +119,15 @@ def menu_elf(original, video_profile='retail', position=5):
             0x24020000 | position,  # v0 = row of the added entry
             branch_not_equal(3, 2, DISPATCH + 4, DISPATCH + 32),
             0x3C04001D, 0x248442D8,  # a0 = disc path
-            0x00002821, 0x00003021,  # argc = 0, argv = NULL
+            0x24050001, 0x2486001C,  # argc = 1, argv = PAYLOAD_ARGV (a0 + 0x1C)
             LOAD_EXEC_PS2, SYSCALL,
             jump(0x001CA5AC), 0,  # Resume normal drawing if the syscall returns.
         ),
         LABEL: (0x30700002, 0x0F6F0000, 0, 0),  # Texture 2, bottom-origin UV, 112×16.
         PATH: struct.unpack('<6I', (b'cdrom0:\\' + disc.PROBE_FILENAME).ljust(24, b'\0')),
         EMPTY_DESCRIPTION: (0,),
+        PAYLOAD_ARGV: (PAYLOAD_ARG,),
+        PAYLOAD_ARG: (0x00303D53,),  # "S=0\0"
     }
     for address, words in sections.items():
         for index, word in enumerate(words):
@@ -273,7 +287,8 @@ def label_writes(source, files, text=DEFAULT_LABEL):
     return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
 
 
-def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5):
+def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5,
+          executable_hook=None):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
     probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
@@ -289,6 +304,16 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         root[offset:offset + 8] = disc.pair32(end)
 
     executable = menu_elf(original, video_profile, position)
+    if executable_hook is not None:  # e.g. bake the runtime video hook into the frontend executable
+        executable = executable_hook(bytes(executable))
+        capacity = (boot['bytes'] + disc.SECTOR - 1) // disc.SECTOR * disc.SECTOR
+        if len(executable) > capacity:
+            raise ValueError(f'The frontend executable grew to {len(executable)} bytes; only {capacity} fit its extent')
+        if len(executable) != boot['bytes']:
+            own = [r for r in records if r['name'] == boot['name'].encode() or r['name'] == boot['name']]
+            if len(own) != 1:
+                raise ValueError('Boot executable record not found in the root directory')
+            root[own[0]['offset'] + 10:own[0]['offset'] + 18] = disc.pair32(len(executable))
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),

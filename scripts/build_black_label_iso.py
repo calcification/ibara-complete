@@ -41,8 +41,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("source", type=Path, help="your clean 'Ibara (Japan).iso'")
     ap.add_argument("--output", type=Path, required=True, help="new ISO to create (must not exist)")
-    ap.add_argument("--video-profile", default="240p_cave_beta",
-                    help="retail, 240p_core, 240p_halfpixel or 240p_cave_beta (default; verified on a real PS2)")
+    ap.add_argument("--video-profile", default="auto",
+                    help="auto (default: Yoko interlaced without filtering, Tate 240p), 240p_cave_beta (240p in every "
+                         "mode; verified on a real PS2), 240p_halfpixel, 240p_core or retail")
     ap.add_argument("--label", default="KURO", help="menu label for the Black Label entry (short, ASCII)")
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
@@ -74,7 +75,8 @@ def main(argv=None) -> int:
         if args.keep_elf:
             args.keep_elf.write_bytes(payload)
         crc, sha = build_menu_probe.build(args.source, args.output, elf, label=args.label,
-                                          video_profile=args.video_profile, position=args.position)
+                                          video_profile=args.video_profile, position=args.position,
+                                          executable_hook=build_ee_hooks.frontend_video_hook(args.video_profile))
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle. EXIT inside returns to the launcher.")

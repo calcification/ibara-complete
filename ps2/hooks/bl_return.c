@@ -8,13 +8,19 @@
 #include "ibara_ps2.h"
 
 static const char launcher_path[] = "cdrom0:\\SLPM_663.01;1";
+/* One argument for the launcher: "S=<screen mode>", kept current by video.c at 0x001D42F8 (zero padding in this
+ * executable); without the video hook the string stays empty and the launcher ignores it. */
+static const char *const launcher_argv[1] = {(const char *)0x001D42F8u};
 
 void bl_return_to_launcher(void)
 {
 	register u32 v1 __asm__("v1") = 6; /* EE kernel syscall: LoadExecPS2(path, argc, argv) */
+	EE_RAM(u8, 0x001D42F8u) = 'S'; /* video.c keeps the digit at +2 current */
+	EE_RAM(u8, 0x001D42F9u) = '=';
+	EE_RAM(u8, 0x001D42FBu) = 0;
 	register const char *a0 __asm__("a0") = launcher_path;
-	register u32 a1 __asm__("a1") = 0;
-	register u32 a2 __asm__("a2") = 0;
+	register u32 a1 __asm__("a1") = 1;
+	register const char *const *a2 __asm__("a2") = launcher_argv;
 	__asm__ volatile("syscall" : : "r"(v1), "r"(a0), "r"(a1), "r"(a2) : "memory");
 	for (;;)
 		;

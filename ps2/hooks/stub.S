@@ -53,4 +53,24 @@
 	.size	\name, . - \name
 .endm
 
+/* Minimal variant for a site whose caller restores only ra after the call (e.g. the main loop body 0x0010BC60:
+ * `jal 0x0010E480; nop; ld ra; jr ra`) and a C hook that uses no callee-saved registers (checked by
+ * tests/test_ee_hooks.py against the listing): saves ra, calls ORIGINAL, then the hook. 36 bytes instead of 128. */
+.macro HOOK_AFTER_LEAF name, original, chook
+	.globl	\name
+	.type	\name, @function
+	.align	4
+\name:
+	addiu	$sp, $sp, -16
+	sd	$ra, 0($sp)
+	jal	\original
+	nop
+	jal	\chook
+	nop
+	ld	$ra, 0($sp)
+	jr	$ra
+	addiu	$sp, $sp, 16
+	.size	\name, . - \name
+.endm
+
 /* Stubs are instantiated by the build (hooks.S generated per profile). */

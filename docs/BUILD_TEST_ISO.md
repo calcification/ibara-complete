@@ -21,7 +21,12 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
 ## Playing it
 
 Boot the new ISO (PCSX2 with **cheats off**, or your usual loader). Start at the title → Mode Select → **Down** twice
-to **KURO** → **Circle**. (`--label` changes the text, `--position 5` puts the row at the bottom as before.) Inside: Circle confirms, Cross cancels; in game Cross = shot, Circle = bomb,
+to **KURO** → **Circle**. (`--label` changes the text, `--position 5` puts the row at the bottom as before.)
+
+Video (default `--video-profile auto`): **Yoko** keeps the retail interlaced output, with texture filtering off;
+**Tate R / Tate L** switch to 240p progressive (the cave-ps2-240p geometry), live, when you change OPTION →
+SCREEN SETTING → SCREEN MODE. The screen mode is carried between the launcher and KURO in both directions.
+`--video-profile 240p_cave_beta` gives the previous behaviour (240p in every mode). Inside: Circle confirms, Cross cancels; in game Cross = shot, Circle = bomb,
 **Square = weapon change**. Play Arcade as usual. EXIT in its Mode Select returns to the launcher.
 
 What the BLACK LABEL build currently does (see `docs/BLACK_LABEL_FEATURES.md`, results in

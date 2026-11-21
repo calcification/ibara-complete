@@ -140,6 +140,17 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(hooks.export_bake(b), committed,
                          "ps2/prebuilt/bl_mode.json is stale: run python3 scripts/build_ee_hooks.py")
 
+    def test_video_hook_is_leaf_safe_and_fits_frontend_slack(self):
+        import re
+        b = hooks.build_hook("video", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
+        # HOOK_AFTER_LEAF does not preserve callee-saved registers: the hook code must not touch them.
+        uses = [l for l in b["listing"].splitlines() if re.search(r"\t.*\b(s[0-7]|s8|fp)\b", l)]
+        self.assertEqual(uses, [], "video hook uses callee-saved registers; it needs the full HOOK_AFTER stub")
+        # The frontend executable grows by 0x80 + the image and must stay in its last disc sector (976 bytes free).
+        self.assertLessEqual(0x80 + b["size"], 976, "video hook no longer fits the frontend executable's extent")
+        h = hooks.HOOKS["bl_mode"]
+        self.assertIn((hooks.VIDEO_SITE, 0x0C043920, "video_entry"), h["sites"])
+
     def test_bake_keeps_program_headers_after_elf_header(self):
         # synthetic retail-shaped ELF: phdrs at 0x34, one PT_LOAD at file 0x80 / vaddr 0x00100000
         body = bytearray(0x30000)
