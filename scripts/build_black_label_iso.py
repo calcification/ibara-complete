@@ -8,15 +8,15 @@ What it does (nothing is downloaded; your ISO is only read):
 2. bakes the BLACK LABEL executable: a copy of the retail executable with this project's Black Label code
    (ps2/hooks: XTC graze counter + HUD, weapon stock and change button, shot levels, rank rules, return to
    the launcher) and the same video profile as the launcher;
-3. builds a separate ISO whose Mode Select has a sixth row (default label BLACK LABEL) that starts it
+3. builds a separate ISO whose Mode Select has an extra row (default: KURO, third, after Arcade and Arrange)
    (research/phase04/build_menu_probe.py). Arcade, Arrange, Gallery, Option and Exit are the retail ones.
 
 Requirements: Python 3.10+ and `pip install -r requirements-assets.txt` (Pillow, numpy). The MIPS cross
 compiler is optional: without it the committed prebuilt hook image (ps2/prebuilt/bl_mode.json) is used.
 Output is ~3.7 GB and contains game data: keep it local, never upload it.
 
-Play: boot the new ISO (PCSX2 with cheats off, or your usual loader), Start at the title, then Up to the
-sixth row and Circle (Circle confirms, Cross cancels; Cross = shot, Circle = bomb, Square = weapon change).
+Play: boot the new ISO (PCSX2 with cheats off, or your usual loader), Start at the title, then Down twice to
+KURO (third row) and Circle (Circle confirms, Cross cancels; Cross = shot, Circle = bomb, Square = weapon change).
 Inside, play Arcade as usual; EXIT in its Mode Select returns to the launcher. Report results with
 tests/manual/RESULT_TEMPLATE.md.
 """
@@ -43,7 +43,9 @@ def main(argv=None) -> int:
     ap.add_argument("--output", type=Path, required=True, help="new ISO to create (must not exist)")
     ap.add_argument("--video-profile", default="240p_cave_beta",
                     help="retail, 240p_core, 240p_halfpixel or 240p_cave_beta (default; verified on a real PS2)")
-    ap.add_argument("--label", default="BLACK LABEL", help="sixth-row label (short, ASCII)")
+    ap.add_argument("--label", default="KURO", help="menu label for the Black Label entry (short, ASCII)")
+    ap.add_argument("--position", type=int, choices=(2, 5), default=2,
+                    help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
     ap.add_argument("--keep-elf", type=Path, help="also save the baked BLACK LABEL executable here")
     args = ap.parse_args(argv)
 
@@ -72,10 +74,10 @@ def main(argv=None) -> int:
         if args.keep_elf:
             args.keep_elf.write_bytes(payload)
         crc, sha = build_menu_probe.build(args.source, args.output, elf, label=args.label,
-                                          video_profile=args.video_profile)
+                                          video_profile=args.video_profile, position=args.position)
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
-    print("Boot it, press Start at the title, Up to the sixth row, Circle. EXIT inside returns to the launcher.")
+    print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle. EXIT inside returns to the launcher.")
     return 0
 
 

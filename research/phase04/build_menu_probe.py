@@ -55,7 +55,21 @@ def branch_not_equal(rs, rt, start, target):
     return 0x14000000 | (rs << 21) | (rt << 16) | (delta & 0xFFFF)
 
 
-def menu_elf(original, video_profile='retail'):
+LABELS = 0x002A9090        # six label-record pointers, one per row (row 5 is the added entry)
+DESCRIPTIONS = 0x002A90B0  # six two-word description entries, one per row
+ROW_LABELS = (0x002A8E80, 0x002A8E90, 0x002A8EA0, 0x002A8EB0, 0x002A8EC0)  # Arcade Arrange Gallery Option Exit
+ROW_DESCRIPTIONS = ((0x002A8EF0, 0x002A8F00), (0x002A8F10, 0x002A8F20), (0x002A8F30, 0x002A8F40),
+                    (0x002A8F50, 0x002A8F60), (0x002A8F70, 0))
+
+
+def menu_elf(original, video_profile='retail', position=5):
+    """position: row of the added entry, 5 = bottom (after Exit) or 2 = third (after Arcade and Arrange).
+
+    Rows are drawn at fixed heights by index, so moving the entry permutes the label and description tables and the
+    accept dispatcher (0x001CA798): with position 2, index 2 launches the payload and Gallery, Option and Exit move
+    to indices 3, 4 and 5."""
+    if position not in (2, 5):
+        raise ValueError('position must be 2 (third row) or 5 (bottom)')
     elf = bytearray(original)
     edits = {
         0x001CA358: (0xAF8090E0, jump(INIT)),  # Initialize the sixth row each time.
@@ -66,10 +80,23 @@ def menu_elf(original, video_profile='retail'):
         0x001CA720: (0x24020004, 0x24020005),  # Up wraps to index 5.
         # Indices 0–3 have already branched. Index 4 still falls through to Exit.
         0x001CA7DC: (0x1462FF73, branch_not_equal(3, 2, 0x001CA7DC, DISPATCH)),
-        0x002A90A4: (0, LABEL),
-        0x002A90D8: (0, EMPTY_DESCRIPTION),
-        0x002A90DC: (0, EMPTY_DESCRIPTION),
     }
+    order = list(range(5))
+    order.insert(position, None)  # row -> original item (None = added entry)
+    for row, item in enumerate(order):
+        label = LABEL if item is None else ROW_LABELS[item]
+        desc = (EMPTY_DESCRIPTION, EMPTY_DESCRIPTION) if item is None else ROW_DESCRIPTIONS[item]
+        before_label = ROW_LABELS[row] if row < 5 else 0
+        before_desc = ROW_DESCRIPTIONS[row] if row < 5 else (0, 0)
+        if label != before_label:
+            edits[LABELS + 4 * row] = (before_label, label)
+        for k in range(2):
+            if desc[k] != before_desc[k]:
+                edits[DESCRIPTIONS + 8 * row + 4 * k] = (before_desc[k], desc[k])
+    if position == 2:  # accept dispatcher: Gallery 2->3, Option 3->4, Exit 4->5
+        edits[0x001CA7B8] = (0x24020002, 0x24020003)
+        edits[0x001CA7C8] = (0x24020003, 0x24020004)
+        edits[0x001CA7D8] = (0x24020004, 0x24020005)
     sections = {
         INIT: (
             0x3C080050, 0x24090038,  # t0 = animation array base, t1 = row anchor
@@ -77,7 +104,7 @@ def menu_elf(original, video_profile='retail'):
             jump(0x001CA360), 0xAF8090E0,  # Replay the displaced store in the delay slot.
         ),
         DISPATCH: (
-            0x24020005,  # v0 = 5
+            0x24020000 | position,  # v0 = row of the added entry
             branch_not_equal(3, 2, DISPATCH + 4, DISPATCH + 32),
             0x3C04001D, 0x248442D8,  # a0 = disc path
             0x00002821, 0x00003021,  # argc = 0, argv = NULL
@@ -246,7 +273,7 @@ def label_writes(source, files, text=DEFAULT_LABEL):
     return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
 
 
-def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=()):
+def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5):
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
     probe = returning_probe() if probe_path is None else read_probe_elf(probe_path)
@@ -261,7 +288,7 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         offset = record['offset'] + 10
         root[offset:offset + 8] = disc.pair32(end)
 
-    executable = menu_elf(original, video_profile)
+    executable = menu_elf(original, video_profile, position)
     writes = [
         (16 * disc.SECTOR, pvd),
         (disc.ORIGINAL_ROOT_LBA * disc.SECTOR, root),
@@ -314,12 +341,15 @@ def main():
     parser.add_argument('--disc-file', action='append', default=[], metavar='NAME=PATH',
                         help='Add a companion file to the disc root (repeatable, ISO 8.3 name)')
     parser.add_argument('--label', default=DEFAULT_LABEL, help='Short label for the sixth menu entry')
+    parser.add_argument('--position', type=int, choices=(2, 5), default=5,
+                        help='Row of the added entry: 5 = bottom (default), 2 = third, after Arcade and Arrange')
     parser.add_argument('--video-profile', choices=VIDEO_PROFILES, default='retail',
                         help='Video profile for the retail frontend')
     args = parser.parse_args()
     try:
         crc, sha256 = build(args.source, args.output, args.payload_elf, label=args.label,
-                            video_profile=args.video_profile, disc_files=args.disc_file)
+                            video_profile=args.video_profile, disc_files=args.disc_file,
+                            position=args.position)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     print(f'Created {args.output}')

@@ -1,7 +1,7 @@
 # Build a testable Black Label ISO
 
-One command turns your own clean Japanese disc image into a separate test ISO whose Mode Select has a sixth
-row, **BLACK LABEL**, that starts the Black Label build. Your original ISO is only read.
+One command turns your own clean Japanese disc image into a separate test ISO whose Mode Select has an extra
+row, **KURO** (third, right after Arcade and Arrange), that starts the Black Label build. Your original ISO is only read.
 
 ```bash
 pip install -r requirements-assets.txt           # Pillow, numpy (once)
@@ -20,8 +20,8 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
 
 ## Playing it
 
-Boot the new ISO (PCSX2 with **cheats off**, or your usual loader). Start at the title → Mode Select → **Up**
-to the sixth row → **Circle**. Inside: Circle confirms, Cross cancels; in game Cross = shot, Circle = bomb,
+Boot the new ISO (PCSX2 with **cheats off**, or your usual loader). Start at the title → Mode Select → **Down** twice
+to **KURO** → **Circle**. (`--label` changes the text, `--position 5` puts the row at the bottom as before.) Inside: Circle confirms, Cross cancels; in game Cross = shot, Circle = bomb,
 **Square = weapon change**. Play Arcade as usual. EXIT in its Mode Select returns to the launcher.
 
 What the BLACK LABEL build currently does (see `docs/BLACK_LABEL_FEATURES.md`, results in
