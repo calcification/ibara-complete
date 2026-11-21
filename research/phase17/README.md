@@ -111,3 +111,15 @@ KURO's menu and a KURO game. Not done: a KURO header picture (needs new artwork 
 (12→14, 8→10 ×2, 5→6 ×3, 10→12; `0x00284E6C`–`0x00284EEC`) — now in `ps2/bl_part_hp.json` (58 words). No score
 differences. Tables that matched on few or no scores were checked entry by entry: effect parts with 1-entry tables
 (HP equal) and records past the logged range. So stages 3–6 need no other part-HP change.
+
+## Bullet cancel after a boss (2026-11-21)
+
+MAME (`bcount.lua`, write tap with `-nodrc`): BL erases every enemy bullet 2 frames after a boss core dies (stage 1:
+19 → 0, no score change). The erasing is BL-only code: cancel-all `0C0BC310` (per bullet `0C0BB980` / `0C0BB9F0`)
+called from the main loop `0C06C630` while counter `0C2B07FC` is non-zero; ~25 boss and mid-boss death paths set
+it to 16. PS2 Arcade leaves the bullets flying (49 bullets drift off over ~130 frames). PS2 keeps its Arrange boss
+gauge variables in every mode: state `$gp-29076` (`0x00338B5C`, 1 while a boss is up) and HP `$gp-29072`
+(`0x00338B60`), which reaches 0 on the core-kill frame. `bl_boss_cancel_frame` (KURO, every game frame) clears all
+enemy bullet records for 16 frames from that moment. PCSX2 stage 1: core killed at 7517, bullets 32 → 0 at 7518,
+the game continues into stage 2. Not covered: mid-bosses (stage 2 has two BL cancels; PS2's gauge stays idle
+there) — they need their own death hooks.

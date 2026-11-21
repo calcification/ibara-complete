@@ -166,6 +166,34 @@ static void trace_frame(void)
 	}
 }
 #endif
+#ifdef BL_BCOUNT
+/* TEST BUILDS ONLY: per game frame, enemy bullets alive (can hit, not a segment) and boss parts alive (type
+ * BL_BOSS_TYPE, default 5): records (bullets, boss parts, boss gauge state $gp-29076, gauge HP $gp-29072) of 4 x u16 at 0x01FD0010, count at
+ * 0x01FD0000 (the BL_SHOT_LOG area), 12000 frames. */
+#ifndef BL_BOSS_TYPE
+#define BL_BOSS_TYPE 5u
+#endif
+static void bcount_frame(void)
+{
+	volatile u32 *n = (volatile u32 *)0x01FD0000u;
+	u32 i, b = 0, bp = 0;
+	if (*n >= 12000u)
+		return;
+	for (i = 0; i < 256u; i++)
+		if ((EE_RAM(u32, PS2_BULLETS_BASE + i * PS2_BULLET_STRIDE) & (BULLET_CAN_HIT | BULLET_SEGMENT)) == BULLET_CAN_HIT)
+			b++;
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		if ((EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == BL_BOSS_TYPE)
+			bp++;
+	}
+	EE_RAM(u16, 0x01FD0010u + 8u * *n) = (u16)b;
+	EE_RAM(u16, 0x01FD0012u + 8u * *n) = (u16)bp;
+	EE_RAM(u16, 0x01FD0014u + 8u * *n) = (u16)EE_RAM(u32, 0x00338B5Cu); /* boss gauge state $gp-29076 */
+	EE_RAM(u16, 0x01FD0016u + 8u * *n) = (u16)EE_RAM(u32, 0x00338B60u); /* boss gauge HP $gp-29072 */
+	(*n)++;
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -182,6 +210,9 @@ void spawn_log_frame(void)
 #endif
 #ifdef BL_TRACE_WEAPON
 	trace_frame();
+#endif
+#ifdef BL_BCOUNT
+	bcount_frame();
 #endif
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;

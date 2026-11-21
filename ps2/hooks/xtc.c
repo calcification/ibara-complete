@@ -150,6 +150,7 @@ void spawn_log_frame(void);
 
 /* BLACK LABEL build only (ps2/hooks/bl_player.c); absent in the XTC-only test profile. */
 void bl_player_frame(u32 rec) __attribute__((weak));
+void bl_boss_cancel_frame(void) __attribute__((weak)); /* bl_enemy.c: bullet cancel after a boss */
 
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
@@ -159,6 +160,8 @@ void xtc_frame(void)
 #ifdef BL_SPAWN_LOG
 	spawn_log_frame();
 #endif
+	if (bl_boss_cancel_frame)
+		bl_boss_cancel_frame();
 	for (s = 0; s < 2; s++) {
 		struct xtc_player *p = &xtc.pl[s];
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;

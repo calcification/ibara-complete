@@ -22,7 +22,7 @@ Phase 11 · **[PS2]** PS2 counterpart known · **[todo]** PS2 counterpart not ye
 | F7 | **Bombs** | bomb spawn `0C073600` (ibara `0C062550`) [spec][delta]; blast length fixed by ship kind and power spent (straight A 103 frames, straight D 231, spread A ~201) [spec] | [todo] |
 | F8 | **Rank** | same stored-rank format (0 hardest, 2^24 scale) at `0C297A3C` [spec]; BL lets bomb cancels lower rank, but rank climbs faster (README of ibara360, shmups.wiki) | [PS2] rank global `0x00338EB4`, Arrange already lowers rank on cancels (Phases 7–9). BL rank events measured in MAME (Phase 13); **fragment (K07), medal and rose (K09) done** — BL uses Arrange's pickup rank rules; bomb/Hadou cancel rules [todo] |
 | F9 | **Score items / medals** | same medal ladder concept; next medal `0C3C53E0`; item pickup routine BL-only `0C07D100` (arcade `0C06BB60`) [spec][delta] | [PS2] medal ladder `0x0020B100`, pickup table `0x0020BF60` |
-| F10 | **Bullet cancel after a boss** | erases all enemy bullets [spec] | [todo] |
+| F10 | **Bullet cancel after a boss** | erases all enemy bullets [spec]; MAME: BL-only cancel-all `0C0BC310` runs from the main loop (`0C06C630`) while counter `0C2B07FC` ≠ 0; boss and mid-boss routines set it to 16 on death; no score | **Bosses done (K24):** `bl_boss_cancel_frame` (`ps2/hooks/bl_enemy.c`) clears enemy bullets for 16 frames when PS2's boss-gauge HP (`0x00338B60`, kept in every mode) reaches 0; stage-1 boss: 32 bullets gone the next frame (BL 19, 2 frames). **Mid-bosses [todo]** (they do not use the gauge on PS2) |
 
 ## 1b. Worklist: ship select (F1), shot tables (F5), bombs (F7)
 

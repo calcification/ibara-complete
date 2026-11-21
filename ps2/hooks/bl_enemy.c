@@ -31,3 +31,32 @@ u32 bl_fire_timer(u32 part, u32 factor, u32 base)
 	EE_RAM(u8, part + 0x9B) = 0;
 	return 1;
 }
+
+/* BL bullet cancel after a boss (F10). BL's main loop (0C06C630) calls its cancel-all (0C0BC310, BL-only) while the
+ * counter 0C2B07FC is non-zero, and the boss / mid-boss routines set that counter to 16 when they die (MAME: stage-1
+ * boss core killed at frame 7037, all 19 bullets gone at 7039, no score). PS2 has no such counter; its boss-gauge
+ * variables are kept in every mode (the gauge is only drawn in Arrange): state $gp-29076 (0x00338B5C) non-zero
+ * while a boss is up, HP $gp-29072 (0x00338B60), which reaches 0 on the core-kill frame. So: when the gauge HP goes
+ * from > 0 to 0 with a boss up, every enemy bullet record is cleared for 16 frames. Called every game frame from
+ * xtc_frame (KURO only). research/phase17. */
+#define BOSS_STATE 0x00338B5Cu
+#define BOSS_HP    0x00338B60u
+static u32 bc_last_hp;
+static u32 bc_left;
+
+void bl_boss_cancel_frame(void)
+{
+	const u32 hp = EE_RAM(u32, BOSS_HP);
+	u32 i;
+	if (EE_RAM(u32, BOSS_STATE) != 0u && bc_last_hp != 0u && hp == 0u)
+		bc_left = 16u;
+	bc_last_hp = hp;
+	if (!bc_left)
+		return;
+	bc_left--;
+	for (i = 0; i < 256u; i++) {
+		const u32 a = PS2_BULLETS_BASE + i * PS2_BULLET_STRIDE;
+		if (EE_RAM(u32, a) & BULLET_CAN_HIT)
+			EE_RAM(u32, a) = 0u;
+	}
+}
