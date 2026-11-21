@@ -97,6 +97,28 @@ void spawn_log_frame(void)
 #ifdef BL_SPAWN_RANK
 	EE_RAM(u32, PS2_RANK_INV) = BL_SPAWN_RANK; /* controlled comparisons: same stored rank as the MAME run */
 #endif
+#ifdef BL_SHOT_LOG /* every new player shot (pool 0x0044C9C0, 160 x 0x34): frame, slot, type +4, +8, +0xC */
+	{
+		static u8 shot_alive[160];
+		static u32 shot_frame;
+		volatile u32 *n = (volatile u32 *)0x01FD0000u;
+		volatile u32 *e = (volatile u32 *)0x01FD0010u;
+		unsigned k;
+		if (!shot_frame)
+			*n = 0;
+		shot_frame++;
+		for (k = 0; k < 160; k++) {
+			const u32 a = 0x0044C9C0u + 0x34u * k;
+			const int on = (EE_RAM(u32, a) >> 30) == 3u;
+			if (on && !shot_alive[k] && *n < 12000u) {
+				e[2 * *n] = shot_frame << 8 | k;
+				e[2 * *n + 1] = (EE_RAM(u32, a + 4) & 0xFF) << 16 | (EE_RAM(u32, a + 8) & 0xFF) << 8 | (EE_RAM(u32, a + 12) & 0xFF);
+				(*n)++;
+			}
+			shot_alive[k] = (u8)on;
+		}
+	}
+#endif
 #ifdef BL_LOG_STAGE /* log one stage only: BL stage byte value, 2 = stage 1 ... 7 = stage 6 (PS2 $gp-28244) */
 	if (EE_RAM(u8, 0x00338E9Cu) != BL_LOG_STAGE)
 		return;
@@ -188,7 +210,11 @@ void spawn_log_frame(void)
 #define CORE_MASK 3u
 #endif
 		if (on && t == BL_BOSS_TYPE && sl_first && !((sl_frame - sl_first) & CORE_MASK) &&
+#ifdef BL_CORE_ONLY0
+		    EE_RAM(u32, a + 8) == 0u) {
+#else
 		    (EE_RAM(u32, a + 8) < 3u || EE_RAM(u32, a + 0x40) >= 50000u)) {
+#endif
 #endif
 			volatile u32 *ccount = (volatile u32 *)CORE_LOG;
 			struct core_rec *c = (struct core_rec *)(CORE_LOG + 16);

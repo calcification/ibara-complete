@@ -137,6 +137,12 @@ def extract_ps2(p2s: Path, out: Path):
         for i in range(c):
             fr, slot, hp, sub, x, y, mode, step = struct.unpack_from("<IHHIhhBB", r, 0x1F60010 + 20 * i)
             f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y} {mode} {step}\n")
+    ns = min(struct.unpack_from("<I", r, 0x1FD0000)[0], 12000)
+    if ns:  # BL_SHOT_LOG: frame slot type +8 +C
+        with open(out / "ps2_shots.txt", "w") as f:
+            for i in range(ns):
+                a, b = struct.unpack_from("<II", r, 0x1FD0010 + 8 * i)
+                f.write(f"{a >> 8} {a & 0xFF} {b >> 16 & 0xFF} {b >> 8 & 0xFF} {b & 0xFF}\n")
     t = min(struct.unpack_from("<I", r, 0x1FC0000)[0], 512)
     with open(out / "ps2_tables.txt", "w") as f:
         for i in range(t):
@@ -190,7 +196,9 @@ def run_bl(args, out: Path):
     sh([args.mame, "ibarablk", "-rompath", str(args.bl_roms), "-video", "none", "-sound", "none", "-nothrottle",
         "-autoboot_script", str(ROOT / "tools/stage_compare/bl_stage_log.lua"), "-skip_gameinfo"], env=env,
        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    for name in ("spawns", "bullets", "core", "tables"):
+    for name in ("spawns", "bullets", "core", "tables", "shots"):
+        if not (tmp / f"{name}.txt").exists():
+            continue
         shutil.move(tmp / f"{name}.txt", out / f"bl_{name}.txt")
     tmp.rmdir()
     print(f"  BL: {sum(1 for _ in open(out / 'bl_spawns.txt'))} spawns, "

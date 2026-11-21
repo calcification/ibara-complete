@@ -111,6 +111,11 @@ HOOKS = {
         + [(0x00126C4C, 0x1060000C, 0x00000000), (0x00126C54, 0x938391A8, 0x938391AC)],
         # BL enemy fire timer (BL 0C0BC1B0 / arcade 0C0A9E40 / PS2 0x00122120): `j bl_fire_timer` at the
         # retail entry (its delay slot `andi v0,v0,0x100` is harmless); see ps2/hooks/bl_enemy.c.
+        # BL held fire (Phase 16, per-frame shot logs): holding shot fires every 2 frames, capped only by the
+        # on-screen shot count; PS2 Arcade keeps the 8-frame interval (+0x262). PS2's shooter 0x0013B2F0 already has
+        # BL's rule on its Arrange path (held >= 8 frames -> interval 2); the held-frame path is taken for Arcade too
+        # (0x0013B310 lw v1,$gp-28076 -> li v1,1). The new-press path (Arcade rank on press) is unchanged.
+        "patches_extra": [(0x0013B310, 0x8F839254, 0x24030001)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
     },
     "bl_xtc": {
@@ -223,7 +228,8 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     for site, original_word, entry in h.get("jumps", []):  # plain `j` into a C leaf that returns to the caller
         assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
-    sites.extend(h.get("patches", []))  # plain word patches: same preimage check and application
+    sites.extend(h.get("patches", []))
+    sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 

@@ -37,11 +37,24 @@ local t0 = 2400
 press(t0, ":PORT_C", "Coin 1", 8); press(t0 + 60, ":PORT_C", "1 Player Start", 8)
 for i = 0, 8 do press(t0 + 300 + i * 40, ":PORT_D", "P1 Button 1", 6) end
 at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1); shooting = true end)
-local function finish() out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
+local sout = os.getenv("SHOTS") and io.open(dir .. "/shots.txt", "w"); local salive = {}; local sframe = 0
+local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34): frame slot type +8 +C
+  sframe = sframe + 1
+  for k = 0, 159 do
+    local a = 0x0C2380D0 + 0x34 * k
+    local on = (sp:read_u32(a) >> 30) == 3
+    if on and not salive[k] then
+      sout:write(string.format("%d %d %d %d %d\n", sframe, k, sp:read_u32(a + 4) & 0xFF, sp:read_u32(a + 8) & 0xFF, sp:read_u32(a + 12) & 0xFF))
+    end
+    salive[k] = on
+  end
+end
+local function finish() if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
 emu.register_frame_done(function()
   frame = frame + 1
   if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
   if frame <= t0 + 700 then return end
+  if sout and sframe < 12000 then shot_frame() end
   sp:write_u8(P1 + 0x288, 240)
   if os.getenv("RANKLOCK") then sp:write_u32(RANK, tonumber(os.getenv("RANKLOCK"))) end
   if os.getenv("SHOTLOCK") then sp:write_u8(P1 + 0x25B, tonumber(os.getenv("SHOTLOCK"))) end
