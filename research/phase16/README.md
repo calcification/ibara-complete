@@ -94,13 +94,20 @@ level 2, rank 0x800000, invincible, shot held; per 1,000 frames:
   MG 6, napalm 4, burner bursts of 16 at one shot per 2 frames …) — the alive counts above agree. Spawn speeds
   checked (MG 8, napalm 7 px/frame) agree too.
 * So the earlier "2.3×" was the Arcade option shot (the pods only take their weapon's routine once the pod
-  records carry the kind); with weapons the spawn rates differ only through **shot lifetime**: homing and napalm
-  shots live about half as long on PS2 (their per-frame behaviour), MG ~25 % shorter (partly scenario: hits).
+  records carry the kind).
+* **Per-shot traces** (`bl_pod_trace.lua`, PS2 `BL_TRACE_WEAPON`/`BL_TRACE_TYPE`): napalm and homing behave the
+  same in both games — napalm flies, slowing (+0x20 −0x1000 per frame), then burns in place for exactly 32 frames
+  (+8 = 5); a homing missile flies until it hits, then becomes a 16-frame burst (type 0). The homing/napalm
+  "lifetime" gaps in the table are a counting artefact: BL relaunches a slot in the same frame its last shot ends,
+  so an off→on count misses launches. MG flight: median 34 frames on PS2, 38 in BL (longest 40 vs 46): BL keeps
+  its MG pod shots ~48 px longer before removing them (off-screen margin, not yet located) — the only real
+  pod-shot difference measured, worth ~12–25 % more MG pod shots on PS2.
 * **Ported: no rank change per pod shot.** PS2's pod routines call `harder(n)` on every shot (`0x00129DF0`; n = 40,
   20, 15, 75, 15, 100, 50 at `0x001330A4`, `0x00133364`, `0x0013370C`, `0x001339AC`, `0x00133BB8`, `0x00133E84`,
   `0x00134164`); BL's pod routines make no rank call and BL's rank-write log (phase 13) has no per-shot writer. The
   BLACK LABEL / KURO builds turn those seven calls into nops.
 
 ## Next
-* Homing and napalm shot behaviour (per-type update routines: lifetime, steering, flame duration) vs BL.
+* MG pod shot removal margin (PS2 pod-shot update table `0x002130A0`: type 2 `0x00138970`; BL's is inlined in
+  `0C0767C0`/`0C076460`). Small.
 * Then compare the other weapons (rocket, burner, gatling, homing, napalm, 5-way) the same way.

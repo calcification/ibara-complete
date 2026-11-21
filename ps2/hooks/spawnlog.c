@@ -120,6 +120,52 @@ static void rate_test_frame(void)
 	}
 }
 #endif
+#ifdef BL_TRACE_WEAPON
+/* TEST BUILDS ONLY (with BL_TEST_ALL_WEAPONS): at game frame 2400 switch to weapon BL_TRACE_WEAPON (as BL_RATE_TEST),
+ * then from frame 3600 trace one pod shot of type BL_TRACE_TYPE per frame: records of 14 words
+ * (frame, +0x00..+0x30) at 0x01FD0010 (count at 0x01FD0000; the BL_SHOT_LOG area), 1000 frames. Slot reuse continues the trace (as bl_trace.lua). */
+static u32 tr_frame, tr_slot = 0xFFFFFFFFu;
+static void trace_frame(void)
+{
+	const u32 rec = 0x0044C380u;
+	u32 k;
+	tr_frame++;
+	if (tr_frame == 2400u && EE_RAM(u8, rec + 0x26D) != 0xFFu) {
+		const u8 w = BL_TRACE_WEAPON;
+		EE_RAM(u8, rec + 0x270) = w;
+		for (k = 0; k < 3u; k++) {
+			const u32 pod = 0x0044C8A0u + 0x30u * k;
+			EE_RAM(u8, rec + 0x26D + k) = (u8)(2u * w);
+			EE_RAM(u32, pod + 4) = 2u * w;
+			EE_RAM(u32, pod + 16) = 2u * w;
+			EE_RAM(u32, pod + 8) = 0;
+			EE_RAM(u32, pod + 12) = 0;
+			EE_RAM(u8, pod + 42) = 0;
+			EE_RAM(u8, pod + 43) = 0;
+		}
+	}
+	if (tr_frame < 3600u || tr_frame >= 4600u)
+		return;
+	if (tr_slot == 0xFFFFFFFFu) {
+		for (k = 0; k < 48u; k++) {
+			const u32 a = 0x0044D6C0u + 0x34u * k;
+			if ((EE_RAM(u32, a) >> 30) == 3u && (EE_RAM(u32, a + 4) & 0xFFu) == BL_TRACE_TYPE) {
+				tr_slot = k;
+				break;
+			}
+		}
+	}
+	if (tr_slot != 0xFFFFFFFFu) {
+		const u32 a = 0x0044D6C0u + 0x34u * tr_slot;
+		volatile u32 *n = (volatile u32 *)0x01FD0000u;
+		volatile u32 *e = (volatile u32 *)(0x01FD0010u + 56u * *n);
+		e[0] = tr_frame;
+		for (k = 0; k < 13u; k++)
+			e[1 + k] = EE_RAM(u32, a + 4u * k);
+		(*n)++;
+	}
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -133,6 +179,9 @@ void spawn_log_frame(void)
 	sl_frame++;
 #ifdef BL_RATE_TEST
 	rate_test_frame();
+#endif
+#ifdef BL_TRACE_WEAPON
+	trace_frame();
 #endif
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;
