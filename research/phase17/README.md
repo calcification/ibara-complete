@@ -103,3 +103,11 @@ PCSX2 (K20): KURO opens in ~0.3 s; inside, all 83 words Black Label, XTC 126 gra
 Mode Select on KURO, all 83 retail, next Arcade game retail; KURO game left to Game Over → attract: all retail; KURO
 again: all Black Label; KURO PRACTICE stage 2: Black Label, scene 3; Tate from a saved card: 224p in Mode Select,
 KURO's menu and a KURO game. Not done: a KURO header picture (needs new artwork in the header texture).
+
+## Enemy part HP, all stages (2026-11-21)
+
+`run_stage.py --stage 6 --all-tables` (new: both loggers list every stage's part-record tables): BL 68 tables, PS2
+69. `diff_part_tables.py`: types 8 and 45 (the 51 stage-2 HP words already patched) and **type 52, 7 entries**
+(12→14, 8→10 ×2, 5→6 ×3, 10→12; `0x00284E6C`–`0x00284EEC`) — now in `ps2/bl_part_hp.json` (58 words). No score
+differences. Tables that matched on few or no scores were checked entry by entry: effect parts with 1-entry tables
+(HP equal) and records past the logged range. So stages 3–6 need no other part-HP change.

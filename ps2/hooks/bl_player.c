@@ -40,7 +40,11 @@ void bl_player_frame(u32 rec)
  * 0x00136CB0 into +0x26). The pod handler reads each pod's code at 0x001342D8 (`lbu a0, 0x26A(v1)`); in KURO that load
  * becomes `jal pod_mode_entry`, which answers 1 while the PS2 held counter ($gp-28068, 0..8, kept counting by the
  * held-fire patch) is 8. Difference: with no enemy on screen PS2's code 1 points straight ahead instead of keeping
- * the formation. Uses a0 and $at only; s2 = the pod's code address (set in the call's delay slot). */
+ * the formation. When aiming, s2 (the pod's code address, set in the call's delay slot and only read afterwards:
+ * the hold-to-freeze test at 0x001343D4 and the turn-rate tests) is pointed at a constant 1 so the rest of the
+ * handler also sees code 1 and turns the pods: PS2 Arcade otherwise freezes stick-formation pods while shot is held
+ * (first test: targets set, angles stuck at 0). Uses a0, s2 and $at; the handler restores s2. */
+const unsigned char pod_aim_code = 1;
 __asm__(
 	".set push\n.set noreorder\n.set noat\n"
 	".globl pod_mode_entry\n"
@@ -51,6 +55,8 @@ __asm__(
 	"	bnez	$1, 1f\n"
 	"	lbu	$4, 0($18)\n"
 	"	li	$4, 1\n"
+	"	lui	$18, %hi(pod_aim_code)\n"
+	"	addiu	$18, $18, %lo(pod_aim_code)\n"
 	"1:	jr	$31\n"
 	"	nop\n"
 	".size pod_mode_entry, . - pod_mode_entry\n"

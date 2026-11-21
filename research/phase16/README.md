@@ -64,9 +64,16 @@ previous target kept at pod +0x28) and, if there is one, sets the target angle t
 angle unit (of 512) per frame — every other frame in some cases (`0C2B039C` parity) — while aiming, or with the
 stick formation; other formations turn by 1/16 of the gap.
 PS2 equivalent: pod code 1 (above). The BLACK LABEL / KURO builds load the pod code through `pod_mode_entry`
-(`ps2/hooks/bl_player.c`, at `0x001342D8`), which answers 1 while PS2's held counter `$gp-28068` is 8. Known
+(`ps2/hooks/bl_player.c`, at `0x001342D8`), which answers 1 while PS2's held counter `$gp-28068` (`0x00338F4C`) is
+8, and points the handler's code pointer s2 at a constant 1 so the rest of the handler agrees (PS2 Arcade freezes
+stick-formation pods while shot is held: the first build set targets but the angles stayed 0). Both games pick the
+target the same way (keep the current one while it is targetable, flag `0x2000000`, +0xA9 ≥ +0xAB and on screen,
+else round-robin from a global cursor). PCSX2 (stage 1, MG, shot held): pods on three different enemies, current
+angle = target angle (25–46 / 512), pod shots 7.2 px/frame forward and ~3.3 sideways (BL: −3.4 … +1.4 sideways). Known
 differences: with no enemy on screen PS2's code 1 points the pods straight ahead (BL keeps the formation angle);
 PS2 Arcade turns ±1 every frame.
 
 ## Next
+* Pod fire rate: PS2 pods fire ~2.3× BL's shots (per-weapon routines after the shared handler `0x00134250`:
+  `0x00133750`, `0x001339F0`, `0x00133F80`, `0x00132E90`, `0x00133460`, …); measure per weapon.
 * Then compare the other weapons (rocket, burner, gatling, homing, napalm, 5-way) the same way.
