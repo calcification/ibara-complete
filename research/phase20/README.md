@@ -17,3 +17,35 @@ upload op = 0x2xxx with dx, dy, w-1, h-1 and the pixels inline. `bl_blitter_log.
 in the ROM (all found). The select screen runs ~830-890 draw ops a frame (most are 32 × 32 background tiles); 940
 distinct source rectangles over 267 logged frames; 333,120 ROM-backed blitter pixels sampled (~650 KB as 16-bit,
 ~10 of our 256 × 128 pages) plus 113,920 frame-buffer pixels (x 960-1315, y 136-455: copy effects, not ROM art).
+
+## Findings for the PS2 port (2026-11-22)
+
+**Coordinates.** The blitter double-buffers at scroll x 32 / 416 (register `0x18000014`), y origin 136: game
+coordinates = dst − (buffer x, 136); landscape, game x up the portrait screen. PS2 keeps the same system: its HUD
+offsets are x 416 / y 136 (`$gp-28648` / `$gp-28640`), so a BL draw op maps onto `0x00110B70` directly:
+x = dst_x − origin + 416, y = dst_y − 136 + 136; w (along x) = op w, h (along y) = op h; texture = the source rect
+in a page of ours (screen orientation: pixel (row i, col j) = blitter (sx + w − 1 − i, sy + j)); tint = R << 16 |
+GB (0x80 = 1.0, same as PS2); a0 = 0x10000000 | (attr & 0x277) << 16 (blend bit, s_mode, d_mode — PS2 tests the
+same d_mode 7 / s_mode 1 values at `0x00110DCC`; Arrange's gauge uses blend + d_mode 4 = 0x2040000) | flipx →
+0x08000000, flipy → 0x04000000 | alpha word (s_alpha << 8 | d_alpha, as PS2).
+
+**Screen contents per frame** (≈ 830-890 ops): 414 32 × 32 tiles compose the girder background off-screen
+(blitter x 960-1315, y 136-455), copied to the screen one 1-px row at a time with a per-row x offset (a heat-shimmer
+wave) and tint 0x58 (dark); ~80-100 element ops (header 武機選択 at game x 272-311, timer, the two side panels at
+y < 120 / ≥ 120, portraits, ship renders, name plates, the join panel, prompt, 8 × 8 font text for CREDIT / PRESS
+START). Steady state: ~10 ops animate (pulsing / blinking); a ship change plays ~30 frames of moving ops (fly-in);
+P2 joining switches that panel.
+
+**Sizes.** Element art (everything but the background tiles and the frame-buffer copies): 150 distinct source
+rects, 179,520 pixels = 5.5 pages of 256 × 128 PSMCT16 (fits the 6-page area at `0x01F20000`); the background adds
+the tile set (stage 2 of option 3).
+
+**Holding the game while the screen is up.** The main loop (`0x0012E1E4`) skips the game update while the pause
+byte `$gp-28128` is set and then calls the pause menu `0x00128E10` (`jal` at `0x0012E778`; returns 0 = stay, 3 =
+restart / title); the HUD pass (and our sprites) still render. KURO plan: set the byte at the start of a KURO game,
+replace that call with the select screen's own (draws, reads the pad, returns 0), then write the ship word / FIGHTER
+TYPE config and clear the byte.
+
+**Art delivery plan.** Pages pre-laid-out by the patcher from the user's ROM (vram_map offsets + an atlas layout,
+both coordinates only) into an extra loadable segment of the frontend executable at `0x01F20000` (zeros on the
+disc without `--bl-rom`; the executable's disc extent has ample free space, the ISO size is unchanged).
