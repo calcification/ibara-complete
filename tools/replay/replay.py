@@ -223,7 +223,14 @@ def verify_context(scenario, scenario_hash, left, right, repeat):
         if not isinstance(context['settings'], dict) or not isinstance(context['rng'], dict):
             raise ValueError('settings and RNG context must be objects')
     if left['settings'] != right['settings']:
-        raise ValueError('logical run settings differ')
+        a, b = left['settings'], right['settings']
+        keys = sorted(set(a) | set(b))
+        details = ', '.join(
+            f'{key} (left {a[key]!r}, right {b[key]!r})' if key in a and key in b
+            else f'{key} (missing on {"right" if key in a else "left"})'
+            for key in keys if key not in a or key not in b or a[key] != b[key]
+        )
+        raise ValueError(f'logical run settings differ: {details}')
     if repeat and left != right:
         raise ValueError('repeat checks require identical context, including checkpoint and RNG policy')
 
@@ -257,7 +264,12 @@ def main():
     probe = commands.choices['ps2-probe-csv']
     probe.add_argument('ram', type=Path, help='PCSX2 .p2s savestate or raw eeMemory.bin')
     probe.add_argument('output', type=Path)
-    probe.add_argument('--skip', type=int, default=0, help='probe rows preceding scenario frame zero')
+    start = probe.add_mutually_exclusive_group()
+    start.add_argument('--skip', type=int, default=0, help='probe rows preceding scenario frame zero')
+    start.add_argument('--find-start', type=int, nargs=2, metavar=('FIRST', 'LAST'),
+                       help='find the unique row matching the entire input plan in this inclusive range')
+    start.add_argument('--checkpoint', type=Path,
+                       help='search from the checkpoint buffer length through eight rows afterward')
     probe.add_argument('--address', type=lambda value: int(value, 0), default=0x01F00000)
     probe.add_argument('--fields', nargs='+', choices=sorted(SUPPORTED_METRICS),
                        default=['observed_input', 'player_x', 'player_y', 'score'])
@@ -278,7 +290,14 @@ def main():
             write_movie(args.output, sync + masks, load_pad_map(args.map), args.state,
                         args.version, args.title, args.lead, args.tail)
         elif args.command == 'ps2-probe-csv':
-            probe_to_csv(args.ram, args.output, args.skip, len(masks), args.address, args.fields)
+            bounds = args.find_start
+            if args.checkpoint is not None:
+                first = probe_frame_count(read_ee(args.checkpoint), args.address)
+                bounds = (first, first + 8)
+            selected = probe_to_csv(args.ram, args.output, args.skip, len(masks), args.address, args.fields,
+                                    alignment=(bounds, masks) if bounds is not None else None)
+            if bounds is not None:
+                print(f'Scenario frame 0 matches capture row {selected}')
         else:
             verify_context(scenario, digest, load_json(args.left_context), load_json(args.right_context), args.repeat)
             result = compare(masks, load_csv(args.left, len(masks)), load_csv(args.right, len(masks)), args.fields)
@@ -320,14 +339,47 @@ def read_ee(path):
     return data
 
 
-def probe_to_csv(ram, output, skip, count, base, fields):
-    if not 0 <= base < 32 * 1024 * 1024 or len(set(fields)) != len(fields) or 'observed_input' not in fields:
-        raise ValueError('expected valid EE address and unique fields including observed_input')
-    data = read_ee(ram)
+def select_trace_start(observed, plan, first, last):
+    if not 0 <= first <= last:
+        raise ValueError('invalid capture row search range')
+    if len(set(plan)) < 2:
+        raise ValueError('input alignment requires a scenario with at least one control change; use --skip')
+    last = min(last, len(observed) - len(plan))
+    matches = [offset for offset in range(first, last + 1)
+               if observed[offset:offset + len(plan)] == plan]
+    if not matches:
+        raise ValueError('no complete input plan matches the capture in the requested range')
+    if len(matches) != 1:
+        raise ValueError(f'input alignment is ambiguous ({len(matches)} matching rows); narrow the search range')
+    return matches[0]
+
+
+def probe_frame_count(data, base):
+    if not 0 <= base <= min(len(data), 32 * 1024 * 1024) - 8:
+        raise ValueError('invalid EE capture address')
     magic, frames = struct.unpack_from('<II', data, base)
-    if magic != 0x46524231 or not 0 <= skip <= frames <= 2048 or skip + count > frames:
+    if magic != 0x46524231 or frames > 2048:
+        raise ValueError('invalid PS2 probe buffer')
+    return frames
+
+
+def probe_to_csv(ram, output, skip, count, base, fields, *, alignment=None):
+    if len(set(fields)) != len(fields) or 'observed_input' not in fields:
+        raise ValueError('expected unique fields including observed_input')
+    data = read_ee(ram)
+    frames = probe_frame_count(data, base)
+    if not 0 <= skip <= frames or skip + count > frames:
         raise ValueError('invalid or incomplete PS2 probe buffer')
     row = struct.Struct('<' + ''.join('i' if field in {'player_x', 'player_y'} else 'I' for field in fields))
+    if alignment is not None:
+        bounds, plan = alignment
+        first, last = bounds
+        input_column = fields.index('observed_input')
+        captures = row.iter_unpack(data[base + 8:base + 8 + frames * row.size])
+        observed = [capture[input_column] for capture in captures]
+        if len(observed) != frames:
+            raise ValueError('truncated PS2 telemetry')
+        skip = select_trace_start(observed, plan, first, last)
     offset = base + 8 + skip * row.size
     rows = list(row.iter_unpack(data[offset:offset + count * row.size]))
     if len(rows) != count:
@@ -338,6 +390,7 @@ def probe_to_csv(ram, output, skip, count, base, fields):
         for frame, values in enumerate(rows):
             writer.writerow((frame, *(None if key in ENEMY_METRICS and value == 0xFFFFFFFF else value
                                       for key, value in zip(fields, values, strict=True))))
+    return skip
 
 
 if __name__ == '__main__':

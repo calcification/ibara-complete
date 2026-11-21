@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import struct
 import tempfile
 import unittest
 
@@ -65,6 +66,34 @@ class ReplayTests(unittest.TestCase):
         replay.verify_context(scenario, digest, context, context, True)
         with self.assertRaisesRegex(ValueError, 'identical context'):
             replay.verify_context(scenario, digest, context, context | {'checkpoint': 'other'}, True)
+        with self.assertRaisesRegex(ValueError, r'bomb_stock \(left 1, right 0\)'):
+            replay.verify_context(
+                scenario, digest, context | {'settings': settings | {'bomb_stock': 1}},
+                context | {'settings': settings | {'bomb_stock': 0}}, False,
+            )
+
+    def test_capture_alignment_matches_inputs_without_matching_telemetry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            memory = Path(directory) / 'ram.bin'
+            csv = Path(directory) / 'trace.csv'
+            plan = [0, 4, 0, 16]
+            inputs = [0, 0, *plan, 0, 0]
+            data = struct.pack('<II', 0x46524231, len(inputs))
+            data += b''.join(struct.pack('<iI', -20 + i, mask) for i, mask in enumerate(inputs))
+            memory.write_bytes(data)
+            fields = ['player_x', 'observed_input']
+            selected = replay.probe_to_csv(memory, csv, 0, len(plan), 0, fields, alignment=((0, 7), plan))
+            self.assertEqual(selected, 2)
+            self.assertEqual(replay.load_csv(csv, len(plan))[1], {'player_x': -17, 'observed_input': 4})
+
+    def test_alignment_rejects_ambiguous_or_incomplete_evidence(self):
+        plan = [0, 16, 0]
+        with self.assertRaisesRegex(ValueError, 'ambiguous'):
+            replay.select_trace_start(plan + plan, plan, 0, 3)
+        with self.assertRaisesRegex(ValueError, 'no complete'):
+            replay.select_trace_start(plan[:-1], plan, 0, 3)
+        with self.assertRaisesRegex(ValueError, 'control change'):
+            replay.select_trace_start([0, 0, 0], [0, 0], 0, 1)
 
 
 if __name__ == '__main__':
