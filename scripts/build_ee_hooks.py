@@ -213,7 +213,12 @@ HOOKS = {
         # BL shot cap (Phase 16): BL's type-0 shot spawner (0C073830) allows 32 slots for one player (10 for two);
         # PS2's fire routine 0x0013ACC0 allows 32 in Arrange but halves it to 16 in Arcade (0x0013AD14
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.
-                          (0x0013AD14, 0x8F829254, 0x24020001)],
+                          (0x0013AD14, 0x8F829254, 0x24020001)]
+        # BL pods do not change rank when they fire (MAME rank-write log, research/phase13; BL pod routines
+        # 0C078A70..0C078BC0 make no rank call). PS2's pod weapons call harder(n) per shot (n = 40, 20, 15, 75, 15,
+        # 100, 50): `jal 0x00129DF0` -> nop (the delay slot only loads n). research/phase16.
+        + [(a, 0x0C04A77C, 0x00000000) for a in (0x001330A4, 0x00133364, 0x0013370C, 0x001339AC, 0x00133BB8,
+                                                   0x00133E84, 0x00134164)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
         "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },

@@ -77,6 +77,49 @@ static void table_seen(u32 type, u32 table)
 		(*n)++;
 	}
 }
+#ifdef BL_RATE_TEST
+/* TEST BUILDS ONLY (with BL_TEST_ALL_WEAPONS): from game frame 2400, change weapon every 1200 frames in BL's order
+ * (current weapon +0x270 and the three pods' shot kinds +0x26D..+0x26F = weapon x 2, as the change routine 0x00139850) and count
+ * new shots of pool 0x0044C9C0 per (weapon, type) over frames 200..1199 of each segment: u32 [7][16] at 0x01FE0000
+ * (research/phase16, compared with BL's bl_pod_rate.lua). */
+static u32 rt_frame;
+static u8 rt_alive[160];
+static void rate_test_frame(void)
+{
+	static const u8 next_weapon[7] = {1, 4, 0, 5, 3, 6, 2};
+	const u32 rec = 0x0044C380u;
+	u32 seg, k;
+	rt_frame++;
+	if (rt_frame < 2400u || EE_RAM(u8, rec + 0x26D) == 0xFFu)
+		return;
+	seg = (rt_frame - 2400u) % 1200u;
+	if (seg == 0) {
+		const u8 w = next_weapon[EE_RAM(u8, rec + 0x270) % 7u];
+		EE_RAM(u8, rec + 0x270) = w;
+		EE_RAM(u8, rec + 0x26D) = (u8)(2u * w); /* shot kind = weapon x 2 (0x00139968), as BL */
+		EE_RAM(u8, rec + 0x26E) = (u8)(2u * w);
+		EE_RAM(u8, rec + 0x26F) = (u8)(2u * w);
+		for (k = 0; k < 3u; k++) { /* and each pod record, as 0x00139938 (player 1: side 0) */
+			const u32 pod = 0x0044C8A0u + 0x30u * k;
+			EE_RAM(u32, pod + 4) = 2u * w;
+			EE_RAM(u32, pod + 16) = 2u * w;
+			EE_RAM(u32, pod + 8) = 0;
+			EE_RAM(u32, pod + 12) = 0;
+			EE_RAM(u8, pod + 42) = 0;
+			EE_RAM(u8, pod + 43) = 0;
+		}
+	}
+	for (k = 0; k < 160u; k++) {
+		const u32 a = 0x0044C9C0u + 0x34u * k;
+		const u8 on = (EE_RAM(u32, a) >> 30) == 3u;
+		if (on && !rt_alive[k] && seg >= 200u && rt_frame < 2400u + 1200u * 8u)
+			EE_RAM(u32, 0x01FE0000u + 4u * (16u * (EE_RAM(u8, rec + 0x270) % 7u) + (EE_RAM(u32, a + 4) & 15u)))++;
+		if (on && seg >= 200u && rt_frame < 2400u + 1200u * 8u) /* alive-shot frames: u32 [7][16] at 0x01FE0200 */
+			EE_RAM(u32, 0x01FE0200u + 4u * (16u * (EE_RAM(u8, rec + 0x270) % 7u) + (EE_RAM(u32, a + 4) & 15u)))++;
+		rt_alive[k] = on;
+	}
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -88,6 +131,9 @@ void spawn_log_frame(void)
 	unsigned i;
 
 	sl_frame++;
+#ifdef BL_RATE_TEST
+	rate_test_frame();
+#endif
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;
 #ifdef BL_LOCK_SHOT /* controlled damage comparisons: fixed shot level */

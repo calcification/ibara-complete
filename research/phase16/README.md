@@ -73,7 +73,34 @@ angle = target angle (25–46 / 512), pod shots 7.2 px/frame forward and ~3.3 si
 differences: with no enemy on screen PS2's code 1 points the pods straight ahead (BL keeps the formation angle);
 PS2 Arcade turns ±1 every frame.
 
+## Pod fire rate per weapon (2026-11-21)
+Measured with every weapon owned, switched every 1,200 frames (BL: its weapon-change button, `bl_pod_rate.lua`;
+PS2: `BL_RATE_TEST`, which also rewrites the pod records as the change routine `0x00139938` does), stage 1, shot
+level 2, rank 0x800000, invincible, shot held; per 1,000 frames:
+
+| weapon | PS2 spawns / alive / life | BL spawns / alive / life |
+|---|---|---|
+| rocket (type 3) | 180 / 17.7 / 99 | 202 / 17.4 / 86 |
+| burner (5) | 722 / 25.5 / 35 | 777 / 23.5 / 30 |
+| gatling (2) | 780 / 17.1 / 22 | 747 / 18.5 / 25 |
+| homing (4) | 214 / 12.5 / 59 | 123 / 12.9 / 105 |
+| napalm (7) | 72 / 11.9 / 166 | 38 / 11.9 / 314 |
+| MG (2) | 287 / 13.9 / 48 | 208 / 13.0 / 62 |
+| 5-way (2) | 952 / 36.4 / 38 | 817 / 32.2 / 39 |
+
+* Dispatch: pod +4 = shot kind (weapon × 2) indexes a routine table — PS2 `0x002102D0`, BL `0C18270C` (rocket
+  `0C078A70`, burner `AA0`, gatling `AD0`, homing `B30`, napalm `B60`, MG `B90`, 5-way `BC0`). The firing rules
+  match: a pod fires when it has a free slot among its first N (BL `0C0718C0`, PS2 `0x0012D050`, same algorithm:
+  MG 6, napalm 4, burner bursts of 16 at one shot per 2 frames …) — the alive counts above agree. Spawn speeds
+  checked (MG 8, napalm 7 px/frame) agree too.
+* So the earlier "2.3×" was the Arcade option shot (the pods only take their weapon's routine once the pod
+  records carry the kind); with weapons the spawn rates differ only through **shot lifetime**: homing and napalm
+  shots live about half as long on PS2 (their per-frame behaviour), MG ~25 % shorter (partly scenario: hits).
+* **Ported: no rank change per pod shot.** PS2's pod routines call `harder(n)` on every shot (`0x00129DF0`; n = 40,
+  20, 15, 75, 15, 100, 50 at `0x001330A4`, `0x00133364`, `0x0013370C`, `0x001339AC`, `0x00133BB8`, `0x00133E84`,
+  `0x00134164`); BL's pod routines make no rank call and BL's rank-write log (phase 13) has no per-shot writer. The
+  BLACK LABEL / KURO builds turn those seven calls into nops.
+
 ## Next
-* Pod fire rate: PS2 pods fire ~2.3× BL's shots (per-weapon routines after the shared handler `0x00134250`:
-  `0x00133750`, `0x001339F0`, `0x00133F80`, `0x00132E90`, `0x00133460`, …); measure per weapon.
+* Homing and napalm shot behaviour (per-type update routines: lifetime, steering, flame duration) vs BL.
 * Then compare the other weapons (rocket, burner, gatling, homing, napalm, 5-way) the same way.
