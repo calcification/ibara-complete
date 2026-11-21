@@ -45,3 +45,50 @@ the next disc read). Options, in order of expected gain / effort:
 Research builds used here (local only): PCSX2 `rcntUpdate_hScanline` sampler (EE pc, ra, IOP pc per hblank, env
 `EE_PC_SAMPLE`), `CDVD_INSTANT` env to cap CDVD read/seek events at 64 cycles; PCSX2 `CdvdVerboseReads` for the read
 log.
+
+## Ship kind (F1) and bombs (F7) in KURO (2026-11-21)
+
+**PS2 has no ship select.** NORMAL goes straight to loading; CONFIG > FIGHTER TYPE (frontend state 7, Arrange 11)
+sets the type per player (Arcade config `0x004E5050` / `0x004E5054`, labels `0x002A9370`), and the player-start code
+writes the ship word (player `+4`) as side × 4 + type at `0x001CE728` / `0x001CE730`, so P1 is always Bond
+(= BL straight) and P2 Dyne (= BL spread), as in arcade Ibara. BL lets either player pick straight or spread
+(Phase 13: BL indexes the same mechanics by kind × 4 + type). A PCSX2 run with P1's ship word forced to 4 played
+normally with Dyne's ship, spread shot and bomb.
+
+KURO (`ps2/hooks/bl_ship.c`, `BL_SHIP_PATCHES`, all runtime-switched with the KURO table):
+
+* FIGHTER TYPE rows take 8 values with our labels: PLAYER 1 STRAIGHT A–D / SPREAD A–D, PLAYER 2 SPREAD A–D /
+  STRAIGHT A–D (popup length 4 → 8 at `0x001C9710`; popup list `0x001C970C` → `ship_popup_tab` for the edited row;
+  value columns `0x001C995C/60`, `0x001C9980/84`; help lines `0x001C9808/0C`, `0x001C9838/40` from a 24-entry copy
+  of the retail table so every value shows its pilot's description). The game's popup shows 4 rows at a time.
+* Ship word = side × 4 **XOR** value (`0x001CE728` `addu` → `xor`): values 0–3 give the retail ship, 4–7 the other
+  pilot's set.
+* `kuro_set` keeps the choice while KURO is off and clamps the config to 0–3 for the retail modes (restored on
+  entering KURO when the retail value was not changed meanwhile).
+
+**Bombs.** BL's trigger `0C073600` (arcade `0C062550`) waits 7 frames after the press (+0x268), spends a bomb
+(power +0x266 = 40) or, with none, the fragments as a partial bomb, spawns the bomb record (`0C07B620`, pool
+`0C229004`, type side + 9) and jumps through an 8-entry per-ship table: straight A–D `0C07A7B0`, `0C07A920`,
+`0C07AA90`, `0C079600`; spread A–D `0C07A280`, `0C07A410`, `0C07A100`, `0C079600`. Against the arcade (Phase 11):
+
+* five routines differ only in relocated operands (record stride 0x280 → 0x2A0, power +0x25F → +0x266);
+* spread B (`0C07A410`) reads the stick as a word (`mov.w`) instead of a byte: on the big-endian SH-3 the arcade
+  read the wrong byte; PS2's port (`0x00119BC0`) already reads it with `lhu` — no change;
+* type D (`0C079600`, both kinds) picks its pattern table and repeat count by ship kind where the arcade
+  (`0C068570`) and PS2 (`0x0011B460`: `$gp-32640 + side*4`, `side + 1`) use the player side. KURO: `bomb_d_kind`
+  at `0x0011B480` / `0x0011B4F4` (identical to retail while kind = side);
+* the arcade trigger calls harder(0x1000) (`0C060350`) per bomb; BL's has no rank call. PS2 Arcade does
+  harder(0x1000) twice per full bomb, 0x4000 on a fragment bomb and 0x10000 on the held path, and skips them all in
+  Arrange; KURO takes the Arrange branches (`0x0013B0C4`, `0x0013B11C`, `0x0013B258`, `0x0013B274`).
+* MAME probe (`bomb.lua` variants): straight A's bomb is type-5 records for 38 frames then type-0 debris to ~110;
+  spread A's is type-3 records for 96+ frames — different weapons per kind, as on PS2 per pilot.
+
+PCSX2 (K25): KURO FIGHTER TYPE shows the 8 labels and per-value help; P1 SPREAD A → ship word 4, Dyne's ship and
+spread shot, spread bomb; SPREAD D → ship word 7; the choice survives EXIT and re-entering KURO; bomb-rank and
+D-bomb words are on in KURO and retail outside it.
+
+**KURO practice Game Over (fixed).** Returning to the practice menu after a practice Game Over passes through
+frontend state 0, which the safety net (`kuro_frame`: state ≤ 1) took for the title and switched KURO off — the
+practice menu then ran retail rules (diagnostic word `kuro_off_why` = state 0). The net now acts on Mode Select
+(state 1) and the attract edge only. PCSX2: KURO practice to Game Over → back at the practice menu with KURO on;
+KURO Arcade to Game Over → KURO off at the attract edge (`kuro_off_why` 0x303).

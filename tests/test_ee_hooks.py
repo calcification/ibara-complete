@@ -165,7 +165,7 @@ class BuildTests(unittest.TestCase):
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
-                "hdr_state"}
+                "hdr_state", "bomb_d_kind"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)
@@ -174,12 +174,16 @@ class BuildTests(unittest.TestCase):
             elif cur in leaf and re.search(r"\t.*\b(s[0-7]|s8|fp)\b", line):
                 bad.append(line)
         self.assertEqual(bad, [])
+        # ship_popup_tab stands in for the retail `lui s3`: s3 is the only saved register it touches.
+        body = b["listing"].split("<ship_popup_tab>:")[1].split("\n\n")[0]
+        self.assertEqual(set(re.findall(r"\b(s[0-8]|fp)\b", body)), {"s3"})
         # The runtime table: every bl_mode word except its Exit-to-launcher hook and video sites, no overlaps.
         words = {a: v for _p, a, v in b["words"]}
         tab, n = words[b["syms"]["kuro_tab"]], words[b["syms"]["kuro_tab_n"]]
         rows = [(words[tab + 12 * i], words[tab + 12 * i + 4], words[tab + 12 * i + 8]) for i in range(n)]
         bl = hooks.HOOKS["bl_mode"]
-        self.assertEqual(n, 3 + 1 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]))
+        self.assertEqual(n, 3 + 1 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"])
+                         + len(hooks.BL_SHIP_PATCHES))
         addrs = [a for a, _o, _n in rows]
         self.assertEqual(len(addrs), len(set(addrs)))
         self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})

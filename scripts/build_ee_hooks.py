@@ -323,11 +323,40 @@ KURO_PATCHES = [
     (0x001CAAD4, 0xAF80979C, "raw", 0xAF83979C),
 ]
 KURO_SITES = {a for a, *_ in KURO_PATCHES}
+# Black Label ship kind and bombs (ps2/hooks/bl_ship.c; research/phase18), switched with KURO:
+BL_SHIP_PATCHES = [
+    # CONFIG > FIGHTER TYPE (state 7): 8 values (straight A-D, spread A-D) with our labels. The edit popup's list
+    # (`lui s3` / `li s0,4` / `addiu s3`) comes from ship_popup_tab for the row being edited; the value column of
+    # PLAYER 1 / PLAYER 2 from ship_tab_p1 / ship_tab_p2.
+    (0x001C970C, 0x3C13002B, "jal", "ship_popup_tab"),
+    (0x001C9710, 0x24100004, "raw", 0x24100008),
+    (0x001C9714, 0x26739370, "raw", 0x00000000),
+    (0x001C995C, 0x3C02002B, "hi", "ship_tab_p1"),
+    (0x001C9960, 0x24429370, "lo", "ship_tab_p1"),
+    (0x001C9980, 0x3C02002B, "hi", "ship_tab_p2"),
+    (0x001C9984, 0x24429370, "lo", "ship_tab_p2"),
+    # its help lines ([row * 8 + value * 2], 0x002A9380 / +4) from ship_help (24 entries)
+    (0x001C9808, 0x3C02002B, "hi", "ship_help"),
+    (0x001C980C, 0x24429380, "lo", "ship_help"),
+    (0x001C9838, 0x3C02002B, "hi", "ship_help", 4),
+    (0x001C9840, 0x24429384, "lo", "ship_help", 4),
+    # player start: ship word = side * 4 + type -> side * 4 XOR value (values 4-7 = the other pilot's set)
+    (0x001CE728, 0x00E51821, "raw", 0x00E51826),
+    # type-D bomb (0x0011B460): pattern table and repeat count by ship kind instead of player side
+    (0x0011B480, 0x8C790000, "jal", "bomb_d_kind"),
+    (0x0011B4F4, 0x24CE0001, "raw", 0x01207021),
+    # bomb trigger (0x0013B000): no rank change on bombing (Arcade's harder() calls skipped, as Arrange and BL)
+    (0x0013B0C4, 0x10400053, "raw", 0x00000000),
+    (0x0013B11C, 0x14400003, "raw", 0x10000003),
+    (0x0013B258, 0x1440FFB4, "raw", 0x1000FFB4),
+    (0x0013B274, 0x1040000C, "raw", 0x00000000),
+]
 HOOKS["kuro"] = {
     "test_id": "K20",
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
-    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c"],
+    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
+                "bl_ship.c"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
               ("hud_entry", 0x0012C0E0, "xtc_hud")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
@@ -335,7 +364,7 @@ HOOKS["kuro"] = {
     "dynamic": {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x0012C394, 0x0C04B038, "hud_entry"),
                   (0x0012C3BC, 0x0C04B038, "hud_entry")],
-        "sym_patches": BL_SYM_PATCHES,
+        "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES,
         "jumps": HOOKS["bl_mode"]["jumps"],
         "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
     },
@@ -357,6 +386,23 @@ def set_sym_word(built: dict, sym: str, value: int) -> None:
             built["words"][i] = (place, a, value)
             return
     raise AssertionError(f"{sym} is not an image word")
+
+
+def sym_patch_word(syms: dict, site: int, original_word: int, kind: str, target, add: int = 0) -> int:
+    """New word for a sym_patches entry: word/raw value, jal/j to it, or the hi/lo half of its address."""
+    value = (syms[target] if isinstance(target, str) else target) + add
+    if kind == "word" or kind == "raw":
+        return value
+    if kind == "jal":
+        return jal(value)
+    if kind == "j":
+        assert value % 4 == 0 and value >> 28 == site >> 28
+        return 0x08000000 | (value >> 2) & 0x03FFFFFF
+    if kind == "hi":
+        return (original_word & 0xFFFF0000) | ((value + 0x8000) >> 16) & 0xFFFF
+    if kind == "lo":
+        return (original_word & 0xFFFF0000) | value & 0xFFFF
+    raise AssertionError(f"unknown patch kind {kind}")
 
 
 def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
@@ -394,21 +440,7 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
     for site, original_word, kind, target, *add in h.get("sym_patches", []):
-        value = (syms[target] if isinstance(target, str) else target) + (add[0] if add else 0)
-        if kind == "word" or kind == "raw":
-            new = value
-        elif kind == "jal":
-            new = jal(value)
-        elif kind == "j":
-            assert value % 4 == 0 and value >> 28 == site >> 28
-            new = 0x08000000 | (value >> 2) & 0x03FFFFFF
-        elif kind == "hi":
-            new = (original_word & 0xFFFF0000) | ((value + 0x8000) >> 16) & 0xFFFF
-        elif kind == "lo":
-            new = (original_word & 0xFFFF0000) | value & 0xFFFF
-        else:
-            raise AssertionError(f"unknown patch kind {kind}")
-        sites.append((site, original_word, new))
+        sites.append((site, original_word, sym_patch_word(syms, site, original_word, kind, target, *add)))
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     dyn = h.get("dynamic")
@@ -416,9 +448,8 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         rows = [(a, o, jal(syms[e])) for a, o, e in dyn["sites"]]
         rows += [(a, o, 0x08000000 | (syms[e] >> 2) & 0x03FFFFFF) for a, o, e in dyn["jumps"]]
         rows += list(dyn["patches"])
-        for a, o, kind, target in dyn.get("sym_patches", []):
-            assert kind == "jal"
-            rows.append((a, o, jal(syms[target])))
+        for a, o, kind, target, *add in dyn.get("sym_patches", []):
+            rows.append((a, o, sym_patch_word(syms, a, o, kind, target, *add)))
         seen = {a for a, _o, _n in sites}
         clash = [f"{a:08X}" for a, _o, _n in rows if a in seen]
         if clash or len({a for a, _o, _n in rows}) != len(rows):

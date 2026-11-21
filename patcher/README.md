@@ -28,7 +28,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
   (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, enemy bullets
-  cleared when a boss or mid-boss dies. Practice works inside KURO. Not yet: ship select, graze sphere.
+  cleared when a boss or mid-boss dies, no rank penalty for bombing. **Straight or spread:** KURO → CONFIG →
+  FIGHTER TYPE offers STRAIGHT A–D and SPREAD A–D for each player. Practice works inside KURO. Not yet: graze
+  sphere, Black Label's own ship-select screen and artwork.
 
 In game: Cross = shot, Circle = bomb, Square = weapon change (KURO). Menus: Circle confirms, Cross cancels.
 

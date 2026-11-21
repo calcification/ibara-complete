@@ -37,10 +37,25 @@ u32 kuro_on;
 void video_frame(void);
 void xtc_reset(void);
 
+/* FIGHTER TYPE (Arcade config words): KURO allows 0-7 (bl_ship.c); the retail modes read 0-3. Leaving KURO keeps
+ * the choice and clamps the config; entering restores it. */
+#define FIGHTER_TYPE 0x004E5050u
+static u32 kuro_ship[2];
+
 static void kuro_set(u32 on)
 {
 	const struct kuro_word *w = kuro_tab;
 	u32 i, n = kuro_tab_n;
+	for (i = 0; i < 2u; i++) {
+		volatile u32 *t = (volatile u32 *)(FIGHTER_TYPE + 4u * i);
+		if (on) {
+			if (kuro_ship[i] >= 4u && *t == (kuro_ship[i] & 3u))
+				*t = kuro_ship[i];
+		} else {
+			kuro_ship[i] = *t;
+			*t &= 3u;
+		}
+	}
 	for (i = 0; i < n; i++, w++) {
 		volatile u32 *p = (volatile u32 *)w->addr;
 		const u32 from = on ? w->retail : w->kuro, to = on ? w->kuro : w->retail;
@@ -74,18 +89,22 @@ u32 kuro_leave(void)
 	return kuro_row;
 }
 
-/* Per frame, after video_frame: KURO off at the title / Mode Select, or when the attract sequence starts after a
+/* Per frame, after video_frame: KURO off at Mode Select (state 1; not 0: returning to the practice menu after a
+ * practice Game Over passes through state 0, research/phase18), or when the attract sequence starts after a
  * Game Over (the game keeps the submenu's state then; its attract flag $gp-28276 goes 0 -> 1, set with the demo's
  * Arcade rules at 0x0013DDBC, cleared by a game start at 0x0013DB10). The edge, not the level, so a flag left at 1
  * from an earlier attract cycle cannot switch KURO off in its own menus. */
 #define ATTRACT 0x00338E7Cu /* u8 */
 static u8 attract_last;
+u32 kuro_off_why; /* diagnostics (read from a savestate): frontend state << 8 | attract << 1 | 1 at the last safety-net switch-off */
 
 void kuro_frame(void)
 {
 	const u8 attract = EE_RAM(u8, ATTRACT);
-	if (kuro_on && (EE_RAM(u32, FRONT_STATE) <= 1u || (attract && !attract_last)))
+	if (kuro_on && (EE_RAM(u32, FRONT_STATE) == 1u || (attract && !attract_last))) {
+		kuro_off_why = EE_RAM(u32, FRONT_STATE) << 8 | (u32)attract << 1 | 1u;
 		kuro_set(0u);
+	}
 	attract_last = attract;
 }
 

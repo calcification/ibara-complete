@@ -246,6 +246,42 @@ static void midlog_frame(void)
 	ml_gauge = g;
 }
 #endif
+#ifdef BL_BOMBLOG
+/* TEST BUILDS ONLY: P1 bombs. Keeps at least one bomb; every frame P1 is alive, records (alive P1 projectile
+ * records per type 0..14, 15 = other) as 16 x u8, enemy bullets (u8) and the bomb stock (u8): 18-byte rows at
+ * 0x01FD0010, up to 3000, row count at 0x01FD0000. */
+static void bomblog_frame(void)
+{
+	volatile u32 *n = (volatile u32 *)0x01FD0000u;
+	const u32 rec = PS2_PLAYER_BASE;
+	u32 i, b;
+	u8 *row;
+	if (!(EE_RAM(u32, rec) & 0x80000000u) || *n >= 3000u)
+		return;
+	if (EE_RAM(u8, rec + PS2_PLAYER_BOMBS) == 0)
+		EE_RAM(u8, rec + PS2_PLAYER_BOMBS) = 1;
+#ifdef BL_FORCE_SHIP /* experiment: P1 ship word (+4, pilot * 4 + type) */
+	EE_RAM(u32, rec + 4) = BL_FORCE_SHIP;
+#endif
+	row = (u8 *)(0x01FD0010u + 18u * *n);
+	for (i = 0; i < 16u; i++)
+		row[i] = 0;
+	for (i = 0; i < 128u; i++) {
+		const u32 a = PS2_SHOTS_BASE + i * PS2_SHOT_STRIDE;
+		if (EE_RAM(u32, a) & 0x80000000u) {
+			const u32 t = EE_RAM(u32, a + 4);
+			row[t < 15u ? t : 15u]++;
+		}
+	}
+	b = 0;
+	for (i = 0; i < 256u; i++)
+		if ((EE_RAM(u32, PS2_BULLETS_BASE + i * PS2_BULLET_STRIDE) & (BULLET_CAN_HIT | BULLET_SEGMENT)) == BULLET_CAN_HIT)
+			b++;
+	row[16] = (u8)(b > 255u ? 255u : b);
+	row[17] = EE_RAM(u8, rec + PS2_PLAYER_BOMBS);
+	(*n)++;
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -268,6 +304,9 @@ void spawn_log_frame(void)
 #endif
 #ifdef BL_MIDLOG
 	midlog_frame();
+#endif
+#ifdef BL_BOMBLOG
+	bomblog_frame();
 #endif
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_INVINCIBLE) = 240;
