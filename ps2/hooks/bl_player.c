@@ -6,16 +6,29 @@
  * every pickup/change; measured in MAME). PS2 keeps the same three bytes at +0x26A..+0x26C, but Arrange sets them
  * from the formation the player picks (table 0x00212FF0, formation button), which the BLACK LABEL build disables.
  * Weapon ids as PS2/BL: 0 rocket, 1 burner, 2 gatling, 3 homing, 4 napalm, 5 MG, 6 5-way. */
-static const u8 bl_pod_formation[7][3] = {
+static const u8 bl_pod_formation[7][3] __attribute__((unused)) = {
 	{2, 2, 2}, {4, 4, 0}, {0, 0, 0}, {3, 3, 7}, {1, 1, 1}, {2, 2, 2}, {4, 4, 2},
 };
 
+/* DISABLED by default (define BL_POD_FORMATION to enable): BL's pod codes do not mean the same as PS2's. Phase 16:
+ * BL's MG pods (code 2) aim at enemies (shot angles vary, -3.4..+1.4 px/frame sideways at 8 px/frame), while PS2's
+ * code 2 is a fixed +/-34 degree spread and PS2 code 1 turns the pods back to straight ahead; no PS2 code aims. The
+ * codes need BL's pod handler (0C0779E0 region) mapped before this table can be used. */
 void bl_player_frame(u32 rec)
 {
+#if !defined(BL_POD_FORMATION) && !defined(BL_POD_TEST)
+	(void)rec;
+	return;
+#else
 	const u8 w = EE_RAM(u8, rec + 0x270);
 	unsigned i;
 	if (w >= 7)
 		return;
 	for (i = 0; i < 3; i++)
+#ifdef BL_POD_TEST /* TEST BUILDS ONLY: force one PS2 pod code to compare behaviours */
+		EE_RAM(u8, rec + 0x26A + i) = BL_POD_TEST;
+#else
 		EE_RAM(u8, rec + 0x26A + i) = bl_pod_formation[w][i];
+#endif
+#endif
 }

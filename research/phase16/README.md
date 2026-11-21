@@ -42,5 +42,19 @@ mostly every 6 frames like BL; damage window 2,284 frames vs BL 2,062 (2,944 bef
 * (resolved by the shot cap) Stage-1 boss damage window: PS2 2,944 frames vs BL 2,062 after the held-fire port (was 3,210). Per-frame hits:
   BL mostly every 6 frames (the flash-timer limit), PS2 spread over 6–10. Candidates: on-screen shot cap per pool
   (BL splits shots over two pools, PS2 shares one), and Arcade's per-press path (rank +16 per press).
-* Option-pod weapons (MG etc.): PS2's pods fire type-0 shots on the 8-frame beat; in BL the type-0 shots come from
-  the same spawner as above. Which object fires them in BL (ship or pods) is not yet settled.
+## Who fires what (settled, `bl_shot_spawn_positions.lua`)
+* **Type 0 = the ship's shot** (spawned 4 px ahead of the ship at y −8 / 0 / +4; three per volley; BL pool
+  `0C2A6D9C`, PS2 shared pool). Held fire, the held speed boost and the 32-slot cap above all apply to it.
+  (Earlier notes in this file that call type 0 "pods" and type 2 "main shot" had them swapped.)
+* **Type 2 = the pods' weapon** (spawned at the pod positions (8, ±28) and (−20, 0)). Same speed in both games
+  (8 px/frame), same alive cap (~18). PS2's pods fire ~2.3× as many shots (~165 vs ~70 per 1,000 frames).
+* **BL's MG pods aim at enemies:** shot angles vary from −3.4 to +1.4 px/frame sideways with the player still. PS2's
+  pod codes (handler `0x001342D8`): 0 follow the stick, 1 turn back to straight ahead (`0x00137DA0`), 2 fixed spread
+  from table `$gp-32024` (±34°), 3/4 rotate −3/+3 per frame, 5 table `$gp-32016`. None aims, so BL's aiming is
+  new BL behaviour (BL pod handler around `0C0779E0`). The per-weapon pod table (`bl_player.c`) is therefore
+  **disabled by default** (`BL_POD_FORMATION` to enable): writing BL's numbers into PS2's codes gave the MG pods
+  a fixed spread that matches neither game.
+
+## Next
+* Map BL's pod handler (codes 0–8, incl. homing's 7) and port the aiming as a hook.
+* Then compare the other weapons (rocket, burner, gatling, homing, napalm, 5-way) the same way.
