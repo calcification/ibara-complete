@@ -1,5 +1,10 @@
 # Build a testable Black Label ISO
 
+**Easiest: the patcher.** `patcher/apply_kuro_patch.py` (Python 3.8+, no extra packages) turns your
+`Ibara (Japan).iso` into `Ibara KURO.iso` in about 30 seconds; on Windows drag the ISO onto
+`patcher/apply_kuro_patch.bat`. See `patcher/README.md`. The rest of this page builds the same disc from source,
+with options.
+
 One command turns your own clean Japanese disc image into a separate test ISO whose Mode Select has an extra
 row, **KURO** (third, right after Arcade and Arrange), that starts the Black Label build. Your original ISO is only read.
 
@@ -12,8 +17,11 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
 
 * Input must be the exact retail `SLPM-66301` image (ELF SHA-256 `263d3079…`, PCSX2 CRC `420C7FAB`); anything
   else is refused. CHD/CSO: convert back to ISO first.
-* Default video is `240p_cave_beta` (matches the published Cave 240p patch; verified on one real PS2). Use
-  `--video-profile retail` for the original interlaced output.
+* Default video is `auto` (below). `--video-profile 240p_cave_beta` is 240p in every mode (matches the published
+  Cave 240p patch; verified on one real PS2); `--video-profile retail` is the original interlaced output.
+* Default `--rank-gauge arcade`: Arrange's RANK gauge (top right) is also shown in Arcade, in the launcher and in
+  KURO, and the blinking "PRESS START button" for the empty side is hidden there (Arrange and Practice hide it too).
+  `--rank-gauge arrange` keeps the retail behaviour.
 * No MIPS compiler needed: the committed `ps2/prebuilt/bl_mode.json` is used (byte-identical to a source
   build; a test keeps it in sync). With `gcc-mips-linux-gnu` installed the hooks are rebuilt from `ps2/hooks`.
 * Output is ~3.7 GB and contains game data: keep it local; never upload it.
@@ -32,7 +40,7 @@ SCREEN SETTING → SCREEN MODE. The screen mode is carried between the launcher 
 What the BLACK LABEL build currently does (see `docs/BLACK_LABEL_FEATURES.md`, results in
 `tests/results/2026-11-20_RUNTIME.md`): XTC graze counter with HUD and bomb wipe; weapon stock, weapon-change
 button and weapon name on the HUD; BL shot levels (small P to level 6, no secret); BL rank rules for fragments,
-medals and roses; return to the launcher. Not yet: BL enemy behaviour, ship select, graze sphere.
+medals and roses; BL enemy HP and fire timer (stages 1–2); held fire and 32-shot cap; return to the launcher. Not yet: BL enemy behaviour, ship select, graze sphere.
 
 Report what you see with `tests/manual/RESULT_TEMPLATE.md` (PCSX2 version or hardware/loader, video profile,
 what happened, screenshots).

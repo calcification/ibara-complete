@@ -47,6 +47,9 @@ def main(argv=None) -> int:
     ap.add_argument("--label", default="KURO", help="menu label for the Black Label entry (short, ASCII)")
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
+    ap.add_argument("--rank-gauge", choices=("arcade", "arrange"), default="arcade",
+                    help="arcade (default): Arrange's RANK gauge also in Arcade (launcher and KURO); "
+                         "arrange: retail behaviour (Arrange and Arcade PRACTICE only)")
     ap.add_argument("--keep-elf", type=Path, help="also save the baked BLACK LABEL executable here")
     args = ap.parse_args(argv)
 
@@ -64,7 +67,8 @@ def main(argv=None) -> int:
     print("    OK: SLPM-66301, CRC 420C7FAB")
 
     print("2/3 baking the BLACK LABEL executable ...")
-    payload, origin = build_ee_hooks.bake_payload(retail, "bl_mode", args.video_profile)
+    payload, origin = build_ee_hooks.bake_payload(retail, "bl_mode", args.video_profile,
+                                                   rank_gauge=args.rank_gauge == "arcade")
     print(f"    {len(payload):,} bytes, hook code {origin}, video {args.video_profile}")
     print(f"    SHA-256 {hashlib.sha256(payload).hexdigest()}")
 
@@ -76,7 +80,8 @@ def main(argv=None) -> int:
             args.keep_elf.write_bytes(payload)
         crc, sha = build_menu_probe.build(args.source, args.output, elf, label=args.label,
                                           video_profile=args.video_profile, position=args.position,
-                                          executable_hook=build_ee_hooks.frontend_video_hook(args.video_profile))
+                                          executable_hook=build_ee_hooks.frontend_video_hook(
+                                              args.video_profile, rank_gauge=args.rank_gauge == "arcade"))
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle. EXIT inside returns to the launcher.")

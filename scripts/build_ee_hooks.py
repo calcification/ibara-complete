@@ -376,21 +376,48 @@ def import_bake(spec: dict) -> dict:
 
 VIDEO_HOOK_PROFILES = {"auto"}
 
+# Arcade rank gauge: the RANK gauge routine 0x00129360 (called every frame from the HUD pass at 0x0012E42C) draws
+# only in Arrange (0x00338F44) or Arcade PRACTICE (0x00338FA4); its fill is the shared stored rank 0x00338EB4, so it
+# already works in Arcade. Dropping the PRACTICE test's branch (beqz v1, 0x00129758) shows it in every Arcade game.
+# The gauge sits where Arcade blinks "PRESS START / button" for a side not in the game (Arrange and PRACTICE never
+# show it); the four string loads (0x00205F20, 0x00205F30) are pointed at the game's blank string 0x00205F40.
+RANK_GAUGE_EDITS = [
+    (0x00129394, 0x106000F0, 0x00000000),
+    (0x0012C7C0, 0x24845F20, 0x24845F40),
+    (0x0012C7E4, 0x24845F30, 0x24845F40),
+    (0x0012CA00, 0x24845F20, 0x24845F40),
+    (0x0012CA24, 0x24845F30, 0x24845F40),
+]
 
-def frontend_video_hook(video: str):
+
+def patch_retail_words(elf: bytes, edits) -> bytes:
+    """Apply (address, original, new) word edits to an executable still in the retail file layout."""
+    out = bytearray(elf)
+    for site, orig, new in edits:
+        off = site - build_pnach.ELF_BASE + build_pnach.ELF_FILE_OFFSET
+        found, = struct.unpack_from("<I", out, off)
+        if found != orig:
+            raise AssertionError(f"patch: preimage mismatch @ {site:08X}")
+        struct.pack_into("<I", out, off, new)
+    return bytes(out)
+
+
+def frontend_video_hook(video: str, rank_gauge: bool = False):
     """Callable for build_menu_probe.build(executable_hook=...): bakes the runtime video hook into the frontend
-    executable for profiles that need it, else None."""
+    executable for profiles that need it and applies the Arcade rank gauge edit when asked, else None."""
+    edits = list(RANK_GAUGE_EDITS) if rank_gauge else []
     if video not in VIDEO_HOOK_PROFILES:
-        return None
+        return (lambda elf: patch_retail_words(elf, edits)) if edits else None
     if have_toolchain() and not EXTRA_DEFINES:
         with tempfile.TemporaryDirectory() as tmp:
             built = build_hook("video", Path(tmp), BAKE_BASE, BAKE_END)
     else:
         built = import_bake(json.loads((PREBUILT / "video.json").read_text()))
-    return lambda elf: bake_elf(elf, built)
+    return lambda elf: bake_elf(patch_retail_words(elf, edits), built)
 
 
-def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None) -> tuple[bytes, str]:
+def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None,
+                 rank_gauge: bool = False) -> tuple[bytes, str]:
     """Baked BLACK LABEL executable. Uses the cross toolchain when present, else the committed prebuilt image."""
     if have_toolchain() and not EXTRA_DEFINES:
         with tempfile.TemporaryDirectory() as tmp:
@@ -407,7 +434,7 @@ def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", wor
     clash = [f"{a:08X}" for a, _o, _n in vid if a in taken]
     if clash:
         raise AssertionError(f"video profile overlaps hook sites: {clash}")
-    baked["sites"] = list(baked["sites"]) + list(vid)
+    baked["sites"] = list(baked["sites"]) + list(vid) + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
     return bake_elf(retail, baked), source
 
 
