@@ -46,6 +46,48 @@ Research builds used here (local only): PCSX2 `rcntUpdate_hScanline` sampler (EE
 `EE_PC_SAMPLE`), `CDVD_INSTANT` env to cap CDVD read/seek events at 64 cycles; PCSX2 `CdvdVerboseReads` for the read
 log.
 
+## Disc-driver buffer experiments (2026-11-22)
+
+The stream buffers are owned by the IOP's `IOP/CDVDACCS.IRX`. The init call at `.text+0x12B4` passes the bank
+count in `a0` (`.text+0x12AC`, `0x24040002`). The init routine at `0x1100` passes the size in bytes in `a1`
+(`.text+0x11B8`, `0x3C050002`). The allocator at `0x23B8` reserves count × size bytes, then uses that same size
+for each bank's capacity and the stride between banks. Both sites are immediate loads with no relocation.
+
+For SLPM-66301, the IRX begins at LBA 1,800,286 and `.text` starts `0xA0` bytes into the file. In a disposable ISO
+copy, the size word is at byte `0xDBC30230` and the count word is at `0xDBC3034C`. Keep the little-endian preimage
+checks. `0x3C050003` selects 192 KiB, `0x3C050004` selects 256 KiB, and `0x24040003` selects three banks. The IRX,
+ISO layout and every asset retain their original lengths.
+
+PCSX2 2.8.2 with normal disc timing, clean boots, and verbose DVD reads. One run per layout. The first interval
+starts when NORMAL is confirmed and includes the opening animation. The second starts when the Stage 1 loading
+scene is entered (`0x00338E9C = 2`) and ends when its transition word (`0x00338F40`) clears.
+
+| Stream banks | Confirm to playable | Stage 1 loading window |
+|---|---:|---:|
+| 2 × 128 KiB (retail) | 15.47 s | 6.35 s |
+| 2 × 192 KiB | 15.88 s | 6.63 s |
+| 1 × 256 KiB | 16.49 s | 6.61 s |
+| 2 × 256 KiB | Stalled during startup | — |
+| 3 × 128 KiB | 15.37 s | 6.30 s |
+
+The DVD trace confirms the larger requests reach the drive. At LBA 1,918,265 the retail request was one 64-sector
+command. The 192 KiB layout issued 7 + 64 + 25 sectors, and the 256 KiB layout issued 7 + 64 + 57. The two-bank
+256 KiB layout issued those reads before stalling, so the trace alone does not identify the failing allocation
+or resource. Three 128 KiB banks preserved the original request size. The measured Stage 1 difference was
+0.05 s. Arcade Practice Stage 6 took 7.52 s with two retail banks and 7.48 s with three, measured from
+GAME START to scene 7 with the transition cleared. Both differences are only a few frames in a single trial
+and do not establish a speedup that justifies the extra 128 KiB of IOP RAM. Hardware and stage-to-stage timing
+remain unmeasured.
+
+For a larger improvement, measure the intervals between disc completion, SIF DMA completion and the next MTS
+read request. Instrument the specific call sites instead of replacing the shared RPC entry. The disc path is
+`CDVDACCS` `.text+0xDE4` → `0x9A8` (`sceCdRead` at `0xA18`, blocking `sceCdSync` at `0xA30`). The transfer
+from `MTSFILE` `.text+0x594` calls `MTSUTIL` export 4 (`.text+0x248`), which submits `sceSifSetDmaIntr` at
+`0x2C0` and sleeps at `0x2D4` until the interrupt callback wakes the thread. MTSFILE schedules the next read
+at `.text+0x5D0–0x5F4` after that transfer returns. Those measurements would show whether the next read could
+overlap the current transfer or whether the limiting wait is elsewhere. Benchmark with normal CDVD timing and
+keep the opening scene out of the load-window comparison.
+
 ## Ship kind (F1) and bombs (F7) in KURO (2026-11-21)
 
 **PS2 has no ship select.** NORMAL goes straight to loading; CONFIG > FIGHTER TYPE (frontend state 7, Arrange 11)

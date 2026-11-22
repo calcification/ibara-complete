@@ -3,8 +3,7 @@
 After Ibara Complete, the plan is **Mushihimesama Complete**: a "complete version" fix for the PS2
 Mushihimesama. That port is also a Cave game ported by Taito, so it is likely built on the same engine and SDK
 practices as PS2 Ibara. This file lists what from this repository should carry over, and what to check first.
-Everything said about Mushihimesama here is an **expectation to verify**. None of it has been checked against that
-disc yet.
+Treat the expected engine similarities below as hypotheses until verified against the Mushihimesama disc.
 
 Keep this repository's tooling, research scripts and notes. They are the starting kit.
 
@@ -21,6 +20,13 @@ Keep this repository's tooling, research scripts and notes. They are the startin
 | PCSX2 headless driving, savestate RAM reads, PINE | `scripts/pcsx2_headless.py`, `scripts/p2s_tools.py`, `scripts/pcsx2_pine.py` | `p2s_tools.load_ee` reads eeMemory from a `.p2s`; cpuRegs and CP0 sit in "PCSX2 Internal Structures.dat" after the `cpuRegs` tag |
 | MAME Lua capture or loggers (blitter draws, uploads, kill/write taps, per-frame state) | `research/phase20/*.lua`, `tools/stage_compare/*.lua` | Cave's later boards (CV1000 / SH-3) share the blitter; Mushihimesama is CV1000 too |
 | Stage-by-stage PS2-vs-MAME comparison harness | `tools/stage_compare/`, `run_stage.py` | Part HP tables, fire timers, cancel triggers, rank |
+
+## Shared disc driver verified on SLPM-660.56
+
+The Japanese Mushihimesama disc has the same `IOP/CDVDACCS.IRX` as Ibara byte for byte. Its `MTSFILE.IRX`
+has the same size and a different SHA-256. The resource archive on Mushihimesama is `CA013R.PDM`, indexed by
+`CA013R.TBL`. The Ibara disc-driver disassembly and buffer-size experiments carry over as research, with separate
+timing and IOP memory measurements needed for Mushihimesama. See [Phase 18](../research/phase18/README.md).
 
 ## Expected engine similarities (verify each)
 
