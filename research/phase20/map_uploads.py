@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Phase 20: map Black Label blitter uploads (bl_blitter_log.lua's U lines) to offsets in the user's ibarablk_u2.
 
-    python3 research/phase20/map_uploads.py blitter_log.txt ibarablk_u2 vram_map.json
+    python3 research/phase20/map_uploads.py uploads.txt ibarablk_u2 vram_map.json
 
-Each upload's first 64 bytes are found in the ROM (or predicted: strips of one image follow each other); strips are
-merged into rectangles (dx, dy, w, h, rom offset). The output holds coordinates and offsets only, no pixels.
+uploads.txt: `U dx dy w h ram frame binoffset` lines with the strips' pixels in uploads.txt.bin (bl_upload_log.lua).
+Each strip's full pixel data is found in the ROM (first the bytes after the previous strip: strips of one image
+follow each other; else a search), so every mapped pixel is exact; strips are merged into rectangles (dx, dy, w, h,
+rom offset). The output holds coordinates and offsets only, no pixels. (Matching only a 64-byte head mapped mostly
+blank first strips to the wrong place.)
 """
 import json
 import sys
@@ -12,14 +15,16 @@ import sys
 
 def main(log, rom, out):
     raw = open(rom, "rb").read()
+    blob = open(log + ".bin", "rb").read()
     recs = []
     for line in open(log):
         p = line.split()
         if p and p[0] == "U":
-            recs.append((int(p[1]), int(p[2]), int(p[3]), int(p[4]), bytes.fromhex(p[7])))
+            dx, dy, w, h, at = int(p[1]), int(p[2]), int(p[3]), int(p[4]), int(p[7])
+            recs.append((dx, dy, w, h, blob[at:at + w * h * 2]))
     rects, prev, miss = [], None, 0
-    for dx, dy, w, h, head in recs:
-        off = prev if prev is not None and raw[prev:prev + len(head)] == head else raw.find(head)
+    for dx, dy, w, h, data in recs:
+        off = prev if prev is not None and raw[prev:prev + len(data)] == data else raw.find(data)
         if off < 0:
             miss += 1
             prev = None

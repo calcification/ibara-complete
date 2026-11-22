@@ -19,7 +19,7 @@
 
 #pragma GCC optimize("Os")
 
-#define GAME_SOUND  ((void (*)(int, int))0x001370E0u)
+#define GAME_SOUND(a, b) GAME_CALL2(0x001370E0u, a, b)
 #define FRONT_STATE 0x00338F58u /* $gp-28056 */
 #define FRONT_ROW   0x0033948Cu /* $gp-26724: cursor row on entering a state */
 #define FRONT_ANIM  0x00338F64u /* $gp-28044 */

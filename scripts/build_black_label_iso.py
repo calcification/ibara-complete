@@ -74,24 +74,28 @@ def main(argv=None) -> int:
     crc, sha = build_menu_probe.build(args.source, args.output, label=args.label, video_profile=args.video_profile,
                                       position=args.position, executable_hook=hook, payload=False)
     if args.bl_rom:
+        import json
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "patcher"))
-        import apply_kuro_patch
-        art = apply_kuro_patch.read_bl_art(args.bl_rom)
-        at, pos, tag = None, 0, apply_kuro_patch.BL_ART_TAG
+        import apply_kuro_patch as kp
+        rom = kp.read_bl_rom(args.bl_rom)
+        found, pos = {}, 0
         with args.output.open("rb") as f:
-            while at is None:
+            while len(found) < 2:
                 chunk = f.read(1 << 26)
                 if not chunk:
                     break
-                k = chunk.find(tag)
-                if k >= 0:
-                    at = pos + k
-                pos += len(chunk) - len(tag)
+                for tag in (kp.BL_ART_TAG, kp.SELECT_TAG):
+                    k = chunk.find(tag)
+                    if k >= 0 and tag not in found:
+                        found[tag] = pos + k
+                pos += len(chunk) - 16
                 f.seek(pos)
-        if at is None:
-            raise ValueError("RANK bar art slot not found in the built disc")
-        apply_kuro_patch.inject_bl_art(args.output, at, art)
-        print(f"Black Label RANK bar artwork copied from {args.bl_rom} (disc offset {at:#x})")
+        if len(found) != 2:
+            raise ValueError("Black Label art slots not found in the built disc")
+        kp.inject_bl_art(args.output, found[kp.BL_ART_TAG], kp.read_bl_art(None, rom))
+        atlas = json.loads((Path(__file__).resolve().parent.parent / "patcher/bl_select_atlas.json").read_text())
+        kp.inject_bl_select(args.output, found[kp.SELECT_TAG], kp.build_select_pages(rom, atlas))
+        print(f"Black Label RANK bar and select screen artwork copied from {args.bl_rom}")
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle: ARCADE MODE's menu with Black Label rules. EXIT returns to Mode Select.")

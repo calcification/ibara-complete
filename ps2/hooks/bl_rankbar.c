@@ -26,7 +26,10 @@ struct bl_bar_blob {
 };
 struct bl_bar_blob bl_bar_blob = {"BLRANKBAR-ART-01", {0}};
 
-/* our 16-bit page 0 (bl_tex.c): the 80 x 14 art at (0, 0), the 70 x 2 grey fill strip at (0, 16) */
+/* our 16-bit page 5 (bl_tex.c), rows 0-19 (kept free by the select-screen atlas): the 80 x 14 art at (0, 0),
+ * the 70 x 2 grey fill strip at (0, 16) */
+#define BAR_PAGE 5u /* pixels */
+#define BAR_TEX 6u  /* bl_tex.c KT_BAR: the rank bar's texture object */
 #define FILL_PY 16u
 u16 *ktex_pixels(u32 page);
 u32 ktex_init(void);
@@ -48,7 +51,7 @@ static u16 to_ct16(u32 w)
 
 static void build_page(void)
 {
-	u16 *const pix = ktex_pixels(0);
+	u16 *const pix = ktex_pixels(BAR_PAGE);
 	u32 x, y;
 	for (y = 0; y < BAR_H; y++)
 		for (x = 0; x < BAR_W; x++) {
@@ -81,11 +84,10 @@ void bl_rank_bar_off(void)
 #define BAR_Y      80
 /* PS2 prints the stage name under the high score (HUD text row 37, cols 5-18), where BL's bar is; BL has no stage
  * name there, so KURO blanks it while the bar is shown. */
-typedef void (*hud_str_fn)(const char *s, int row, int col, u32 colour);
-#define HUD_STR ((hud_str_fn)0x00111460u)
+#define HUD_STR(s, row, col, colour) GAME_CALL4(0x00111460u, s, row, col, colour)
 static const char stage_blank[] = "              ";
 static s32 bar_x = BAR_X;
-#define ARRANGE_GAUGE ((void (*)(void))0x00129360u)
+#define ARRANGE_GAUGE() GAME_CALL0(0x00129360u)
 
 void bl_rank_bar(void)
 {
@@ -132,7 +134,7 @@ void bl_rank_bar(void)
 	ox = EE_RAM(s32, OFF_X);
 	oy = EE_RAM(s32, OFF_Y);
 	/* the whole 80 x 14 art: screen rows 0-13 = game x bar_x + 6 down to bar_x - 7 */
-	if (!ktex_draw(0, 0, 0, BAR_W, BAR_H, flags, tint, bar_x - 7 + ox, BAR_Y + oy)) {
+	if (!ktex_draw(BAR_TEX, 0, 0, BAR_W, BAR_H, flags, tint, bar_x - 7 + ox, BAR_Y + oy)) {
 		ARRANGE_GAUGE();
 		return;
 	}
@@ -149,5 +151,5 @@ void bl_rank_bar(void)
 		const u32 rr = r * 33u >> 5, gg = g * 33u >> 5, bb = b * 33u >> 5;
 		col = (rr > 255u ? 255u : rr) << 16 | (gg > 255u ? 255u : gg) << 8 | (bb > 255u ? 255u : bb);
 	}
-	ktex_draw(0, 0, FILL_PY, len, 2, flags, col, bar_x + 3 + ox, BAR_Y + 5 + oy);
+	ktex_draw(BAR_TEX, 0, FILL_PY, len, 2, flags, col, bar_x + 3 + ox, BAR_Y + 5 + oy);
 }

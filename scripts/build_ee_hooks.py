@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build injected EE hook code for Ibara (SLPM-66301, CRC 420C7FAB) into PCSX2 PNACH profiles.
 
-Pipeline: C/asm in ps2/hooks -> mips-linux-gnu-gcc (-march=r5900, o32, soft-float, no PIC, -G0)
+Pipeline: C/asm in ps2/hooks -> mips-linux-gnu-gcc (-march=r5900, n32: 16-byte stack frames, soft-float, no PIC, -G0)
 -> linked at the code cave -> PNACH words. Hook sites are retail `jal` words replaced by `jal stub`;
 stubs (ps2/hooks/stub.S) call the retail routine first, then our C, preserving 128-bit registers.
 
@@ -31,7 +31,7 @@ import build_pnach  # noqa: E402
 
 PS2 = ROOT / "ps2"
 CROSS = "mips-linux-gnu-"
-CFLAGS = ["-march=r5900", "-EL", "-mabi=32", "-msoft-float", "-mno-abicalls", "-fno-pic", "-G0", "-O2",
+CFLAGS = ["-march=r5900", "-EL", "-mabi=n32", "-msoft-float", "-mno-abicalls", "-fno-pic", "-G0", "-O2",
           "-ffreestanding", "-fno-builtin", "-nostdlib", "-fno-common", "-Wall", "-Werror",
           "-Wa,-mfix-r5900", "-I", str(PS2 / "include")]
 CAVE_BASE = 0x000C0000  # PNACH profiles: written after boot (C00/K01 runtime-verified)
@@ -56,7 +56,7 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c", "bl_tex.c"}
+LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c", "bl_tex.c", "bl_select.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
@@ -352,13 +352,20 @@ BL_SHIP_PATCHES = [
     (0x0013B274, 0x1040000C, "raw", 0x00000000),
     # HUD pass: Black Label's centred RANK bar instead of Arrange's gauge (ps2/hooks/bl_rankbar.c; research/phase19)
     (0x0012E42C, 0x0C04A4D8, "jal", "bl_rank_bar"),
+    # Black Label select screen (ps2/hooks/bl_select.c; research/phase20): player start marks the side (the `dsll32
+    # a0,t0,0x10` of 0x001CE6E0), and the paused main loop's pause-menu call runs the select screen while it is up
+    (0x001CE718, 0x0008243C, "jal", "sel_start_stub"),
+    (0x0012E778, 0x0C04A384, "jal", "sel_menu"),
+    # and the draw pass skips the stage's 24 layers while it is up (BL's screen covers the playfield; the stage's
+    # textures and ours together overran the GS texture cache)
+    (0x0012E234, 0x0C044940, "jal", "sel_layers_stub"),
 ]
 HOOKS["kuro"] = {
     "test_id": "K20",
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
               ("hud_entry", 0x0012C0E0, "xtc_hud")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
@@ -424,7 +431,7 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         run([CROSS + "gcc", *CFLAGS, *extra, *[f"-D{d}" for d in EXTRA_DEFINES], "-c", str(src), "-o", str(obj)])
         objs.append(str(obj))
     elf = work / f"{key}.elf"
-    run([CROSS + "ld", "-EL", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",
+    run([CROSS + "ld", "-EL", "-m", "elf32ltsmipn32", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",
          *defsyms, "-o", str(elf), *objs])
     secs, syms = read_elf_sections(elf)
     end = syms["__cave_end"]
@@ -514,7 +521,18 @@ def video_profile(name: str) -> list:
     return [tuple(e) for e in build_menu_probe.VIDEO_PROFILES[name]]
 
 
-def bake_elf(retail: bytes, built: dict) -> bytes:
+# Black Label select-screen art pages (research/phase20): a loadable segment of zeros after a tag, filled from the
+# user's own ROM by patcher/apply_kuro_patch.py --bl-rom (the tag then reads BLSELECT-ART-ON).
+SELECT_ART_ADDR = 0x01F1FFF0
+SELECT_ART_TAG = b"BLSELECT-ART-01\0"
+SELECT_ART_PAGES = 6
+
+
+def select_art_segment() -> tuple[int, bytes]:
+    return SELECT_ART_ADDR, SELECT_ART_TAG + bytes(SELECT_ART_PAGES * 0x10000)
+
+
+def bake_elf(retail: bytes, built: dict, extra: list | None = None) -> bytes:
     """Copy of the retail ELF with the hook image as an extra PT_LOAD and the hook sites patched.
 
     For the sixth Mode Select entry (research/phase04/build_menu_probe.py --payload-elf): the original
@@ -536,7 +554,8 @@ def bake_elf(retail: bytes, built: dict) -> bytes:
     shoff, = struct.unpack_from("<I", src, 0x20)
     phentsize, phnum, shentsize, shnum = struct.unpack_from("<HHHH", src, 0x2A)
     first_data = min(struct.unpack_from("<I", src, phoff + i * phentsize + 4)[0] for i in range(phnum))
-    if phoff != 0x34 or phoff + (phnum + 1) * phentsize > first_data + SHIFT:
+    extra = list(extra or [])
+    if phoff != 0x34 or phoff + (phnum + 1 + len(extra)) * phentsize > first_data + SHIFT:
         raise AssertionError("bake: unexpected retail ELF layout")
     words = sorted((a, v) for _p, a, v in built["words"])
     lo, hi = words[0][0], words[-1][0] + 4
@@ -554,8 +573,13 @@ def bake_elf(retail: bytes, built: dict) -> bytes:
         ph[1] += SHIFT
         table += struct.pack("<8I", *ph)
     table += struct.pack("<8I", 1, cave_off, lo, lo, len(image), len(image), 7, 0x10)  # PT_LOAD RWX
+    for addr, data in extra:  # further data segments (e.g. the select-screen art pages)
+        while len(out) % 16:
+            out.append(0)
+        table += struct.pack("<8I", 1, len(out), addr, addr, len(data), len(data), 6, 0x10)  # PT_LOAD RW
+        out += data
     out[phoff:phoff + len(table)] = table
-    struct.pack_into("<H", out, 0x2C, phnum + 1)
+    struct.pack_into("<H", out, 0x2C, phnum + 1 + len(extra))
     if shoff and shnum:
         struct.pack_into("<I", out, 0x20, shoff + SHIFT)
         for i in range(shnum):
@@ -648,7 +672,7 @@ def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2)
         set_sym_word(built, "video_enabled", 0)
     built["sites"] = [x for x in built["sites"] if x[0] not in drop] + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
     set_sym_word(built, "kuro_row", position)
-    return lambda elf: bake_elf(elf, built)
+    return lambda elf: bake_elf(elf, built, [select_art_segment()])
 
 
 def bake_payload(retail: bytes, key: str = "bl_mode", video: str = "retail", work: Path | None = None,

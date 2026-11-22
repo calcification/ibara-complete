@@ -8,10 +8,9 @@
  */
 #include "ibara_ps2.h"
 
-typedef void (*hud_str_fn)(const char *s, int row, int col, u32 colour);
-typedef void (*hud_num_fn)(int value, int row, int col, u32 colour);
-#define HUD_STR ((hud_str_fn)0x00111460u)
-#define HUD_NUM ((hud_num_fn)0x0012C0E0u)
+/* 0x00111460 (string, row, col, colour) and 0x0012C0E0 (value, row, col, colour) */
+#define HUD_STR(s, row, col, colour) GAME_CALL4(0x00111460u, s, row, col, colour)
+#define HUD_NUM(v, row, col, colour) GAME_CALL4(0x0012C0E0u, v, row, col, colour)
 
 #ifndef XTC_HUD_ROW
 #define XTC_HUD_ROW 36 /* score line is 39; 38 holds lives icons, 37 the padded stage name (cols 5-18) */

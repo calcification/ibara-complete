@@ -65,3 +65,34 @@ The free side shows the 参戦可能 / PRESS START join panel; with two players 
 Per frame the P1 panel is ~40-50 ops; steady states have no single loop period (several independent animations:
 pulsing highlights, blinking text, bobbing arrows), so the PS2 version will animate elements individually rather than
 replay frame lists.
+
+## Running on PS2 (stage one, 2026-11-22)
+
+`ps2/hooks/bl_select.c` with the art pages from `--bl-rom` (`bl_tex.c`: six PSMCT16 pages, each a texture object
+cloned from the HUD page's). PCSX2, KURO stage 1: the screen opens once the stage runs, Right switches to the spread
+ship, Circle / Cross opens TYPE A–D, Down moves to TYPE B, Circle / Cross resumes the stage with ship word 5 (spread,
+type B; FIGHTER TYPE 5); with no input the 60-s timer runs out and the stage resumes with the current choice.
+Arrange is unchanged (no select screen, its gauge and PRACTICE row as before). Pad: `0x00341FA0 + port * 0x50`,
++0x0C directions (bit 0 up, 1 down, 2 left, 3 right), +0x08 button edges (0x10 Circle, 0x20 Cross).
+
+**The freeze, solved.** With more than one of our pages on screen the game froze within a few frames (TLB misses at
+0x4C / 0x50 from the sprite routine's batch list). Bisecting by page pointed at the GS texture cache, but a PCSX2
+trace (TLB message with registers) showed `gp = 0xFFF20000` inside `0x00110B70`; gp checks around every sprite call
+showed it changing *between* two of our calls, in our own C code, which never writes gp. The main thread's
+register save area on its stack (found in a savestate below its sp) held the same gp: the kernel saves a preempted
+thread's registers on that thread's stack with `sq`, and our hooks were o32 code whose frames are only 8-byte
+aligned; a thread switch while our draw loops ran therefore saved / restored registers on a misaligned stack (`sq` /
+`lq` ignore the low address bits) and gp came back corrupted. The longer our code runs per frame, the likelier — one
+page worked, the full screen did not. Fix: the hooks are built for n32 (`-mabi=n32`, `ld -m elf32ltsmipn32`), whose
+frames are 16-byte aligned like the game's (tests check every `addiu sp` in the KURO image). n32 passes arguments 5-8
+in `$8-$11`, as the game's own EABI code does.
+
+**Stage hidden while the screen is up.** `jal 0x00112500` at `0x0012E234` (before the draw pass's 24-layer loop)
+returns to `0x0012E424` (the HUD calls) while the screen is up: BL's screen covers the playfield, and nothing after
+the loop reads its registers. The HUD still draws (score line, RANK bar).
+
+**Patch.** The hook image now has a literal run of ~9 KB (code + `bl_select_data.c` tables);
+`scripts/make_patch.py` allows 16 KiB per run (64 KiB total, unchanged). `ibara_kuro.patch` 9.8 KB; patch +
+`--bl-rom` gives the same disc as `build_black_label_iso.py --bl-rom` (byte-identical).
+
+Stage two (not done): per-element animation, the ship fly-in and confirm sequence, the girder background, player 2.

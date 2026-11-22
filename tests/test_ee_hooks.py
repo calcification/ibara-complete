@@ -165,7 +165,8 @@ class BuildTests(unittest.TestCase):
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
-                "hdr_state", "bomb_d_kind", "bl_rank_bar", "bl_rank_bar_off", "bar_sprite"}
+                "hdr_state", "bomb_d_kind", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
+                "sel_layers_stub"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)
@@ -174,6 +175,11 @@ class BuildTests(unittest.TestCase):
             elif cur in leaf and re.search(r"\t.*\b(s[0-7]|s8|fp)\b", line):
                 bad.append(line)
         self.assertEqual(bad, [])
+        # n32 frames: every stack adjustment is a multiple of 16 (the game and the kernel's thread switch spill
+        # 128-bit registers with sq / lq relative to sp, which an 8-byte-aligned o32 frame broke).
+        frames = [int(x) for x in re.findall(r"\taddiu\tsp,sp,(-?\d+)", b["listing"])]
+        self.assertTrue(frames)
+        self.assertEqual([f for f in frames if f % 16], [])
         # ship_popup_tab stands in for the retail `lui s3`: s3 is the only saved register it touches.
         body = b["listing"].split("<ship_popup_tab>:")[1].split("\n\n")[0]
         self.assertEqual(set(re.findall(r"\b(s[0-8]|fp)\b", body)), {"s3"})

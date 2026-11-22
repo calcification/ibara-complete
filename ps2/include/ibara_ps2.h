@@ -70,4 +70,12 @@ typedef int s32;
 #define PS2_CAVE_BASE        0x000C0000u
 #define PS2_CAVE_END         0x00100000u
 
+/* Calling the game from hook C code. The hooks are built for the n32 ABI (scripts/build_ee_hooks.py), whose
+ * frames are 16-byte aligned like the game's: the game spills 128-bit registers with sq / lq (which ignore the low
+ * four address bits) and the kernel saves a preempted thread's registers on its stack the same way, so an o32
+ * frame (8-byte aligned) corrupted registers (gp came back wrong after a thread switch inside our code). */
+#define GAME_CALL0(fn)             ((u32(*)(void))(fn))()
+#define GAME_CALL2(fn, a, b)       ((u32(*)(u32, u32))(fn))((u32)(a), (u32)(b))
+#define GAME_CALL4(fn, a, b, c, d) ((u32(*)(u32, u32, u32, u32))(fn))((u32)(a), (u32)(b), (u32)(c), (u32)(d))
+
 #endif

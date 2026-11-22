@@ -16,7 +16,7 @@
 
 #pragma GCC optimize("Os")
 
-#define GAME_SOUND     ((void (*)(int, int))0x001370E0u) /* (95, 36): the menus' accept sound */
+#define GAME_SOUND(a, b) GAME_CALL2(0x001370E0u, a, b) /* (95, 36): the menus' accept sound */
 #define ON_OFF_NAMES   0x00338930u                         /* $gp-29632: "OFF", "ON" (CONTINUE's values) */
 
 u32 opt_gauge = 1u; /* RANK GAUGE: 1 ON (the baked state), 0 OFF (retail) */

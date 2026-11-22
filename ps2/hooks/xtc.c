@@ -114,7 +114,6 @@ static void test_grant_weapons(u32 rec)
 #ifdef BL_TEST_SHOT_LEVELS
 /* TEST BUILDS ONLY: drive the game's small-P pickup handler (0x0012FB00(side, item)) once a game starts.
  * Results (level, shot P) after each case are left in bl_shot_test[]. */
-typedef void (*pickup_fn)(int side, int item);
 u8 bl_shot_test[8];
 u32 bl_rank_test; /* stored rank after one fragment pickup starting from 0x00800000 */
 u32 bl_rank_test2[2]; /* rank after a level-1 rose and after a level-3 medal (each from 0x00800000) */
@@ -125,21 +124,21 @@ static void test_shot_levels(u32 rec)
 		return;
 	bl_shot_test[7] = 1;
 	EE_RAM(u8, rec + 0x25B) = 2; EE_RAM(u8, rec + 0x25C) = 0; streak[0] = 5;   /* secret case */
-	((pickup_fn)0x0012FB00u)(0, 0);
+	GAME_CALL2(0x0012FB00u, 0, 0);
 	bl_shot_test[0] = EE_RAM(u8, rec + 0x25B); bl_shot_test[1] = EE_RAM(u8, rec + 0x25C);
 	EE_RAM(u8, rec + 0x25B) = 5; EE_RAM(u8, rec + 0x25C) = 5; streak[0] = 0;   /* level 5 -> 6 case */
-	((pickup_fn)0x0012FB00u)(0, 0);
+	GAME_CALL2(0x0012FB00u, 0, 0);
 	bl_shot_test[2] = EE_RAM(u8, rec + 0x25B); bl_shot_test[3] = EE_RAM(u8, rec + 0x25C);
 	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* fragment rank case */
-	((pickup_fn)0x0012F400u)(0, 0);
+	GAME_CALL2(0x0012F400u, 0, 0);
 	bl_rank_test = EE_RAM(u32, PS2_RANK_INV);
 	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* rose, level 1 */
 	EE_RAM(u32, PS2_ITEMS_BASE + 255 * 0x58 + 8) = 1;
-	((pickup_fn)0x0012F680u)(0, 255);
+	GAME_CALL2(0x0012F680u, 0, 255);
 	bl_rank_test2[0] = EE_RAM(u32, PS2_RANK_INV);
 	EE_RAM(u32, PS2_RANK_INV) = 0x00800000u;                                     /* medal, level 3 */
 	EE_RAM(u16, PS2_ITEMS_BASE + 255 * 0x58 + 8) = 3;
-	((pickup_fn)0x0012F7B0u)(0, 255);
+	GAME_CALL2(0x0012F7B0u, 0, 255);
 	bl_rank_test2[1] = EE_RAM(u32, PS2_RANK_INV);
 }
 #endif
@@ -151,6 +150,7 @@ void spawn_log_frame(void);
 /* BLACK LABEL build only (ps2/hooks/bl_player.c); absent in the XTC-only test profile. */
 void bl_player_frame(u32 rec) __attribute__((weak));
 void bl_boss_cancel_frame(void) __attribute__((weak)); /* bl_enemy.c: bullet cancel after a boss */
+void bl_select_tick(void) __attribute__((weak));       /* bl_select.c: open the select screen at a game start */
 
 /* Once per game logic frame (hooked after the retail collision pass). */
 void xtc_frame(void)
@@ -162,6 +162,8 @@ void xtc_frame(void)
 #endif
 	if (bl_boss_cancel_frame)
 		bl_boss_cancel_frame();
+	if (bl_select_tick)
+		bl_select_tick();
 	for (s = 0; s < 2; s++) {
 		struct xtc_player *p = &xtc.pl[s];
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;

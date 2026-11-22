@@ -13,6 +13,7 @@ The patch (ibara_kuro.patch, next to this script) holds this project's changes a
 game byte comes from your disc. The result is checked against the SHA-256 of the disc the patch was made from.
 """
 import hashlib
+import json
 import shutil
 import struct
 import sys
@@ -65,22 +66,10 @@ BL_ART_W, BL_ART_H = 80, 14
 BL_ART_TAG = b"BLRANKBAR-ART-01"
 
 
-def read_bl_art(path):
+def read_bl_art(path, data=None):
     """The bar's 2,240 art bytes from the user's ibarablk ROM (zip or the u2 file), checked by size and CRC."""
-    path = Path(path)
-    if zipfile.is_zipfile(path):
-        with zipfile.ZipFile(path) as z:
-            names = [i for i in z.infolist() if i.file_size == BL_U2_SIZE]
-            if not names:
-                raise SystemExit(f"{path}: no {BL_U2_SIZE:,}-byte ibarablk_u2 in this zip")
-            if names[0].CRC != BL_U2_CRC:
-                raise SystemExit(f"{path}: {names[0].filename} is not the Black Label u2 (CRC {names[0].CRC:08x})")
-            with z.open(names[0]) as f:
-                data = f.read()
-    else:
-        data = path.read_bytes()
-        if len(data) != BL_U2_SIZE or zlib.crc32(data) != BL_U2_CRC:
-            raise SystemExit(f"{path} is not the Black Label ibarablk_u2 ({BL_U2_SIZE:,} bytes, CRC {BL_U2_CRC:08x})")
+    if data is None:
+        data = read_bl_rom(path)
     out = bytearray()
     for y in range(BL_ART_H):
         for x in range(BL_ART_W):
@@ -93,6 +82,54 @@ def inject_bl_art(iso, at, art):
     with open(iso, "r+b") as f:
         f.seek(at + len(BL_ART_TAG))
         f.write(art)
+
+
+# Black Label select screen (research/phase20): six 256 x 128 PSMCT16 texture pages after SELECT_TAG in the
+# executable's art segment, assembled from the ROM's blitter images as described by bl_select_atlas.json.
+SELECT_TAG = b"BLSELECT-ART-01\0"
+SELECT_ON = b"BLSELECT-ART-ON\0"
+SELECT_PAGES = 6
+
+
+def build_select_pages(rom_data, atlas):
+    rects = atlas["rects"]
+    pages = bytearray(SELECT_PAGES * 0x10000)
+
+    def pixel(x, y):
+        for dx, dy, w, h, off in reversed(rects):
+            if dx <= x < dx + w and dy <= y < dy + h:
+                return struct.unpack_from(">H", rom_data, off + ((y - dy) * w + (x - dx)) * 2)[0]
+        return 0
+    for sx, sy, w, h, page, px, py in atlas["sprites"]:
+        for i in range(w):          # screen row i = blitter column sx + w - 1 - i
+            for j in range(h):      # screen column j = blitter row sy + j
+                v = pixel(sx + w - 1 - i, sy + j)
+                c = (v & 0x8000) | (v & 31) << 10 | (v & 0x3E0) | ((v >> 10) & 31)
+                struct.pack_into("<H", pages, page * 0x10000 + ((py + i) * 256 + px + j) * 2, c)
+    return bytes(pages)
+
+
+def read_bl_rom(path):
+    """The whole ibarablk_u2 (zip or file), checked by size and CRC."""
+    path = Path(path)
+    if zipfile.is_zipfile(path):
+        with zipfile.ZipFile(path) as z:
+            names = [i for i in z.infolist() if i.file_size == BL_U2_SIZE]
+            if not names or names[0].CRC != BL_U2_CRC:
+                raise SystemExit(f"{path}: no Black Label ibarablk_u2 ({BL_U2_SIZE:,} bytes, CRC {BL_U2_CRC:08x})")
+            with z.open(names[0]) as f:
+                return f.read()
+    data = path.read_bytes()
+    if len(data) != BL_U2_SIZE or zlib.crc32(data) != BL_U2_CRC:
+        raise SystemExit(f"{path} is not the Black Label ibarablk_u2 ({BL_U2_SIZE:,} bytes, CRC {BL_U2_CRC:08x})")
+    return data
+
+
+def inject_bl_select(iso, at, pages):
+    with open(iso, "r+b") as f:
+        f.seek(at)
+        f.write(SELECT_ON)
+        f.write(pages)
 
 
 def digest(path, algo, label):
@@ -124,7 +161,8 @@ def main(argv):
     source = Path(argv[0])
     output = Path(argv[1])
     patch = Path(argv[2]) if len(argv) == 3 else HERE / "ibara_kuro.patch"
-    art = read_bl_art(rom) if rom else None
+    rom_data = read_bl_rom(rom) if rom else None
+    art = read_bl_art(rom, rom_data) if rom else None
     if output.exists():
         raise SystemExit(f"{output} already exists; choose a new name")
     src_size, dst_size, src_md5, dst_sha, note, records = read_patch(patch)
@@ -134,7 +172,7 @@ def main(argv):
         raise SystemExit("This is not the retail Japanese 'Ibara (Japan).iso' (SLPM-66301, MD5 " + src_md5 + ").")
     print("2/3 writing the new ISO ...")
     shutil.copyfile(source, output)
-    art_at = None
+    art_at = sel_at = None
     with source.open("rb") as src, output.open("r+b") as out:
         out.truncate(dst_size)
         for at, length, ops in records:
@@ -152,6 +190,9 @@ def main(argv):
             k = buf.find(BL_ART_TAG)
             if k >= 0:
                 art_at = at + k
+            k = buf.find(SELECT_TAG)
+            if k >= 0:
+                sel_at = at + k
     print("3/3 verifying ...")
     if digest(output, "sha256", "SHA-256") != dst_sha:
         output.unlink()
@@ -159,6 +200,10 @@ def main(argv):
     if art and art_at is not None:
         inject_bl_art(output, art_at, art)
         print("Black Label RANK bar artwork copied from your ROM.")
+    if rom_data and sel_at is not None:
+        atlas = json.loads((HERE / "bl_select_atlas.json").read_text())
+        inject_bl_select(output, sel_at, build_select_pages(rom_data, atlas))
+        print("Black Label select screen artwork copied from your ROM.")
     elif art:
         print("Note: this patch has no place for the RANK bar artwork; it was not added.")
     print(f"Done: {output}")
