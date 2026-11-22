@@ -81,20 +81,39 @@ static int xtc_test_player(unsigned side)
 	return n;
 }
 
+/* where the XTC number popup appears (BL player +0x278 / +0x27C: the player's position when the displayed value
+ * last changed; research/phase21) */
+static u32 pop_x[2], pop_y[2];
+
 static void xtc_add(unsigned side, int n)
 {
 	struct xtc_player *p = &xtc.pl[side];
 	const u32 rec = PS2_PLAYER_BASE + side * PS2_PLAYER_STRIDE;
+	/* BL 0C06F0CA: +10 per graze, +110 at the hardest rank (stored rank 0) */
+	const u32 pts = (EE_RAM(u32, PS2_RANK_INV) & 0x00FFFFFFu) ? 10u : 110u;
 	while (n-- > 0) {
 		const s32 shown = p->quarters >> 2;
-		EE_RAM(u32, rec + PS2_PLAYER_SCORE) += 10;
-		xtc.points += 10;
+		EE_RAM(u32, rec + PS2_PLAYER_SCORE) += pts;
+		xtc.points += pts;
 		if (p->quarters < XTC_MAX_QUARTERS)
 			p->quarters++;
-		if ((p->quarters >> 2) != shown)
+		if ((p->quarters >> 2) != shown) {
 			p->left = XTC_TIMER;
+			pop_x[side] = EE_RAM(u32, rec + PS2_PLAYER_X);
+			pop_y[side] = EE_RAM(u32, rec + PS2_PLAYER_Y);
+		}
 		xtc.grazes++;
 	}
+}
+
+/* the XTC number popup of a side: displayed value (0 = none), frames left, position (16.16) */
+u32 xtc_popup(u32 side, u32 *left, u32 *x, u32 *y)
+{
+	side &= 1u;
+	*left = xtc.pl[side].left;
+	*x = pop_x[side];
+	*y = pop_y[side];
+	return (u32)(xtc.pl[side].quarters >> 2);
 }
 
 #ifdef BL_TEST_ALL_WEAPONS
@@ -196,6 +215,15 @@ void xtc_frame(void)
 			p->held = 0;
 		else if (p->held < XTC_MAX_HELD)
 			p->held++;
+#ifdef BL_TEST_XTC_POPUP
+		/* TEST BUILDS ONLY: while the shot is held, one graze per frame from 990 (shows the small, then the big
+		 * digits of the popup; research/phase21) */
+		if (down) {
+			if (p->quarters < 4 * 990)
+				p->quarters = 4 * 990;
+			xtc_add(s, 1);
+		}
+#endif
 		if (p->left && --p->left == 0)
 			p->quarters = 0;
 		{

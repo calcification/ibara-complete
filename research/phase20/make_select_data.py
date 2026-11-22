@@ -163,18 +163,24 @@ def emit(scene, vmap, root):
     # the XTC graze sphere's 16 frames (research/phase21; drawn with the RANK bar's texture object, page 5):
     # blitter (0x1498, 0x700 + 16 f) 16 x 16 -> page 5 row 96, column 16 f
     extra = [(SPHERE_SX, SPHERE_SY + 16 * f, 16, 16) for f in range(16)]
+    # the XTC number popup's digits (research/phase21): big 0-9 + '+' at page 5 rows 112-127, columns 16 d; small
+    # 0-9 at rows 112-119, columns 176 + 8 d, small '+' at row 120, column 176
+    xtc = [((0x690, 16 * d) if d < 10 else (0x6A0, 0xB0)) + (16, 16, SPHERE_PAGE, 16 * d, 112) for d in range(11)] + \
+          [(0x6F0, 0x80 + 8 * d if d < 10 else 0x58, 8, 8, SPHERE_PAGE, 176 + 8 * d if d < 10 else 176,
+            112 if d < 10 else 120) for d in range(11)]
     for (sx, sy, w, h), (pg, x, y) in zip(sprites, place):
-        if pg == SPHERE_PAGE and y < SPHERE_ROW + 16 and SPHERE_ROW < y + w:
-            raise SystemExit("select art overlaps the graze sphere rows")
+        if pg == SPHERE_PAGE and y < 128 and SPHERE_ROW < y + w:
+            raise SystemExit("select art overlaps the graze sphere / XTC digit rows (page 5 rows 96-127)")
     used = []
     for i, (dx, dy, w, h, off) in enumerate(vmap):
-        if any(dx < sx + sw and sx < dx + w and dy < sy + sh and sy < dy + h for sx, sy, sw, sh in sprites + extra):
+        if any(dx < sx + sw and sx < dx + w and dy < sy + sh and sy < dy + h for sx, sy, sw, sh in sprites + extra + [x[:4] for x in xtc]):
             used.append([dx, dy, w, h, off])
     atlas = {"note": "Black Label select screen atlas: sprite = [blitter x, y, w, h, page, page x, page y] (screen "
                      "orientation: page pixel (row i, col j) = blitter (x + w - 1 - i, y + j)); rects = blitter "
                      "uploads [x, y, w, h, ibarablk_u2 offset], later ones win. Coordinates only.",
              "sprites": [list(s) + list(p) for s, p in zip(sprites, place)] +
-                        [list(e) + [SPHERE_PAGE, 16 * f, SPHERE_ROW] for f, e in enumerate(extra)], "rects": used}
+                        [list(e) + [SPHERE_PAGE, 16 * f, SPHERE_ROW] for f, e in enumerate(extra)] +
+                        [list(x) for x in xtc], "rects": used}
     (root / "patcher/bl_select_atlas.json").write_text(json.dumps(atlas, separators=(",", ":")) + "\n")
     print(f"atlas: {max(p[0] for p in place) + 1} pages, {len(used)} upload rects; {len(ops)} ops")
 

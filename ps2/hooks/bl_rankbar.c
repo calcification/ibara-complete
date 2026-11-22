@@ -103,11 +103,56 @@ static int sphere_art(void)
 	return EE_RAM(u32, SEL_ART_TAG) == 0x45534C42u && EE_RAM(u32, SEL_ART_TAG + 12u) == 0x004E4F2Du; /* "BLSE" .. "-ON\0" */
 }
 
+/* The XTC number popup (BL 0C071110 up to 0C0712F2; research/phase21): while the counter is non-zero, "+" and its
+ * digits near where the player was when the value last changed. Anchor (16.16): game x = x + 32 px + (128 - left) /
+ * 4 px (it drifts), screen y = y - camera; digit k (k = 0 least significant) at slot 5 - k, "+" at the slot after
+ * the most significant digit: small digits (value <= 999) 8 x 8 at y + 8 slot + 4 (digits + 1) - 40, offset (-8,
+ * -8); big ones 16 x 16 at y + 16 slot + 8 (digits + 1) - 80, offset (-16, -16). Flags 0x12040000, alpha
+ * min(2 left, 192); tint 0x30F060, white on odd frames while left > 119.
+ * Art on page 5: big digit d (10 = '+') at column 16 d, row 112; small d at column 176 + 8 d, row 112 ('+': 176, 120). */
+u32 xtc_popup(u32 side, u32 *left, u32 *x, u32 *y);
+
+static void bl_xtc_popup(s32 ox, s32 oy)
+{
+	u32 s;
+	for (s = 0; s < 2u; s++) {
+		u32 left, px, py, n, nd, m, slot, a, tint, flags;
+		const u32 v = xtc_popup(s, &left, &px, &py);
+		s32 ax, ay;
+		const u32 big = v > 999u;
+		const s32 sz = big ? 16 : 8;
+		if (!v || !EE_RAM(u32, PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE))
+			continue;
+		for (nd = 1u, m = v; m; m /= 10u)
+			nd++;
+		a = left * 2u > 0xC0u ? 0xC0u : left * 2u;
+		flags = 0x12040000u | a << 8 | a;
+		tint = (left > 119u && (EE_RAM(u32, FRAMES) & 1u)) ? 0xFFFFFFu : 0x30F060u;
+		ax = (s32)((px + ((128u - left) << 14) + 0x200000u) >> 16) - sz + ox;
+		ay = (s32)((py - (EE_RAM(u32, CAMERA) & 0xFFFF0000u)) >> 16) + (big ? 8 * (s32)nd - 80 : 4 * (s32)nd - 40) - sz + oy;
+		for (n = v, slot = 5u; slot > 0u; slot--) {
+			const u32 d = n % 10u;
+			if (slot < 5u && !d && !n)
+				break;
+			n /= 10u;
+			if (big)
+				ktex_draw(BAR_TEX, 16u * d, 112u, 16, 16, flags, tint, ax, ay + 16 * (s32)slot);
+			else
+				ktex_draw(BAR_TEX, 176u + 8u * d, 112u, 8, 8, flags, tint, ax, ay + 8 * (s32)slot);
+		}
+		if (big)
+			ktex_draw(BAR_TEX, 160u, 112u, 16, 16, flags, tint, ax, ay + 16 * (s32)slot);
+		else
+			ktex_draw(BAR_TEX, 176u, 120u, 8, 8, flags, tint, ax, ay + 8 * (s32)slot);
+	}
+}
+
 static void bl_sphere(s32 ox, s32 oy)
 {
 	u32 s;
 	if (!sphere_art())
 		return;
+	bl_xtc_popup(ox, oy);
 	for (s = 0; s < 2u; s++) {
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
 		const u32 held = xtc_held(s), f = s * 8u + ((EE_RAM(u32, FRAMES) >> 2) & 7u);
