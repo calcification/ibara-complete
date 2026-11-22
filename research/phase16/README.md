@@ -107,7 +107,23 @@ level 2, rank 0x800000, invincible, shot held; per 1,000 frames:
   `0x00134164`); BL's pod routines make no rank call and BL's rank-write log (phase 13) has no per-shot writer. The
   BLACK LABEL / KURO builds turn those seven calls into nops.
 
+## Shot sparks (2026-11-22): the "MG margin" was the hit spark
+
+Not a margin: BL and PS2 remove pod shots at the same bound (|x − 160| > 176, |y − camera − 120| > 136; MAME:
+BL pod shots end at x ≤ 335.7). The difference is what a shot becomes when it hits: a type-0 spark that lives 16
+frames (+C counts to 8 every 2 frames) in both games, but
+* BL (`0C06E460`): same angle, speed / 4 (speed / 8 against targets flagged `0x20000000`) — MAME traces: MG
+  23 of 23 sparks speed / 4 at 0°, homing likewise;
+* PS2 `0x0013BC90` (hit handler for shot types 0-4, table `0x00211C20`): BL's rule only on the Arrange path; Arcade
+  picks a random angle at about full speed, so the spark leaves the screen within a few frames and frees its pod
+  slot early.
+
+KURO / BLACK LABEL take the Arrange path always (`0x0013BD0C`, `0x0013BD28` beqz → nop). PCSX2 MG trace afterwards:
+24 of 24 sparks speed / 4 at 0°. `BL_RATE_TEST` (stage 1, per 1,000 frames, same day, without → with the patch;
+BL from the table above): MG 317 → 209 (BL 208), 5-way 1901 → 1540 (817), homing 188 → 64 (123), gatling 773 → 724
+(747), rocket 191 → 181 (202), burner 726 → 725 (777), napalm 73 → 72 (38). Same-day PS2 counts differ from the
+earlier table (5-way 1901 vs 952), so only same-run pairs compare; MG now matches BL. The remaining gaps (5-way,
+homing, napalm) are other behaviour (targeting, firing), not the spark.
+
 ## Next
-* MG pod shot removal margin (PS2 pod-shot update table `0x002130A0`: type 2 `0x00138970`; BL's is inlined in
-  `0C0767C0`/`0C076460`). Small.
 * Then compare the other weapons (rocket, burner, gatling, homing, napalm, 5-way) the same way.

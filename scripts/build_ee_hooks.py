@@ -218,7 +218,14 @@ HOOKS = {
         # 0C078A70..0C078BC0 make no rank call). PS2's pod weapons call harder(n) per shot (n = 40, 20, 15, 75, 15,
         # 100, 50): `jal 0x00129DF0` -> nop (the delay slot only loads n). research/phase16.
         + [(a, 0x0C04A77C, 0x00000000) for a in (0x001330A4, 0x00133364, 0x0013370C, 0x001339AC, 0x00133BB8,
-                                                   0x00133E84, 0x00134164)],
+                                                   0x00133E84, 0x00134164)]
+        # BL shot sparks (research/phase16): a shot that hits becomes a type-0 spark for 16 frames. BL (0C06E460)
+        # keeps its angle at a quarter of its speed (an eighth on targets flagged 0x20000000); PS2's handler
+        # 0x0013BC90 does that only for Arrange and gives Arcade sparks a random angle at about full speed, which
+        # left the screen sooner and freed the MG pod slots early (~12-25 % more MG pod shots than BL). The
+        # Arrange branch is taken always (0x0013BD0C / 0x0013BD28 beqz on $gp-28076 -> nop). MAME: 23 of 23 BL
+        # sparks = speed / 4, same angle.
+        + [(0x0013BD0C, 0x10600020, 0x00000000), (0x0013BD28, 0x10600026, 0x00000000)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
         "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },
