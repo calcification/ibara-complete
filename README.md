@@ -12,6 +12,8 @@
 >
 > **Test the Black Label build:** `python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output 'Ibara Black Label test.iso'` → [docs/BUILD_TEST_ISO.md](docs/BUILD_TEST_ISO.md)
 >
+> **Progress (22 Nov 2026):** roughly 60–65 % toward an arcade-faithful Black Label mode — see [docs/PROGRESS.md](docs/PROGRESS.md).
+>
 > **Next project: Mushihimesama Complete** (also a Cave game ported by Taito). The tooling, the patcher and the lessons from this repository that carry over are in [docs/NEXT_MUSHIHIMESAMA.md](docs/NEXT_MUSHIHIMESAMA.md); keep them.
 
 ## Start here: 60-second PCSX2 setup
