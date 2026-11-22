@@ -25,8 +25,8 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **Mode Select:** ARCADE, ARRANGE, **KURO** (Black Label, third row), GALLERY, OPTION, EXIT. KURO switches the
   Black Label rules on instantly (no reload) and opens its menu: GAME START, PRACTICE, CONFIG, EXIT (the header still
   reads ARCADE MODE). EXIT switches them off again.
-* **Video:** Yoko stays interlaced with texture filtering off; TATE R / TATE L switch to 240p progressive, live from
-  OPTION → SCREEN SETTING → SCREEN MODE.
+* **Video.** Yoko stays interlaced and filtering is off in all orientations. TATE R / TATE L switch to full-frame
+  240p with 240 active lines on NTSC output. Change the orientation in OPTION → SCREEN SETTING → SCREEN MODE.
 * **RANK gauge:** Arcade defaults to OFF and KURO defaults to ON. Change either setting in its CONFIG menu.
   Both settings last for the current session. Attract mode suppresses the gauge.
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE; KURO's practice is

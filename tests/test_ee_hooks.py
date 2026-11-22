@@ -163,7 +163,8 @@ class BuildTests(unittest.TestCase):
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
         # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "kuro_enter", "kuro_leave", "kuro_enter_entry",
-                "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
+                "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "fix_full_frame_env",
+                "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
                 "sel_layers_stub", "sel_begin", "sel_pause", "kuro_weapon_bar"}

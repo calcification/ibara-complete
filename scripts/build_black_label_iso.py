@@ -41,9 +41,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("source", type=Path, help="your clean 'Ibara (Japan).iso'")
     ap.add_argument("--output", type=Path, required=True, help="new ISO to create (must not exist)")
-    ap.add_argument("--video-profile", default="auto",
-                    help="auto (default: Yoko interlaced without filtering, Tate 240p), 240p_cave_beta (240p in every "
-                         "mode; verified on a real PS2), 240p_halfpixel, 240p_core or retail")
+    ap.add_argument("--video-profile", default=build_ee_hooks.FULL_FRAME_AUTO,
+                    help="auto_full_frame (default: interlaced Yoko, 240 active lines in NTSC Tate), auto (224-line "
+                         "Tate), 240p_full_frame, 240p_cave_beta, 240p_halfpixel, 240p_core or retail")
     ap.add_argument("--label", default="KURO", help="menu label for the Black Label entry (short, ASCII)")
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")

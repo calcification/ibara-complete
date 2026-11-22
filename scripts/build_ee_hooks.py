@@ -529,7 +529,9 @@ def check_ram(path: Path, built: dict):
 
 
 def video_profile(name: str) -> list:
-    """(address, original, new) video edits shared with the launcher builder (research/phase04)."""
+    """(address, original, new) video edits for a standalone payload."""
+    if name == FULL_FRAME_AUTO:
+        raise ValueError("auto_full_frame requires scripts/build_black_label_iso.py")
     sys.path.insert(0, str(ROOT / "research" / "phase04"))
     sys.path.insert(0, str(ROOT / "research" / "phase03"))
     import build_menu_probe  # noqa: E402
@@ -629,6 +631,7 @@ def import_bake(spec: dict) -> dict:
 
 
 VIDEO_HOOK_PROFILES = {"auto"}
+FULL_FRAME_AUTO = "auto_full_frame"
 
 # Arcade rank gauge: the RANK gauge routine 0x00129360 (called every frame from the HUD pass at 0x0012E42C) draws
 # only in Arrange (0x00338F44) or Arcade PRACTICE (0x00338FA4); its fill is the shared stored rank 0x00338EB4, so it
@@ -680,11 +683,13 @@ def _select_sites(baked: dict, video: str, rank_gauge: bool) -> dict:
 def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2):
     """Callable for build_menu_probe.build(executable_hook=...): bakes the instant-KURO image (ps2/hooks/kuro.c,
     with video.c and options.c) into the frontend executable: Black Label switched at runtime from the KURO row,
-    PRACTICE in ARRANGE MODE, the runtime video switch with the auto profile, ARCADE CONFIG > RANK GAUGE with the rank
+    PRACTICE in ARRANGE MODE, the runtime video switch with the auto profiles, ARCADE CONFIG > RANK GAUGE with the rank
     gauge."""
     built = _load_hook("kuro")[0]
     drop = set() if rank_gauge else set(RANK_OPTION_SITES)
-    if video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching
+    if video == FULL_FRAME_AUTO:
+        set_sym_word(built, "video_enabled", 2)
+    elif video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching
         drop |= {a for a, _o, _e in VIDEO_APPLY_SITES}
         set_sym_word(built, "video_enabled", 0)
     built["sites"] = [x for x in built["sites"] if x[0] not in drop]

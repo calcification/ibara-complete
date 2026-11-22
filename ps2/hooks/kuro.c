@@ -30,7 +30,7 @@ struct kuro_word { u32 addr, retail, kuro; };
 const struct kuro_word *volatile kuro_tab = 0;
 volatile u32 kuro_tab_n = 0u;
 volatile u32 kuro_row = 2u;      /* Mode Select row of KURO (builder: 2 or 5) */
-volatile u32 video_enabled = 1u; /* 0 when the build's video profile has no runtime part */
+volatile u32 video_enabled = 1u; /* 0 fixed output, 1 auto crop, 2 auto full frame */
 
 u32 kuro_on;
 

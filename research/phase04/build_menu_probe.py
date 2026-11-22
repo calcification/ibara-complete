@@ -10,6 +10,7 @@ import sys
 
 import ibara_complete_audit as retail
 import ibara_complete_button_prototype as atlas
+from full_frame_video import FULL_FRAME_EDITS
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'phase03'))
 import ibara_complete_bootstrap as disc
@@ -41,12 +42,14 @@ VIDEO_PROFILES = {
     '240p_core': video.VIDEO_EDITS,
     '240p_halfpixel': video.VIDEO_EDITS + video.HALFPIXEL_EDITS,
     '240p_cave_beta': video.VIDEO_EDITS + video.HALFPIXEL_EDITS + FIELD_STATE_EDITS,
+    '240p_full_frame': video.VIDEO_EDITS[:2] + video.HALFPIXEL_EDITS + FIELD_STATE_EDITS + FULL_FRAME_EDITS,
     # Yoko interlaced without texture filtering, Tate 240p: static part only (no bilinear 0x001AF11C, the two Tate
     # display tables 0x001DD200 / 0x001DD240). The interlace flag, half-pixel and field-state words are switched at
     # runtime by ps2/hooks/video.c, which the builders add with this profile (VIDEO_HOOK_PROFILES).
     'auto': [e for e in video.VIDEO_EDITS if e[0] == 0x001AF11C or 0x001DD200 <= e[0] < 0x001DD280],
+    # One VRAM layout for both orientations. Keep the full source UVs and let the KURO hook switch scan modes.
+    'auto_full_frame': [video.VIDEO_EDITS[1]] + FULL_FRAME_EDITS,
 }
-VIDEO_HOOK_PROFILES = {'auto'}
 LOAD_EXEC_PS2 = 0x24030006  # addiu v1, zero, 6
 SYSCALL = 0x0000000C
 
@@ -295,6 +298,8 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
     inside the frontend executable instead of loading one)."""
     if source.resolve() == output.resolve():
         raise ValueError('Choose a separate output path')
+    if video_profile == 'auto_full_frame' and executable_hook is None:
+        raise ValueError('auto_full_frame requires the runtime video hook in scripts/build_black_label_iso.py')
     probe = b'' if not payload else returning_probe() if probe_path is None else read_probe_elf(probe_path)
     pvd, root, records, _, source_sha = disc.check_source(source)
     rows, companions, end_lba = companion_layout(disc_files, records, len(probe), include_probe=payload)

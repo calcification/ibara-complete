@@ -79,6 +79,43 @@ static void fix_one_env(u32 env, u32 tate)
 	e[2] = tate ? 2u : 3u;
 }
 
+#ifdef KURO_PRESENTATION
+extern volatile u32 video_enabled;
+
+/* Full-frame builds allocate 240-line buffers once. Their NTSC env is created with 480 interlaced lines.
+ * Keep the original 448-line Yoko display window and center the 240-line Tate window by shifting DY up 8. */
+static void fix_full_frame_env(u32 env, u32 tate, u32 switched)
+{
+	volatile u32 *e = (volatile u32 *)env;
+	u32 dh = (e[7] >> 12) & 0x7FFu, dy = (e[6] >> 12) & 0x7FFu;
+	if (!dh)
+		return;
+	if (tate) {
+		if (dh == 447u || dh == 479u) {
+			dh = 239u;
+			dy = (dy >> 1) - 8u;
+		} else if (dh == 223u) {
+			dh = 239u;
+		} else {
+			fix_one_env(env, 1u);
+			return;
+		}
+	} else if (dh == 479u) {
+		dh = 447u;
+	} else if (switched && dh == 239u) {
+		dh = 447u;
+		dy = (dy + 8u) << 1;
+	} else {
+		if (switched)
+			fix_one_env(env, 0u);
+		return;
+	}
+	e[6] = (e[6] & ~(0x7FFu << 12)) | (dy & 0x7FFu) << 12;
+	e[7] = (e[7] & ~(0x7FFu << 12)) | dh << 12;
+	e[2] = tate ? 2u : 3u;
+}
+#endif
+
 
 /* FlushCache(0), FlushCache(2), then SetGsCrt(vs.crt[0], vs.crt[1], vs.crt[0]). One asm block so that nothing
  * lives in a register across the kernel calls (they may overwrite every caller-saved register), and no callee-saved
@@ -153,6 +190,13 @@ void video_frame(void)
 	}
 	/* Tate: keep the geometry progressive every frame. Yoko is left to the game (its loading screen, for one, uses a
 	 * smaller display than the retail frame) except once, right after leaving Tate, to restore the retail geometry. */
+#ifdef KURO_PRESENTATION
+	if (video_enabled == 2u && EE_RAM(u8, VIDEO_STD) != 2u) {
+		fix_full_frame_env(DISP_ENV0, vs.tate, m == 4u);
+		fix_full_frame_env(DISP_ENV1, vs.tate, m == 4u);
+		return;
+	}
+#endif
 	if (vs.tate || m == 4u)
 		fix_display_env(vs.tate);
 }

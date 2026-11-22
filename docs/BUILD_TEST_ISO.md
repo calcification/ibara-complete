@@ -17,7 +17,8 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
 
 * Input must be the exact retail `SLPM-66301` image (ELF SHA-256 `263d3079…`, PCSX2 CRC `420C7FAB`); anything
   else is refused. CHD/CSO: convert back to ISO first.
-* Default video is `auto` (below). `--video-profile 240p_cave_beta` is 240p in every mode (matches the published
+* Default video is `auto_full_frame` (below). `--video-profile auto` uses the earlier 224-active-line Tate crop.
+  `--video-profile 240p_cave_beta` is progressive in every mode (matches the published
   Cave 240p patch; verified on one real PS2); `--video-profile retail` is the original interlaced output.
 * Default `--rank-gauge arcade` adds a **RANK GAUGE** toggle to Arcade and KURO CONFIG. Arcade starts OFF and
   KURO starts ON. Attract mode suppresses the gauge. `--rank-gauge arrange` hides the toggle.
@@ -35,9 +36,9 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
 Boot the new ISO (PCSX2 with **cheats off**, or your usual loader). Start at the title → Mode Select → **Down** twice
 to **KURO** → **Circle**. (`--label` changes the text, `--position 5` puts the row at the bottom as before.)
 
-Video (default `--video-profile auto`): **Yoko** keeps the retail interlaced output, with texture filtering off;
-**Tate R / Tate L** switch to 240p progressive (the cave-ps2-240p geometry), live, when you change OPTION →
-SCREEN SETTING → SCREEN MODE.
+The default `--video-profile auto_full_frame` keeps **Yoko** interlaced and uses all 240 active lines for
+**Tate R / Tate L** on NTSC. All orientations use nearest-neighbor filtering. Switch live in OPTION → SCREEN
+SETTING → SCREEN MODE.
 `--video-profile 240p_cave_beta` gives the previous behaviour (240p in every mode). Inside: Circle confirms, Cross cancels; in game Cross = shot, Circle = bomb,
 **Square = weapon change**. KURO opens a menu like ARCADE MODE's (GAME START, PRACTICE, CONFIG, EXIT; the header still reads ARCADE MODE)
 with the Black Label rules switched on; EXIT (or cancel) switches them off and returns to Mode Select on KURO. They
