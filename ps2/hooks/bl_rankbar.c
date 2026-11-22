@@ -167,7 +167,7 @@ static void bl_sphere(s32 ox, s32 oy)
 	}
 }
 
-extern u32 kuro_on, opt_gauge;
+extern u32 kuro_on, opt_gauge, sel_active;
 
 static void bl_rank_bar(void)
 {
@@ -240,10 +240,16 @@ static void bl_rank_bar(void)
 
 void frontend_rank_bar(void)
 {
-	if (EE_RAM(u8, 0x00338E7Cu)) /* attract demo */
+	if ((kuro_on && sel_active) || EE_RAM(u8, 0x00338E7Cu)) /* ship selection or attract demo */
 		return;
 	if (kuro_on)
 		bl_rank_bar();
 	else if (opt_gauge || EE_RAM(u32, 0x00338F44u)) /* Arrange retains its retail gauge */
 		ARRANGE_GAUGE();
+}
+
+void kuro_weapon_bar(void)
+{
+	if (!sel_active)
+		GAME_CALL0(0x001285C0u);
 }

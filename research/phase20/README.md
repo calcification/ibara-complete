@@ -96,3 +96,16 @@ the loop reads its registers. The HUD still draws (score line, RANK bar).
 `--bl-rom` gives the same disc as `build_black_label_iso.py --bl-rom` (byte-identical).
 
 Stage two (not done): per-element animation, the ship fly-in and confirm sequence, the girder background, player 2.
+
+## Before takeoff (2026-11-22)
+
+KURO now opens ship select in scene 1, once the HUD texture table is ready. The retail pause check
+(`0x0012C220`, called at `0x0012E1AC`) rejects pauses in that scene. `sel_pause` overrides the result while
+the menu is active, so the ship stays on the launchpad. Confirming a ship and type sets the ship word and
+resumes the retail takeoff. The final result of the pause check comes from the retail routine at all other times.
+
+Arrange's stock bar (`0x001285C0`) uses the same seven slots and equipped-weapon ID as KURO. In KURO the
+draw call at `0x0012E434` shows that bar outside ship select. The selector hides the RANK gauge and clears
+the XTC text cells. PCSX2 held P1 on the launchpad in Yoko and Tate R, then took off with Spread B (ship word 5).
+With MG and Rocket stocked via PINE, pressing Square changed the active weapon and the bright slot from MG
+to Rocket. After game over, the three patched call/branch words for pause and the stock bar were restored.

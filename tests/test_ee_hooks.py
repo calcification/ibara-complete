@@ -166,7 +166,7 @@ class BuildTests(unittest.TestCase):
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
-                "sel_layers_stub"}
+                "sel_layers_stub", "sel_begin", "sel_pause", "kuro_weapon_bar"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)
@@ -198,6 +198,9 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(by_site[0x00113610], (hooks.jal(0x0013D580), 0x0000102D))
         for site in (0x001155A8, 0x0012CEC0):
             self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))
+        self.assertEqual(by_site[0x001285EC], (0x106000D0, 0))
+        self.assertEqual(by_site[0x0012E434], (hooks.jal(0x001285C0), hooks.jal(b["syms"]["kuro_weapon_bar"])))
+        self.assertEqual(by_site[0x0012E1AC], (hooks.jal(0x0012C220), hooks.jal(b["syms"]["sel_pause"])))
         self.assertTrue(all(o != k for _a, o, k in rows))
 
     def test_bake_keeps_program_headers_after_elf_header(self):

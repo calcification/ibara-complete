@@ -5,7 +5,7 @@
  * before, with CONFIG > FIGHTER TYPE).
  *
  * Flow: a player start (0x001CE6E0, the code that writes the ship word; `dsll32` at 0x001CE718 -> sel_start_stub)
- * marks the side; the next game-update frame (xtc_frame) opens the screen for player 1 and sets the pause byte
+ * marks the side; the pause hook opens the screen for player 1 once the opening scene is ready and sets the pause byte
  * ($gp-28128), which stops the game update while the HUD pass still renders. The main loop then calls the pause
  * menu (0x00128E10, `jal` at 0x0012E778 -> sel_menu): sel_menu draws the screen and reads the pad instead, and
  * hands over to the real pause menu when the screen is not up. On confirm or when the 60-s timer runs out: ship
@@ -35,6 +35,7 @@
 #define BTN_LEFT 0x4u
 #define BTN_RIGHT 0x8u
 #define BTN_OK (0x10u | 0x20u) /* Circle or Cross */
+#define SELECT_FRAMES (60u * 60u)
 
 u32 ktex_init(void);
 u32 ktex_claim(void);
@@ -51,32 +52,43 @@ static u32 art_present(void)
 	       EE_RAM(u32, ART_TAG + 8u) == 0x5452412Du && EE_RAM(u32, ART_TAG + 12u) == 0x004E4F2Du; /* "-ART-ON\0" */
 }
 
-/* The game's own condition for allowing a pause (0x0012C220): no attract demo, $gp-28232 and $gp-28080 clear, stage
- * counter >= 2 — i.e. the stage is loaded and running. (Opening at the player-start event itself put the screen up
- * over NOW LOADING; the stage loader then rebuilt the texture tables under it and the game crashed.) */
+/* Scene 1 is the takeoff. The transition flag can still be set on entry, so only later scenes use the regular
+ * pause condition. Scene 0 still belongs to the frontend or loader. */
 static u32 pausable(void)
 {
-	return !EE_RAM(u8, 0x00338E7Cu) && !EE_RAM(u32, 0x00338EA8u) && !EE_RAM(u32, 0x00338F40u) &&
-	       EE_RAM(u8, 0x00338E9Cu) >= 2u;
+	const u8 scene = EE_RAM(u8, 0x00338E9Cu);
+	return !EE_RAM(u8, 0x00338E7Cu) && !EE_RAM(u32, 0x00338EA8u) &&
+	       (scene == 1u || (scene > 1u && !EE_RAM(u32, 0x00338F40u)));
 }
 
-/* game update, every frame (xtc_frame): open the screen once player 1 has started and the stage is running */
-void bl_select_tick(void)
+static void sel_begin(void)
 {
 	u32 ship;
-	if (!sel_pending[0] || !pausable())
+	if (sel_active || !sel_pending[0] || !pausable())
+		return;
+	if (!art_present()) {
+		sel_pending[0] = sel_pending[1] = 0;
+		return;
+	}
+	if (!ktex_init() || !ktex_claim())
 		return;
 	sel_pending[0] = sel_pending[1] = 0;
-	if (sel_active || !art_present() || !ktex_init() || !ktex_claim())
-		return;
 	ship = EE_RAM(u32, SHIP_P1);
 	sel_kind = (ship >> 2) & 1u;
 	sel_type = ship & 3u;
 	sel_phase = 0;
-	sel_timer = 60u * 60u;
-	last_dirs = 0;
+	sel_timer = SELECT_FRAMES;
+	last_dirs = EE_RAM(u32, PAD(0) + 0x0Cu);
 	sel_active = 1;
 	EE_RAM(u8, PAUSE_BYTE) = 1;
+}
+
+/* The retail pause check returns zero in scene 1 even if the pause byte is set. Return one while selecting so
+ * the main loop skips the update pass that moves the ship and proceeds to drawing the menu. */
+u32 sel_pause(void)
+{
+	sel_begin();
+	return sel_active ? 1u : (u32)GAME_CALL0(0x0012C220u);
 }
 
 static void draw_state(u32 state, s32 ox, s32 oy)
@@ -114,6 +126,8 @@ u32 sel_menu(void)
 		return PAUSE_MENU();
 	dirs = EE_RAM(u32, PAD(0) + 0x0Cu);
 	btn = EE_RAM(u32, PAD(0) + 0x08u);
+	if (sel_timer == SELECT_FRAMES)
+		btn = 0; /* consume the difficulty-confirm edge on the first selection frame */
 	edge = dirs & ~last_dirs;
 	last_dirs = dirs;
 	if (sel_phase == 0) {

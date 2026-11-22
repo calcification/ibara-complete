@@ -21,7 +21,7 @@ Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "I
   Cave 240p patch; verified on one real PS2); `--video-profile retail` is the original interlaced output.
 * Default `--rank-gauge arcade` adds a **RANK GAUGE** toggle to Arcade and KURO CONFIG. Arcade starts OFF and
   KURO starts ON. Attract mode suppresses the gauge. `--rank-gauge arrange` hides the toggle.
-* `--bl-rom` adds the Black Label ship-select and RANK bar artwork from the user's ROM. KURO skips the retail
+* `--bl-rom` adds the Black Label artwork for ship select before takeoff and the RANK bar. KURO skips the retail
   ranking and autosave flow, and restores retail settings when leaving.
 * ARRANGE MODE has its own **PRACTICE** row (GAME START, PRACTICE, CONFIG, EXIT), like ARCADE MODE: the same
   practice menu (stage select, start position, play data) under the ARRANGE MODE header, playing Arrange. Inside
@@ -44,9 +44,9 @@ with the Black Label rules switched on; EXIT (or cancel) switches them off and r
 also switch off at the title / Mode Select and when the attract sequence starts after a Game Over.
 
 What the BLACK LABEL build currently does (see `docs/BLACK_LABEL_FEATURES.md`, results in
-`tests/results/2026-11-20_RUNTIME.md`): XTC graze counter with HUD and bomb wipe; weapon stock, weapon-change
-button and weapon name on the HUD; BL shot levels (small P to level 6, no secret); BL rank rules for fragments,
-medals and roses; BL enemy HP and fire timer (stages 1–2); held fire and 32-shot cap. Not yet: BL enemy behaviour, ship select, graze sphere.
+`tests/results/2026-11-20_RUNTIME.md`): XTC graze counter with HUD and bomb wipe, Arrange's seven-slot weapon
+bar at the bottom of the screen, BL shot levels (small P to level 6, no secret), BL rank rules for fragments,
+medals and roses, BL enemy HP and fire timing, held fire and 32-shot cap. `--bl-rom` also adds the graze sphere.
 
 Report what you see with `tests/manual/RESULT_TEMPLATE.md` (PCSX2 version or hardware/loader, video profile,
 what happened, screenshots).

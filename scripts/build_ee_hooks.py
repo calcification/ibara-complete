@@ -363,9 +363,13 @@ BL_SHIP_PATCHES = [
     (0x0012CEC0, 0x0C04F7A4, "raw", 0x00000000),
     # Skip the retail ranking/initials state machine and its memory-card autosave after a KURO game.
     (0x00113610, 0x0C04F560, "raw", 0x0000102D),
+    # Arrange's seven-slot weapon stock bar uses the same player stock and selected-weapon fields as KURO.
+    (0x001285EC, 0x106000D0, "raw", 0x00000000),
+    (0x0012E434, 0x0C04A170, "jal", "kuro_weapon_bar"),
     # Black Label select screen (ps2/hooks/bl_select.c; research/phase20): player start marks the side (the `dsll32
     # a0,t0,0x10` of 0x001CE6E0), and the paused main loop's pause-menu call runs the select screen while it is up
     (0x001CE718, 0x0008243C, "jal", "sel_start_stub"),
+    (0x0012E1AC, 0x0C04B088, "jal", "sel_pause"),
     (0x0012E778, 0x0C04A384, "jal", "sel_menu"),
     # and the draw pass skips the stage's 24 layers while it is up (BL's screen covers the playfield; the stage's
     # textures and ours together overran the GS texture cache)
@@ -377,6 +381,7 @@ HOOKS["kuro"] = {
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
                 "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c"],
+    "defines": ["KURO_PRESENTATION"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
               ("hud_entry", 0x0012C0E0, "xtc_hud")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
@@ -436,10 +441,11 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         lines.append(f"{'HOOK_AFTER_LEAF' if kind == ['leaf'] else 'HOOK_AFTER'} {entry}, {sym}, {chook}")
         defsyms += ["--defsym", f"{sym}=0x{original:08X}"]
     stub_src.write_text("\n".join(lines) + "\n")
+    defines = [f"-D{d}" for d in [*h.get("defines", []), *EXTRA_DEFINES]]
     for src in [stub_src] + [PS2 / "hooks" / s for s in h["sources"]]:
         obj = work / (src.stem + ".o")
         extra = LEAF_CFLAGS if src.name in LEAF_SOURCES else []
-        run([CROSS + "gcc", *CFLAGS, *extra, *[f"-D{d}" for d in EXTRA_DEFINES], "-c", str(src), "-o", str(obj)])
+        run([CROSS + "gcc", *CFLAGS, *extra, *defines, "-c", str(src), "-o", str(obj)])
         objs.append(str(obj))
     elf = work / f"{key}.elf"
     run([CROSS + "ld", "-EL", "-m", "elf32ltsmipn32", "-T", str(PS2 / "link.ld"), "--defsym", f"CAVE_BASE=0x{base:08X}",

@@ -37,13 +37,15 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game and
   pad settings so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択
-  screen, drawn from your ROM's artwork with Black Label's layout: left / right picks the straight
+  screen before takeoff. Left / right picks the straight
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the
-  SPEED / POWER / bomb panel), Circle or Cross starts; a 60-second timer keeps the current choice. The choice is
+  SPEED / POWER / bomb panel), then Circle or Cross starts takeoff. A 60-second timer keeps the current choice. The choice is
   also stored as FIGHTER TYPE. Stage one of the port: no element animation or ship fly-in yet, a black background
   instead of the girder wall, player 2 still joins with FIGHTER TYPE.
-* **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, weapon stock with weapon change
-  (Square) and weapon name on the HUD, BL shot levels, BL rank rules for fragments, medals and roses, BL enemy HP
+* **KURO weapon bar.** Arrange's seven-slot stock bar appears at the bottom. It marks the weapons you have
+  collected and highlights the equipped one. Press Square to cycle through your stock.
+* **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, BL shot levels,
+  BL rank rules for fragments, medals and roses, BL enemy HP
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, BL hit sparks (a
   shot that hits slows to a quarter speed, as in Black Label), enemy bullets
   cleared when a boss or mid-boss dies, no rank penalty for bombing. **Straight or spread:** the select screen, or KURO → CONFIG →

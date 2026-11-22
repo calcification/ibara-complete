@@ -169,7 +169,9 @@ void spawn_log_frame(void);
 /* BLACK LABEL build only (ps2/hooks/bl_player.c); absent in the XTC-only test profile. */
 void bl_player_frame(u32 rec) __attribute__((weak));
 void bl_boss_cancel_frame(void) __attribute__((weak)); /* bl_enemy.c: bullet cancel after a boss */
+#ifndef KURO_PRESENTATION
 void bl_select_tick(void) __attribute__((weak));       /* bl_select.c: open the select screen at a game start */
+#endif
 
 /* Once per game logic frame (hooked after the retail collision pass). */
 /* shot-held frames (0..8) of a side: BL's player +0x270, which also drives the graze sphere (bl_rankbar.c) */
@@ -187,8 +189,10 @@ void xtc_frame(void)
 #endif
 	if (bl_boss_cancel_frame)
 		bl_boss_cancel_frame();
+#ifndef KURO_PRESENTATION
 	if (bl_select_tick)
 		bl_select_tick();
+#endif
 	for (s = 0; s < 2; s++) {
 		struct xtc_player *p = &xtc.pl[s];
 		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
