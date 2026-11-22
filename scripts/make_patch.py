@@ -125,6 +125,8 @@ def main(argv=None) -> int:
     if args.source.stat().st_size != SOURCE_SIZE or file_md5(args.source) != SOURCE_MD5:
         ap.error("source is not the retail 'Ibara (Japan).iso' (SLPM-66301)")
     size = args.built.stat().st_size
+    if size > SOURCE_SIZE:  # project rule: the disc image never grows
+        ap.error(f"built disc is {size:,} bytes, larger than the retail {SOURCE_SIZE:,}; the ISO must never grow")
     with args.source.open("rb") as src, args.built.open("rb") as dst:
         exe_off, exe_size = find_file(src, b"SLPM_663.01;1")
         src.seek(exe_off)

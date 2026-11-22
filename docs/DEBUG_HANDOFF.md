@@ -9,6 +9,10 @@ Tests: `TEST_MATRIX.csv` (K-rows = KURO).
 * Never commit ISO / ELF / ROM / savestates / MAME output or anything copied from the game; run
   `python3 scripts/check_repository_safety.py` before every commit. Art reaches the disc only from the user's own
   ROM through the patcher (`--bl-rom`); the repository holds coordinates and offsets only.
+* **The ISO must never grow.** Built and patched discs are exactly the retail size (3,932,848,128 bytes) today;
+  `make_patch.py` and the patcher refuse anything larger and a test checks the committed patch. New code or art
+  goes into existing space (the executable's free extent, the art segment inside the executable's disc extent),
+  never appended files.
 * KURO = Black Label rules; Arrange must stay as on the original disc (only addition: its PRACTICE row).
 * ibara360 is a study reference only; copy none of its code.
 * Work on branch `claude/ibara-black-label-ps2-rm9qnw`; no pull request unless asked.

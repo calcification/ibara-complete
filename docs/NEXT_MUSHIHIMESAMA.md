@@ -54,7 +54,9 @@ Mushihimesama by pattern, not by address:
    savestates. For a frozen thread, search eeMemory for its saved register block below its stack pointer.
 5. Re-read symbol addresses after every build (sizes shift).
 6. Don't open overlays during loading (texture tables are rebuilt). Wait for the game's own "pausable" condition.
-7. **Ship nothing copyrighted.** Art comes from the user's ROM at patch time. Generated tables hold coordinates only.
+7. **The ISO must never grow** (user rule): new code and art go into existing disc space; tools refuse a larger
+   image.
+8. **Ship nothing copyrighted.** Art comes from the user's ROM at patch time. Generated tables hold coordinates only.
 
 ## First steps for Mushihimesama
 

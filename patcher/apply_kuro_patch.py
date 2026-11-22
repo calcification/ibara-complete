@@ -166,6 +166,8 @@ def main(argv):
     if output.exists():
         raise SystemExit(f"{output} already exists; choose a new name")
     src_size, dst_size, src_md5, dst_sha, note, records = read_patch(patch)
+    if dst_size > src_size:  # project rule: the disc image never grows
+        raise SystemExit(f"patch would grow the disc ({dst_size:,} > {src_size:,} bytes); refusing")
     print(f"Ibara KURO patch: {note}")
     print("1/3 checking your ISO ...")
     if source.stat().st_size != src_size or digest(source, "md5", "MD5") != src_md5:

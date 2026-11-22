@@ -16,6 +16,7 @@ class PatchTest(unittest.TestCase):
         src_size, dst_size, src_md5, _sha, _note, records = apply_kuro_patch.read_patch(
             ROOT / "patcher" / "ibara_kuro.patch")
         self.assertEqual(src_size, make_patch.SOURCE_SIZE)
+        self.assertLessEqual(dst_size, src_size, "project rule: the ISO must never grow")
         self.assertEqual(src_md5, make_patch.SOURCE_MD5)
         literal = [len(op[1]) for _a, _n, ops in records for op in ops if op[0] == 1]
         self.assertLessEqual(max(literal), make_patch.MAX_DATA_RUN)
