@@ -9,7 +9,7 @@ this project has done so far. Your ISO is only read; no game data is in this fol
 * **Windows:** install Python 3 (python.org), then drag `Ibara (Japan).iso` onto `apply_kuro_patch.bat` — select
   your `ibarablk.zip` too and drag both together to get the Black Label RANK bar and select screen artwork. `Ibara KURO.iso` appears
   next to the ISO.
-* **Any system:** `python3 apply_kuro_patch.py "Ibara (Japan).iso" "Ibara KURO.iso" [--bl-rom ibarablk.zip]`
+* **Any system:** `python3 apply_kuro_patch.py "Ibara (Japan).iso" "Ibara KURO.iso" --bl-rom ibarablk.zip`
 
 **`--bl-rom` (optional):** your own Ibara Kuro Black Label arcade ROM set (MAME's `ibarablk.zip`, or the
 `ibarablk_u2` file from it; checked by size and CRC `5e46be44`). KURO's centred Black Label RANK bar and its ship
@@ -27,14 +27,15 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   reads ARCADE MODE). EXIT switches them off again.
 * **Video:** Yoko stays interlaced with texture filtering off; TATE R / TATE L switch to 240p progressive, live from
   OPTION → SCREEN SETTING → SCREEN MODE.
-* **RANK gauge in Arcade:** ARCADE MODE → CONFIG → RANK GAUGE ON/OFF (starts ON). ON shows Arrange's RANK gauge
-  (top right) in Arcade (and in KURO when no `--bl-rom` was given), and hides the blinking "PRESS START" for the empty side,
-  as in Arrange and Practice. Not saved to the memory card.
+* **RANK gauge:** Arcade defaults to OFF and KURO defaults to ON. Change either setting in its CONFIG menu.
+  Both settings last for the current session. Attract mode suppresses the gauge.
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE; KURO's practice is
   KURO → PRACTICE.
-* **KURO Black Label RANK bar** (with `--bl-rom`): always shown in KURO, centred under the high score as in Black
+* **KURO Black Label RANK bar** (with `--bl-rom`): shown when enabled, centred under the high score as in Black
   Label — fill length, rank colours, the white flash at maximum rank and the fade when your ship is near it follow
-  Black Label's code; the frame and plate use your ROM's artwork, colours exact. The PS2 stage-name line is hidden there in KURO (Black Label has none).
+  Black Label's code. The frame and plate use your ROM's artwork. KURO hides the stage-name line with either gauge.
+* **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game and
+  pad settings so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択
   screen, drawn from your ROM's artwork with Black Label's layout: left / right picks the straight
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the

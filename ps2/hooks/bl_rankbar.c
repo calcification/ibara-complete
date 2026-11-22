@@ -5,8 +5,8 @@
  * L = (0xFFFFFF - rank) >> 16: R = max(0, 2L - 255), G = 2L <= 255 ? 2L : 510 - 2L, B = max(0, 255 - 2L); the whole
  * bar flashes white (tint 0xFFFFFF) at rank 0 and fades when a player is close to it.
  *
- * PS2's Arrange gauge 0x00129360 is a port of that routine with other art; KURO calls bl_rank_bar instead (the HUD
- * pass's `jal 0x00129360` at 0x0012E42C, a KURO table word). The art is not in this repository: bl_bar_art is
+ * PS2's Arrange gauge 0x00129360 is a port of that routine with other art; the HUD pass calls frontend_rank_bar
+ * to select the gauge. The art is not in this repository: bl_bar_art is
  * zero here and filled from the user's own ibarablk ROM by the patcher (patcher/apply_kuro_patch.py --bl-rom) or by
  * scripts/build_black_label_iso.py --bl-rom. Without it, KURO shows the Arrange gauge as before.
  *
@@ -167,19 +167,24 @@ static void bl_sphere(s32 ox, s32 oy)
 	}
 }
 
-void bl_rank_bar(void)
+extern u32 kuro_on, opt_gauge;
+
+static void bl_rank_bar(void)
 {
 	const u32 rank = EE_RAM(u32, RANK);
 	u32 tint = 0x808080u, flags = 0x10000000u, alpha = 0, s, len, l2, col;
 	s32 ox, oy;
+	HUD_STR(stage_blank, 37, 5, 0x80808000u);
 	if (!art_present() || !ktex_init()) {
-		ARRANGE_GAUGE();
+		if (opt_gauge)
+			ARRANGE_GAUGE();
 		return;
 	}
 	if (!bar_built)
 		build_page();
 	bl_sphere(EE_RAM(s32, OFF_X), EE_RAM(s32, OFF_Y));
-	HUD_STR(stage_blank, 37, 5, 0x80808000u);
+	if (!opt_gauge)
+		return;
 	/* slide like BL (target BAR_X, 16 px lower while a boss gauge is up) */
 	{
 		const s32 target = EE_RAM(u32, BOSS_UP) ? BAR_X - 16 : BAR_X;
@@ -231,4 +236,14 @@ void bl_rank_bar(void)
 		col = (rr > 255u ? 255u : rr) << 16 | (gg > 255u ? 255u : gg) << 8 | (bb > 255u ? 255u : bb);
 	}
 	ktex_draw(BAR_TEX, 0, FILL_PY, len, 2, flags, col, bar_x + 3 + ox, BAR_Y + 5 + oy);
+}
+
+void frontend_rank_bar(void)
+{
+	if (EE_RAM(u8, 0x00338E7Cu)) /* attract demo */
+		return;
+	if (kuro_on)
+		bl_rank_bar();
+	else if (opt_gauge || EE_RAM(u32, 0x00338F44u)) /* Arrange retains its retail gauge */
+		ARRANGE_GAUGE();
 }

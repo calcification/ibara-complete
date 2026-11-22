@@ -58,6 +58,24 @@ PCSX2 driving: `tools/pcsx2_session/` (README there). Savestate RAM: `scripts/p2
 | 8 | Patch size limit | `scripts/make_patch.py` `MAX_DATA_RUN` raised to 16 KiB (longest literal run now 9,888 bytes). Confirm the run is only our hook image. | `scripts/make_patch.py` |
 | 9 | HUD while selecting | The HUD ("♪Show Time" track line, score) still draws over the select screen; BL has no Show Time. Cosmetic. | `bl_select.c` |
 
+## Hardware feedback retest
+
+Mode Select moved EXIT from index 4 to index 5. The help renderer continued to skip EXIT's null second
+help pointer at index 4. The builder changes the renderer's index along with the accept dispatcher.
+
+Arcade defaults to RANK GAUGE OFF and KURO to ON. The HUD gate checks the attract flag independently of
+either preference. The KURO runtime table suppresses both HUD stage-name writers and bypasses the retail
+ranking and autosave state machine. KURO snapshots the retail Arcade options, key mappings, and fighter
+types on entry and restores them on exit. KURO's fighter type and gauge choices stay in RAM for the session.
+
+PCSX2 2.8.2 highlighted and confirmed EXIT, entered and left Practice in all three modes, and chose Spread B
+on the KURO ship-select screen after visiting Arcade and Arrange. A cold boot restored Tate R and Auto Save
+from the test card. Instrumented KURO game overs with qualifying scores kept the retail ranking table and
+test card byte-identical with Auto Save off and on. Leaving KURO restored Arcade's fighter setting. The
+gameplay capture showed the centered rank bar clear of the HUD stage name. The attract capture showed the
+stage name without a gauge while Arcade's preference was ON. The builder and patcher produced identical
+`--bl-rom` images of 3,932,848,128 bytes. Original PS2 retest is pending.
+
 ## Recently changed files (last commits on the branch)
 
 `ps2/hooks/bl_select.c`, `bl_select.h`, `bl_select_data.c` (generated), `bl_tex.c`, `bl_rankbar.c`, `xtc.c`,

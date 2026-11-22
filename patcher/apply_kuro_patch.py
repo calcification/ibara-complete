@@ -208,6 +208,8 @@ def main(argv):
         print("Black Label select screen artwork copied from your ROM.")
     elif art:
         print("Note: this patch has no place for the RANK bar artwork; it was not added.")
+    elif not rom_data and art_at is not None:
+        print("No Black Label artwork was added. Supply --bl-rom ibarablk.zip for KURO's ship select and rank bar.")
     print(f"Done: {output}")
     print("Boot it, press Start at the title; KURO is the third row of Mode Select (Circle to enter).")
     return 0

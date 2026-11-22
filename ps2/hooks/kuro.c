@@ -36,28 +36,52 @@ u32 kuro_on;
 
 void video_frame(void);
 void xtc_reset(void);
+extern u32 opt_gauge;
+void opt_set(u32 on);
+static u32 arcade_gauge, kuro_gauge = 1u;
 
-/* FIGHTER TYPE (Arcade config words): KURO allows 0-7 (bl_ship.c); the retail modes read 0-3. Leaving KURO keeps
- * the choice and clamps the config; entering restores it. */
+/* Keep the six Arcade CONFIG bytes and the mappings/fighter types out of retail saves after leaving KURO. */
+#define ARCADE_CONTINUE 0x00338BECu
+#define ARCADE_CONFIG 0x00338BF4u /* DIFFICULTY 1/2, EXTEND, PLAYER STOCK, BOMB STOCK */
+#define PAD_CONFIG   0x004E4FD0u
 #define FIGHTER_TYPE 0x004E5050u
-static u32 kuro_ship[2];
+static u32 retail_config[0x90u / 4u];
+static u8 retail_arcade[6];
+static u32 kuro_ship[2] = {8u, 8u};
 
 void bl_rank_bar_off(void);
+
+static void isolate_config(u32 on)
+{
+	u32 i;
+	for (i = 0; i < 6u; i++) {
+		volatile u8 *setting = (volatile u8 *)(i == 0 ? ARCADE_CONTINUE : ARCADE_CONFIG + 4u * (i - 1u));
+		if (on)
+			retail_arcade[i] = *setting;
+		else
+			*setting = retail_arcade[i];
+	}
+	if (!on)
+		for (i = 0; i < 2u; i++)
+			kuro_ship[i] = EE_RAM(u32, FIGHTER_TYPE + 4u * i);
+	for (i = 0; i < sizeof(retail_config) / sizeof(*retail_config); i++) {
+		volatile u32 *setting = (volatile u32 *)(PAD_CONFIG + 4u * i);
+		if (on)
+			retail_config[i] = *setting;
+		else
+			*setting = retail_config[i];
+	}
+	if (on)
+		for (i = 0; i < 2u; i++)
+			if (kuro_ship[i] < 8u)
+				EE_RAM(u32, FIGHTER_TYPE + 4u * i) = kuro_ship[i];
+}
 
 static void kuro_set(u32 on)
 {
 	const struct kuro_word *w = kuro_tab;
 	u32 i, n = kuro_tab_n;
-	for (i = 0; i < 2u; i++) {
-		volatile u32 *t = (volatile u32 *)(FIGHTER_TYPE + 4u * i);
-		if (on) {
-			if (kuro_ship[i] >= 4u && *t == (kuro_ship[i] & 3u))
-				*t = kuro_ship[i];
-		} else {
-			kuro_ship[i] = *t;
-			*t &= 3u;
-		}
-	}
+	isolate_config(on);
 	if (!on)
 		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
 	for (i = 0; i < n; i++, w++) {
@@ -67,11 +91,14 @@ static void kuro_set(u32 on)
 			*p = to;
 	}
 	kuro_on = on;
-	__asm__ __volatile__( /* FlushCache(0) write back data, FlushCache(2) invalidate instructions */
-		"move $4, $0\n\tli $3, 100\n\tsyscall\n"
-		"li $4, 2\n\tli $3, 100\n\tsyscall\n"
-		: : : "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9",
-		      "memory");
+	/* opt_set also flushes both caches for the table edits above. */
+	if (on) {
+		arcade_gauge = opt_gauge;
+		opt_set(kuro_gauge);
+	} else {
+		kuro_gauge = opt_gauge;
+		opt_set(arcade_gauge);
+	}
 }
 
 void kuro_enter(void)

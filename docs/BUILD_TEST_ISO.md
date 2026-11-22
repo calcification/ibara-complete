@@ -10,22 +10,23 @@ row, **KURO** (third, right after Arcade and Arrange): Black Label, switched on 
 
 ```bash
 pip install -r requirements-assets.txt           # Pillow, numpy (once)
-python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output 'Ibara Black Label test.iso'
+python3 scripts/build_black_label_iso.py 'Ibara (Japan).iso' --output 'Ibara Black Label test.iso' --bl-rom ibarablk.zip
 ```
 
-Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "Ibara Black Label test.iso"`.
+Windows: `py -3 scripts\build_black_label_iso.py "Ibara (Japan).iso" --output "Ibara Black Label test.iso" --bl-rom ibarablk.zip`.
 
 * Input must be the exact retail `SLPM-66301` image (ELF SHA-256 `263d3079…`, PCSX2 CRC `420C7FAB`); anything
   else is refused. CHD/CSO: convert back to ISO first.
 * Default video is `auto` (below). `--video-profile 240p_cave_beta` is 240p in every mode (matches the published
   Cave 240p patch; verified on one real PS2); `--video-profile retail` is the original interlaced output.
-* Default `--rank-gauge arcade`: ARCADE MODE → CONFIG has a **RANK GAUGE** ON/OFF row (starts ON). ON shows
-  Arrange's RANK gauge (top right) in Arcade and in KURO, and hides the blinking "PRESS START button" for the
-  empty side (Arrange and Practice hide it too). Not saved to the memory card. `--rank-gauge arrange` keeps the retail behaviour (no row).
+* Default `--rank-gauge arcade` adds a **RANK GAUGE** toggle to Arcade and KURO CONFIG. Arcade starts OFF and
+  KURO starts ON. Attract mode suppresses the gauge. `--rank-gauge arrange` hides the toggle.
+* `--bl-rom` adds the Black Label ship-select and RANK bar artwork from the user's ROM. KURO skips the retail
+  ranking and autosave flow, and restores retail settings when leaving.
 * ARRANGE MODE has its own **PRACTICE** row (GAME START, PRACTICE, CONFIG, EXIT), like ARCADE MODE: the same
   practice menu (stage select, start position, play data) under the ARRANGE MODE header, playing Arrange. Inside
   KURO's rules are practised from KURO → PRACTICE.
-* No MIPS compiler needed: the committed `ps2/prebuilt/bl_mode.json` is used (byte-identical to a source
+* No MIPS compiler needed: the committed `ps2/prebuilt/kuro.json` is used (byte-identical to a source
   build; a test keeps it in sync). With `gcc-mips-linux-gnu` installed the hooks are rebuilt from `ps2/hooks`.
 * Output is ~3.7 GB and contains game data: keep it local; never upload it.
 

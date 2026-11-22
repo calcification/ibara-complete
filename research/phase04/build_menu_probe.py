@@ -101,6 +101,8 @@ def menu_elf(original, video_profile='retail', position=5):
             if desc[k] != before_desc[k]:
                 edits[DESCRIPTIONS + 8 * row + 4 * k] = (before_desc[k], desc[k])
     if position == 2:  # accept dispatcher: Gallery 2->3, Option 3->4, Exit 4->5
+        # Exit has a null second help line. The draw path must skip it at the new row.
+        edits[0x001CA648] = (0x24020004, 0x24020005)
         edits[0x001CA7B8] = (0x24020002, 0x24020003)
         edits[0x001CA7C8] = (0x24020003, 0x24020004)
         edits[0x001CA7D8] = (0x24020004, 0x24020005)

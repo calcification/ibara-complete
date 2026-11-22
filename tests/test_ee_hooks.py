@@ -162,10 +162,10 @@ class BuildTests(unittest.TestCase):
         b = hooks.build_hook("kuro", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
         # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
-        leaf = {"frame_hook", "kuro_frame", "kuro_set", "kuro_enter", "kuro_leave", "kuro_enter_entry",
+        leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
-                "hdr_state", "bomb_d_kind", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
+                "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
                 "sel_layers_stub"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
@@ -194,6 +194,10 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(len(addrs), len(set(addrs)))
         self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})
         self.assertNotIn(0x001CA7F0, addrs)
+        by_site = {site: (original, replacement) for site, original, replacement in rows}
+        self.assertEqual(by_site[0x00113610], (hooks.jal(0x0013D580), 0x0000102D))
+        for site in (0x001155A8, 0x0012CEC0):
+            self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))
         self.assertTrue(all(o != k for _a, o, k in rows))
 
     def test_bake_keeps_program_headers_after_elf_header(self):

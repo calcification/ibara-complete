@@ -328,6 +328,7 @@ KURO_PATCHES = [
     (0x001CA968, 0xAF80979C, "raw", 0xAF83979C),
     (0x001CAAC4, 0x24020001, "jal", "kuro_leave_entry"),
     (0x001CAAD4, 0xAF80979C, "raw", 0xAF83979C),
+    (0x0012E42C, 0x0C04A4D8, "jal", "frontend_rank_bar"),
 ]
 KURO_SITES = {a for a, *_ in KURO_PATCHES}
 # Black Label ship kind and bombs (ps2/hooks/bl_ship.c; research/phase18), switched with KURO:
@@ -357,8 +358,11 @@ BL_SHIP_PATCHES = [
     (0x0013B11C, 0x14400003, "raw", 0x10000003),
     (0x0013B258, 0x1440FFB4, "raw", 0x1000FFB4),
     (0x0013B274, 0x1040000C, "raw", 0x00000000),
-    # HUD pass: Black Label's centred RANK bar instead of Arrange's gauge (ps2/hooks/bl_rankbar.c; research/phase19)
-    (0x0012E42C, 0x0C04A4D8, "jal", "bl_rank_bar"),
+    # Both stage-name writers use HUD row 37. Keep that space clear in KURO even without arcade art.
+    (0x001155A8, 0x0C04F7A4, "raw", 0x00000000),
+    (0x0012CEC0, 0x0C04F7A4, "raw", 0x00000000),
+    # Skip the retail ranking/initials state machine and its memory-card autosave after a KURO game.
+    (0x00113610, 0x0C04F560, "raw", 0x0000102D),
     # Black Label select screen (ps2/hooks/bl_select.c; research/phase20): player start marks the side (the `dsll32
     # a0,t0,0x10` of 0x001CE6E0), and the paused main loop's pause-menu call runs the select screen while it is up
     (0x001CE718, 0x0008243C, "jal", "sel_start_stub"),
@@ -389,7 +393,7 @@ HOOKS["kuro"] = {
     "bake_only": True,
     "frontend": True,  # sites include words of the launcher builder's dispatcher (not in the retail executable)
 }
-KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n")
+KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n", "opt_gauge")
 
 EXTRA_DEFINES: list[str] = []  # --define NAME (test builds only; never for committed profiles)
 
@@ -605,9 +609,9 @@ def export_bake(built: dict) -> dict:
     out = {"base": f"{built['base']:08X}",
            "words": [[f"{a:08X}", f"{v:08X}"] for _p, a, v in sorted(built["words"], key=lambda t: t[1])],
            "sites": [[f"{a:08X}", f"{o:08X}", f"{n:08X}"] for a, o, n in built["sites"]]}
-    syms = {k: f"{built['syms'][k]:08X}" for k in KURO_EXPORTED_SYMS if k in built.get("syms", {})}
-    if syms:
-        out["syms"] = syms
+    syms = built.get("syms", {})
+    if "kuro_tab" in syms:
+        out["syms"] = {k: f"{syms[k]:08X}" for k in KURO_EXPORTED_SYMS}
     return out
 
 
@@ -677,7 +681,8 @@ def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2)
     if video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching
         drop |= {a for a, _o, _e in VIDEO_APPLY_SITES}
         set_sym_word(built, "video_enabled", 0)
-    built["sites"] = [x for x in built["sites"] if x[0] not in drop] + (list(RANK_GAUGE_EDITS) if rank_gauge else [])
+    built["sites"] = [x for x in built["sites"] if x[0] not in drop]
+    set_sym_word(built, "opt_gauge", 0)
     set_sym_word(built, "kuro_row", position)
     return lambda elf: bake_elf(elf, built, [select_art_segment()])
 
