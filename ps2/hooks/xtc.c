@@ -153,6 +153,12 @@ void bl_boss_cancel_frame(void) __attribute__((weak)); /* bl_enemy.c: bullet can
 void bl_select_tick(void) __attribute__((weak));       /* bl_select.c: open the select screen at a game start */
 
 /* Once per game logic frame (hooked after the retail collision pass). */
+/* shot-held frames (0..8) of a side: BL's player +0x270, which also drives the graze sphere (bl_rankbar.c) */
+u32 xtc_held(u32 side)
+{
+	return xtc.pl[side & 1u].held;
+}
+
 void xtc_frame(void)
 {
 	unsigned s;

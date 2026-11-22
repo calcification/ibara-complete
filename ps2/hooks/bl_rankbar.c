@@ -89,6 +89,39 @@ static const char stage_blank[] = "              ";
 static s32 bar_x = BAR_X;
 #define ARRANGE_GAUGE() GAME_CALL0(0x00129360u)
 
+/* The XTC graze sphere (research/phase21; BL 0C071110, the block at 0C071380): while a player holds the shot
+ * (BL's player +0x270 = held frames 1..8), a 16 x 16 orb turns on the ship — blue for player 1, red for player 2,
+ * 8 frames, one every 4 game frames — at the player's position + (+2 straight / -2 spread, 0) px (BL's per-kind
+ * offsets, 0C1754E0), drawn twice: flags 0x1217FF00, then 0x12040000 with alpha held x 0x808; tint 0x808080.
+ * Art: page 5 row 96, frame f at column 16 f (the select art segment, patcher --bl-rom). */
+#define SPHERE_ROW 96u
+#define SEL_ART_TAG 0x01F1FFF0u
+u32 xtc_held(u32 side);
+
+static int sphere_art(void)
+{
+	return EE_RAM(u32, SEL_ART_TAG) == 0x45534C42u && EE_RAM(u32, SEL_ART_TAG + 12u) == 0x004E4F2Du; /* "BLSE" .. "-ON\0" */
+}
+
+static void bl_sphere(s32 ox, s32 oy)
+{
+	u32 s;
+	if (!sphere_art())
+		return;
+	for (s = 0; s < 2u; s++) {
+		const u32 rec = PS2_PLAYER_BASE + s * PS2_PLAYER_STRIDE;
+		const u32 held = xtc_held(s), f = s * 8u + ((EE_RAM(u32, FRAMES) >> 2) & 7u);
+		const u32 kind = ((EE_RAM(u32, rec + 4u) >> 2) ^ s) & 1u; /* ship word = side * 4 XOR (kind * 4 + type) */
+		s32 x, y;
+		if (!held || !EE_RAM(u32, rec))
+			continue;
+		x = (s32)(EE_RAM(u32, rec + 0x10u) >> 16) + (kind ? -2 : 2) - 8 + ox;
+		y = (s32)((EE_RAM(u32, rec + 0x14u) - (EE_RAM(u32, CAMERA) & 0xFFFF0000u)) >> 16) - 8 + oy;
+		ktex_draw(BAR_TEX, 16u * f, SPHERE_ROW, 16, 16, 0x1217FF00u, 0x808080u, x, y);
+		ktex_draw(BAR_TEX, 16u * f, SPHERE_ROW, 16, 16, 0x12040000u | held * 0x808u, 0x808080u, x, y);
+	}
+}
+
 void bl_rank_bar(void)
 {
 	const u32 rank = EE_RAM(u32, RANK);
@@ -100,6 +133,7 @@ void bl_rank_bar(void)
 	}
 	if (!bar_built)
 		build_page();
+	bl_sphere(EE_RAM(s32, OFF_X), EE_RAM(s32, OFF_Y));
 	HUD_STR(stage_blank, 37, 5, 0x80808000u);
 	/* slide like BL (target BAR_X, 16 px lower while a boss gauge is up) */
 	{

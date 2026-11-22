@@ -46,8 +46,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, BL hit sparks (a
   shot that hits slows to a quarter speed, as in Black Label), enemy bullets
   cleared when a boss or mid-boss dies, no rank penalty for bombing. **Straight or spread:** the select screen, or KURO → CONFIG →
-  FIGHTER TYPE offers STRAIGHT A–D and SPREAD A–D for each player. Practice works inside KURO. Not yet: graze
-  sphere, the select screen's animation and background.
+  FIGHTER TYPE offers STRAIGHT A–D and SPREAD A–D for each player. Practice works inside KURO. With `--bl-rom` the
+  graze sphere (BL's orb on the ship while the shot is held) is drawn too. Not yet: the XTC number popup next to
+  the ship, the select screen's animation and background.
 
 In game: Cross = shot, Circle = bomb, Square = weapon change (KURO). Menus: Circle confirms, Cross cancels.
 
