@@ -43,8 +43,10 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   also stored as FIGHTER TYPE. Stage one of the port: no element animation or ship fly-in yet, a black background
   instead of the girder wall, player 2 still joins with FIGHTER TYPE.
 * **KURO weapon bar.** Arrange's seven-slot stock bar appears at the bottom. It marks the weapons you have
-  collected and highlights the equipped one. Press Square to cycle through your stock.
-* **KURO (Black Label, work in progress):** XTC graze counter and HUD, bomb wipe, BL shot levels,
+  collected and highlights the equipped one. Bomb stock and fragments sit above the bar. Press Square to cycle
+  through your stock.
+* **Gameplay scores.** The 1P label and score have a left margin.
+* **KURO (Black Label, work in progress):** XTC graze scoring, bomb wipe, BL shot levels,
   BL rank rules for fragments, medals and roses, BL enemy HP
   (stages 1–6) and fire timing, held fire, 32-shot cap, MG pod aiming and BL pod fire rules, BL hit sparks (a
   shot that hits slows to a quarter speed, as in Black Label), enemy bullets

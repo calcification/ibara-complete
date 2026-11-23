@@ -184,13 +184,13 @@ class BuildTests(unittest.TestCase):
         # ship_popup_tab stands in for the retail `lui s3`: s3 is the only saved register it touches.
         body = b["listing"].split("<ship_popup_tab>:")[1].split("\n\n")[0]
         self.assertEqual(set(re.findall(r"\b(s[0-8]|fp)\b", body)), {"s3"})
-        # The runtime table: every bl_mode word except its Exit-to-launcher hook and video sites, no overlaps.
+        # The runtime table contains KURO's gameplay words, with no overlap with the static edits.
         words = {a: v for _p, a, v in b["words"]}
         tab, n = words[b["syms"]["kuro_tab"]], words[b["syms"]["kuro_tab_n"]]
         rows = [(words[tab + 12 * i], words[tab + 12 * i + 4], words[tab + 12 * i + 8]) for i in range(n)]
         bl = hooks.HOOKS["bl_mode"]
-        self.assertEqual(n, 3 + 1 + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"])
-                         + len(hooks.BL_SHIP_PATCHES))
+        self.assertEqual(n, len(hooks.HOOKS["kuro"]["dynamic"]["sites"]) + len(hooks.BL_SYM_PATCHES)
+                         + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]) + len(hooks.BL_SHIP_PATCHES))
         addrs = [a for a, _o, _n in rows]
         self.assertEqual(len(addrs), len(set(addrs)))
         self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})
@@ -201,6 +201,15 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))
         self.assertEqual(by_site[0x001285EC], (0x106000D0, 0))
         self.assertEqual(by_site[0x0012E434], (hooks.jal(0x001285C0), hooks.jal(b["syms"]["kuro_weapon_bar"])))
+        self.assertEqual(by_site[0x0012C3E0], (0x24A50001, 0x24A50003))
+        self.assertEqual(by_site[0x00337EA0], (0, 2))
+        self.assertEqual(by_site[0x00337EA8], (4, 6))
+        for site in (0x0011536C, 0x0012C978, 0x0012C990):
+            self.assertEqual(by_site[site], (0x24050004, 0x24050005))
+        self.assertFalse({0x0012C394, 0x0012C3BC} & set(by_site))  # native score calls, no fixed XTC text
+        static = {site: (original, replacement) for site, original, replacement in b["sites"]}
+        self.assertEqual(static[0x0012CF2C], (0x0000302D, 0x24060002))
+        self.assertEqual(static[0x0012C31C], (0x24030002, 0x24030004))
         self.assertEqual(by_site[0x0012E1AC], (hooks.jal(0x0012C220), hooks.jal(b["syms"]["sel_pause"])))
         self.assertTrue(all(o != k for _a, o, k in rows))
 

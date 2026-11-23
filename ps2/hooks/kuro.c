@@ -1,7 +1,7 @@
 /* Instant KURO: Black Label as a mode of the main executable, switched on and off without reloading the game.
  *
  * The frontend executable carries this project's whole hook image (video.c and options.c for every mode, plus
- * the Black Label code: xtc.c, xtc_hud.c, bl_enemy.c, bl_player.c). The Black Label code words — call sites of
+ * the Black Label code: xtc.c, bl_enemy.c, bl_player.c). The Black Label code words — call sites of
  * its hooks, rule patches, the enemy part-HP tables — are not baked in: the builder appends them as a table of
  * (address, retail word, Black Label word) after the image (scripts/build_ee_hooks.py, kuro_tab/kuro_tab_n) and
  * kuro_set() writes one column or the other, then flushes the caches. A word is only written when it still holds

@@ -45,8 +45,8 @@ with the Black Label rules switched on; EXIT (or cancel) switches them off and r
 also switch off at the title / Mode Select and when the attract sequence starts after a Game Over.
 
 What the BLACK LABEL build currently does (see `docs/BLACK_LABEL_FEATURES.md`, results in
-`tests/results/2026-11-20_RUNTIME.md`): XTC graze counter with HUD and bomb wipe, Arrange's seven-slot weapon
-bar at the bottom of the screen, BL shot levels (small P to level 6, no secret), BL rank rules for fragments,
+`tests/results/2026-11-20_RUNTIME.md`): XTC graze scoring and bomb wipe, Arrange's seven-slot weapon
+bar below the bomb stock and fragments, BL shot levels (small P to level 6, no secret), BL rank rules for fragments,
 medals and roses, BL enemy HP and fire timing, held fire and 32-shot cap. `--bl-rom` also adds the graze sphere.
 
 Report what you see with `tests/manual/RESULT_TEMPLATE.md` (PCSX2 version or hardware/loader, video profile,

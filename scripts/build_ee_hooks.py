@@ -317,7 +317,7 @@ if _HP.exists():
 
 # Instant KURO (ps2/hooks/kuro.c): the frontend executable carries the whole image; the Black Label words of
 # bl_mode (hook call sites, rule patches, part-HP tables) become a runtime table that kuro.c switches on entering and
-# leaving KURO. Not in it: bl_mode's Exit-to-launcher hook (0x001CA7F0) and its video sites (static here).
+# leaving KURO. Video and the gameplay score margin apply in every mode of the frontend executable.
 KURO_PATCHES = [
     # Mode Select's KURO row: the dispatcher (research/phase04 DISPATCH 0x001D42A0: li v0,row; bne v1,v0,skip;
     # lui a0 (delay slot); addiu a0 ...; LoadExecPS2) -> its first word after the delay slot jumps to kuro_enter_entry
@@ -329,6 +329,16 @@ KURO_PATCHES = [
     (0x001CAAC4, 0x24020001, "jal", "kuro_leave_entry"),
     (0x001CAAD4, 0xAF80979C, "raw", 0xAF83979C),
     (0x0012E42C, 0x0C04A4D8, "jal", "frontend_rank_bar"),
+    # In Tate the first visible text column is 1. Start 1P at column 2 to leave a visible gutter.
+    (0x0012CF2C, 0x0000302D, "raw", 0x24060002),  # Arcade 1P label
+    (0x0012CDE4, 0x24060001, "raw", 0x24060002),  # Arrange 1P label
+    (0x0012CF74, 0x24060002, "raw", 0x24060004),  # initial Arcade P1 score
+    (0x0012CE14, 0x24060002, "raw", 0x24060004),  # initial Arrange P1 score
+    (0x0012C31C, 0x24030002, "raw", 0x24030004),  # per-frame P1 score column in both modes
+    (0x0012CF5C, 0x2406000A, "raw", 0x2406000B),  # place Arcade TOP after the full seven-digit 1P score
+    (0x0012CFB0, 0x2406000D, "raw", 0x2406000E),  # Arcade high score follows TOP
+    (0x0012C800, 0x24630015, "raw", 0x24630013),  # preserve Arcade's P2 score column
+    (0x0012C80C, 0x24630010, "raw", 0x2463000E),  # preserve Arrange's P2 score column
 ]
 KURO_SITES = {a for a, *_ in KURO_PATCHES}
 # Black Label ship kind and bombs (ps2/hooks/bl_ship.c; research/phase18), switched with KURO:
@@ -366,6 +376,14 @@ BL_SHIP_PATCHES = [
     # Arrange's seven-slot weapon stock bar uses the same player stock and selected-weapon fields as KURO.
     (0x001285EC, 0x106000D0, "raw", 0x00000000),
     (0x0012E434, 0x0C04A170, "jal", "kuro_weapon_bar"),
+    # Move both bomb-stock glyph rows and the fragment strip two cells inward from the weapon bar.
+    (0x0012C3E0, 0x24A50001, "raw", 0x24A50003),
+    (0x00337EA0, 0x00000000, "raw", 0x00000002),  # P1 bomb stock column
+    (0x00337EA8, 0x00000004, "raw", 0x00000006),  # P1 fragment strip column
+    # Keep the temporary song title above the bomb icons. Use the same row when drawing and clearing it.
+    (0x0011536C, 0x24050004, "raw", 0x24050005),
+    (0x0012C978, 0x24050004, "raw", 0x24050005),
+    (0x0012C990, 0x24050004, "raw", 0x24050005),
     # Black Label select screen (ps2/hooks/bl_select.c; research/phase20): player start marks the side (the `dsll32
     # a0,t0,0x10` of 0x001CE6E0), and the paused main loop's pause-menu call runs the select screen while it is up
     (0x001CE718, 0x0008243C, "jal", "sel_start_stub"),
@@ -379,16 +397,14 @@ HOOKS["kuro"] = {
     "test_id": "K20",
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
-    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "xtc_hud.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
+    "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
                 "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c"],
     "defines": ["KURO_PRESENTATION"],
-    "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame"),
-              ("hud_entry", 0x0012C0E0, "xtc_hud")],
+    "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
     "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
     "dynamic": {
-        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry"), (0x0012C394, 0x0C04B038, "hud_entry"),
-                  (0x0012C3BC, 0x0C04B038, "hud_entry")],
+        "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
         "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES,
         "jumps": HOOKS["bl_mode"]["jumps"],
         "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
