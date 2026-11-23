@@ -41,8 +41,8 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   screen before takeoff. Left / right picks the straight
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the
   SPEED / POWER / bomb panel), then Circle or Cross starts takeoff. A 60-second timer keeps the current choice. The choice is
-  also stored as FIGHTER TYPE. Stage one of the port: no element animation or ship fly-in yet, a black background
-  instead of the girder wall, player 2 still joins with FIGHTER TYPE.
+  also stored as FIGHTER TYPE. Player 2 presses Start once gameplay begins and joins with the ship chosen in
+  CONFIG → FIGHTER TYPE. The opening art is static and uses a black background.
 * **KURO weapon bar.** Arrange's seven-slot stock bar appears at the bottom. It marks the weapons you have
   collected and highlights the equipped one. Bomb stock and fragments sit above the bar. Press Square to cycle
   through your stock.

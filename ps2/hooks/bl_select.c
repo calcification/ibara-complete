@@ -1,8 +1,8 @@
 /* Black Label (KURO) select screen, stage one (research/phase20): ship (straight / spread), then type A-D, as on the
  * arcade board, drawn from Black Label's own artwork (the user's ROM, patcher --bl-rom) with its own layout and
  * blend settings (bl_select_data.c, generated from MAME captures). Stage one: one steady frame per state (no
- * per-element animation, no fly-in, black instead of the girder background); player 1 only (player 2 joins as
- * before, with CONFIG > FIGHTER TYPE).
+ * per-element animation, no fly-in, black instead of the girder background). Player 2 joins with
+ * CONFIG > FIGHTER TYPE once gameplay resumes.
  *
  * Flow: a player start (0x001CE6E0, the code that writes the ship word; `dsll32` at 0x001CE718 -> sel_start_stub)
  * marks the side; the pause hook opens the screen for player 1 once the opening scene is ready and sets the pause byte
@@ -155,7 +155,6 @@ u32 sel_menu(void)
 	secs = (sel_timer + 59u) / 60u;
 	draw_digit(secs / 10u, 280 + ox, 192 + oy);
 	draw_digit(secs % 10u, 280 + ox, 208 + oy);
-	draw_state(SEL_JOIN_P2, ox, oy);
 	draw_state(sel_phase == 0 ? SEL_SHIP_S + sel_kind : (sel_kind ? SEL_TYPE_P : SEL_TYPE_S) + sel_type, ox, oy);
 	return 0;
 }
