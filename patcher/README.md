@@ -30,12 +30,13 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **RANK gauge:** Arcade defaults to OFF and KURO defaults to ON. Change either setting in its CONFIG menu.
   Both settings last for the current session. Attract mode suppresses the gauge.
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE. For Black Label, choose
-  NOIR MODE → PRACTICE.
+  NOIR MODE → PRACTICE. Noir can select a stage and uses the default start data. PLAY DATA LIST is
+  available in Arcade and Arrange Practice.
 * **KURO Black Label RANK bar** (with `--bl-rom`): shown when enabled, centred under the high score as in Black
   Label — fill length, rank colours, the white flash at maximum rank and the fade when your ship is near it follow
   Black Label's code. The frame and plate use your ROM's artwork. KURO hides the stage-name line with either gauge.
-* **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game and
-  pad settings so changes made in KURO stay out of a later retail save.
+* **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game,
+  pad settings and Practice selections so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択
   screen before takeoff. Left / right picks the straight
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the

@@ -49,7 +49,37 @@ static u32 retail_config[0x90u / 4u];
 static u8 retail_arcade[6];
 static u32 kuro_ship[2] = {8u, 8u};
 
+#define PRACTICE_STAGE    0x00338F94u
+#define PRACTICE_POSITION 0x00338F98u
+#define PRACTICE_DATA     0x00338FA0u /* signed slot, -1 is DEFAULT */
+static u32 retail_practice_stage;
+static u32 retail_practice_position;
+static s32 retail_practice_data;
+
+/* Shift-JIS strings for the native two-line help renderer. */
+const char noir_start_help[] = /* ノワールモードでゲームを */
+	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xc5\x83\x51\x81\x5b\x83\x80\x82\xf0";
+const char noir_return_help[] = /* ノワールモードのメニューへ */
+	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xcc\x83\x81\x83\x6a\x83\x85\x81\x5b\x82\xd6";
+extern const char *cfg_desc[20];
+
 void bl_rank_bar_off(void);
+
+static void isolate_practice(u32 on)
+{
+	if (on) {
+		retail_practice_stage = EE_RAM(u32, PRACTICE_STAGE);
+		retail_practice_position = EE_RAM(u32, PRACTICE_POSITION);
+		retail_practice_data = EE_RAM(s32, PRACTICE_DATA);
+		EE_RAM(u32, PRACTICE_STAGE) = 0;
+		EE_RAM(u32, PRACTICE_POSITION) = 0;
+		EE_RAM(s32, PRACTICE_DATA) = -1;
+	} else {
+		EE_RAM(u32, PRACTICE_STAGE) = retail_practice_stage;
+		EE_RAM(u32, PRACTICE_POSITION) = retail_practice_position;
+		EE_RAM(s32, PRACTICE_DATA) = retail_practice_data;
+	}
+}
 
 static void isolate_config(u32 on)
 {
@@ -82,6 +112,11 @@ static void kuro_set(u32 on)
 	const struct kuro_word *w = kuro_tab;
 	u32 i, n = kuro_tab_n;
 	isolate_config(on);
+	isolate_practice(on);
+	/* Config's extended table when RANK GAUGE is present. The retail table is switched with the other words. */
+	cfg_desc[14] = (const char *)(on ? 0x003023F2u : 0x003023E0u); /* FIGHTER TYPE: omit the Arcade prefix */
+	cfg_desc[16] = (const char *)(on ? 0x00302432u : 0x00302420u); /* KEY CONFIG: omit the Arcade prefix */
+	cfg_desc[18] = on ? noir_return_help : (const char *)0x00301EF0u;
 	if (!on)
 		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
 	for (i = 0; i < n; i++, w++) {
@@ -188,4 +223,12 @@ __asm__(
 	"	jr	$31\n"
 	"	li	$2, 1\n"
 	".size kuro_leave_entry, . - kuro_leave_entry\n"
+	/* Up from the first Practice row wraps to EXIT (row 3). */
+	".globl noir_practice_wrap\n"
+	".type noir_practice_wrap, @function\n"
+	"noir_practice_wrap:\n"
+	"\tli\t$2, 3\n"
+	"\tj\t0x001CB314\n"
+	"\tsw\t$2, -26732($28)\n"
+	".size noir_practice_wrap, . - noir_practice_wrap\n"
 	".set pop\n");

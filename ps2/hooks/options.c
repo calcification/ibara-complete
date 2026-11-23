@@ -32,7 +32,11 @@ const char rank_label[] = "RANK GAUGE"; /* label-table word 0x002A9238 */
 static const char rank_help[] = "\x83\x89\x83\x93\x83\x4e\x83\x51\x81\x5b\x83\x57\x82\xcc\x95\x5c\x8e\xa6\x82\xf0";
 
 /* Two help lines per row (retail 0x002A9310 holds 9 rows, with the next table right after it). */
+#ifdef KURO_PRESENTATION
+const char *cfg_desc[20] = {
+#else
 const char *const cfg_desc[20] = {
+#endif
 	(const char *)0x003022E0u, (const char *)0x00302300u, /* DIFFICULTY 1 */
 	(const char *)0x00302310u, (const char *)0x00302300u, /* DIFFICULTY 2 */
 	(const char *)0x00302330u, (const char *)0x00302300u, /* PLAYER STOCK */

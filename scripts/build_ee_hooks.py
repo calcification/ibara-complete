@@ -394,6 +394,27 @@ BL_SHIP_PATCHES = [
     # textures and ours together overran the GS texture cache)
     (0x0012E234, 0x0C044940, "jal", "sel_layers_stub"),
 ]
+# Noir Practice uses DEFAULT play data and cannot open the shared slot picker or deletion menu.
+# The mode switch saves and restores the three retail Practice choices (ps2/hooks/kuro.c).
+NOIR_MENU_PATCHES = [
+    (0x002A903C, 0x00301CA0, "word", 0x00301C50),  # replace PLAY DATA with EXIT in the visible menu
+    (0x001CB0A4, 0x2A020005, "raw", 0x2A020004),  # render four rows
+    (0x001CB298, 0x28410005, "raw", 0x28410004),  # Down wraps at four rows
+    (0x001CB328, 0x1000FFFA, "j", "noir_practice_wrap"),
+    (0x001CB32C, 0xAF869794, "raw", 0x00000000),
+    (0x001CB058, 0x24020003, "raw", 0x24020004),  # skip the PLAY DATA value renderer
+    (0x001CB36C, 0x10620042, "raw", 0x10620005),  # accept row 3 as EXIT
+    (0x001CB1AC, 0x14430010, "raw", 0x10000010),  # never enter the slot screen from an edit popup
+    (0x002A90E0, 0x00301D50, "word", "noir_start_help"),   # main submenu > GAME START help
+    (0x002A9128, 0x00301EF0, "word", "noir_return_help"),  # difficulty > EXIT help
+    (0x002A91A8, 0x00302010, "word", "noir_return_help"),  # Practice's new EXIT row
+    (0x002A91AC, 0x00302030, "word", 0x00301F10),
+    # Retail CONFIG help table when the optional RANK GAUGE row is absent.
+    (0x002A9340, 0x003023E0, "word", 0x003023F2),
+    (0x002A9348, 0x00302420, "word", 0x00302432),
+    (0x002A9350, 0x00301EF0, "word", "noir_return_help"),
+]
+
 HOOKS["kuro"] = {
     "test_id": "K20",
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
@@ -406,7 +427,7 @@ HOOKS["kuro"] = {
     "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
     "dynamic": {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
-        "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES,
+        "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES + NOIR_MENU_PATCHES,
         "jumps": HOOKS["bl_mode"]["jumps"],
         "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"] + [
             (0x002A8E40, 0xD0000003, HEADER_UV),  # Redirect the Arcade header to NOIR MODE while KURO is active.

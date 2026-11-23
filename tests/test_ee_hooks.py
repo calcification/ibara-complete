@@ -162,12 +162,12 @@ class BuildTests(unittest.TestCase):
         b = hooks.build_hook("kuro", Path(self.tmp.name), hooks.BAKE_BASE, hooks.BAKE_END)
         self.assertLessEqual(hooks.BAKE_BASE + b["size"], hooks.BAKE_END)
         # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
-        leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "kuro_enter", "kuro_leave", "kuro_enter_entry",
+        leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "isolate_practice", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "fix_full_frame_env",
                 "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
-                "sel_layers_stub", "sel_begin", "sel_pause", "kuro_weapon_bar"}
+                "sel_layers_stub", "sel_begin", "sel_pause", "kuro_weapon_bar", "noir_practice_wrap"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)
@@ -196,6 +196,10 @@ class BuildTests(unittest.TestCase):
         self.assertNotIn(0x001CA7F0, addrs)
         by_site = {site: (original, replacement) for site, original, replacement in rows}
         self.assertEqual(by_site[0x002A8E40], (0xD0000003, 0x70700003))  # Arcade header UV, Noir while active
+        self.assertEqual(by_site[0x002A903C], (0x00301CA0, 0x00301C50))  # PLAY DATA becomes EXIT
+        self.assertEqual(by_site[0x001CB36C], (0x10620042, 0x10620005))  # row 3 confirms EXIT
+        self.assertEqual(by_site[0x001CB1AC], (0x14430010, 0x10000010))  # bypass shared slot screen
+        self.assertEqual(by_site[0x002A90E0], (0x00301D50, b["syms"]["noir_start_help"]))
         self.assertEqual(by_site[0x00113610], (hooks.jal(0x0013D580), 0x0000102D))
         for site in (0x001155A8, 0x0012CEC0):
             self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))
