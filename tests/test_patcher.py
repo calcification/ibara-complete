@@ -43,6 +43,26 @@ class PatchTest(unittest.TestCase):
                 at += size
         self.assertEqual(copied, spans)
 
+    def test_native_header_copies_the_reserved_plaque_from_its_atlas(self):
+        pixels = 0xDEB61040  # SLPM-66301, IBARAR.PDM resource 946
+        width = native_menu_label.ATLAS_WIDTH
+        left, top, right, bottom = native_menu_label.HEADER_BOX
+        _s, _d, _m, _sha, _note, records = apply_kuro_patch.read_patch(ROOT / "patcher" / "ibara_kuro.patch")
+        copied = 0
+        for at, length, ops in records:
+            if at >= pixels + width ** 2 or at + length <= pixels:
+                continue
+            for op in ops:
+                self.assertEqual(op[0], make_patch.OP_COPY)
+                _, src, size = op
+                if src != at:
+                    y, x = divmod(at - pixels, width)
+                    self.assertTrue(top <= y < bottom and left <= x < x + size <= right)
+                    self.assertTrue(pixels <= src < src + size <= pixels + width ** 2)
+                    copied += size
+                at += size
+        self.assertEqual(copied, (right - left) * (bottom - top))
+
     def test_patch_has_an_empty_rank_bar_art_slot(self):
         # the art slot is in the patch's literal bytes, tag then 2,240 zero bytes (art comes from the user's ROM)
         _s, _d, _m, _sha, _note, records = apply_kuro_patch.read_patch(ROOT / "patcher" / "ibara_kuro.patch")

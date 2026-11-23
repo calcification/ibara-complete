@@ -251,26 +251,28 @@ def write_companion(target, path, offset, size, chunk_size):
             remaining -= length
 
 
+def read_menu_atlas(source, files, resource_offset, box):
+    pdm = next(record for record in files if record['name'].split(';')[0].upper() == 'IBARAR.PDM')
+    with source.open('rb') as iso:
+        pixels, original, clut, palette_type = native_menu_label.read_atlas(iso, pdm['lba'] * disc.SECTOR + resource_offset)
+    palette = atlas.palette_from_bytes(clut, palette_type)
+    tile = atlas.original_image(original, palette).crop(box)
+    if tile.getchannel('A').getextrema() != (0, 0):
+        raise ValueError('The new menu art would overlap existing atlas artwork')
+    return pixels, original, clut, palette_type, palette, tile.size
+
+
 def label_writes(source, files, text=DEFAULT_LABEL):
     from PIL import Image, ImageDraw, ImageFont
 
     if not text.strip() or not text.isprintable():
         raise ValueError('The launcher label must be a single printable line')
-    pdm = next(record for record in files if record['name'].split(';')[0].upper() == 'IBARAR.PDM')
-    width = native_menu_label.ATLAS_WIDTH
-    pixel_size = width * width
-    with source.open('rb') as iso:
-        pixels, palette_type = native_menu_label.atlas_layout(iso, pdm['lba'] * disc.SECTOR)
-        original = disc.read_at(iso, pixels, pixel_size)
-        palette = atlas.palette_from_bytes(disc.read_at(iso, pixels + pixel_size, 1024), palette_type)
-    tile = atlas.original_image(original, palette).crop(LABEL_BOX)
-    if tile.getchannel('A').getextrema() != (0, 0):
-        raise ValueError('The probe label would overlap existing atlas artwork')
+    pixels, original, _, _, palette, size = read_menu_atlas(source, files, native_menu_label.ATLAS_PDM_OFFSET, LABEL_BOX)
     if text == native_menu_label.LABEL:
         return [(pixels + target, original[src:src + size])
                 for target, src, size in native_menu_label.copy_spans(0)]
 
-    label = Image.new('RGBA', tile.size)
+    label = Image.new('RGBA', size)
     draw = ImageDraw.Draw(label)
     vertical = 7
     try:
@@ -287,11 +289,20 @@ def label_writes(source, files, text=DEFAULT_LABEL):
         stroke_width=1, stroke_fill=(13, 22, 44, 255),
     )
     left, top, _, bottom = LABEL_BOX
-    return [(pixels + y * width + left, row.tobytes()) for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
+    return [(pixels + y * native_menu_label.ATLAS_WIDTH + left, row.tobytes())
+            for y, row in zip(range(top, bottom), atlas.quantize(label, palette))]
+
+
+def header_writes(source, files):
+    pixels, original, clut, palette_type, _, _ = read_menu_atlas(
+        source, files, native_menu_label.HEADER_PDM_OFFSET, native_menu_label.HEADER_BOX,
+    )
+    return [(pixels + dest, original[src:src + size])
+            for dest, src, size in native_menu_label.header_spans(0, original, clut, palette_type)]
 
 
 def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile='retail', disc_files=(), position=5,
-          executable_hook=None, payload=True):
+          executable_hook=None, payload=True, noir_header=False):
     """payload=False: no separate executable on the disc (instant KURO: executable_hook makes the added row act
     inside the frontend executable instead of loading one)."""
     if source.resolve() == output.resolve():
@@ -334,6 +345,7 @@ def build(source, output, probe_path=None, *, label=DEFAULT_LABEL, video_profile
         *([(disc.NEW_FILE_LBA * disc.SECTOR, probe)] if payload else []),
         (boot_lba * disc.SECTOR, executable),
         *label_writes(source, files, label),
+        *(header_writes(source, files) if noir_header else ()),
     ]
     with source.open('rb') as original_iso, output.open('x+b') as target:
         try:

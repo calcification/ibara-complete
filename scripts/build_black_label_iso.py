@@ -16,8 +16,8 @@ compiler is optional: without it the committed prebuilt hook image (ps2/prebuilt
 Output is ~3.7 GB and contains game data: keep it local, never upload it.
 
 Play: boot the new ISO (PCSX2 with cheats off, or your usual loader), Start at the title, then Down twice to
-NOIR MODE (third row) and Circle. Circle confirms, Cross cancels. NOIR MODE opens ARCADE MODE's menu with
-Black Label rules. Its EXIT returns to Mode Select. Cross shoots, Circle bombs, and Square changes weapon.
+NOIR MODE (third row) and Circle. Circle confirms, Cross cancels. NOIR MODE opens the Black Label menu.
+Its EXIT returns to Mode Select. Cross shoots, Circle bombs, and Square changes weapon.
 Report results with tests/manual/RESULT_TEMPLATE.md.
 """
 from __future__ import annotations
@@ -74,7 +74,7 @@ def main(argv=None) -> int:
                                               position=args.position)
     print("3/3 building the disc (this copies ~3.7 GB) ...")
     crc, sha = build_menu_probe.build(args.source, args.output, label=args.label, video_profile=args.video_profile,
-                                      position=args.position, executable_hook=hook, payload=False)
+                                      position=args.position, executable_hook=hook, payload=False, noir_header=True)
     if args.bl_rom:
         import json
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "patcher"))
@@ -100,7 +100,8 @@ def main(argv=None) -> int:
         print(f"Black Label RANK bar and select screen artwork copied from {args.bl_rom}")
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
-    print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), Circle: ARCADE MODE's menu with Black Label rules. EXIT returns to Mode Select.")
+    print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), and press Circle.")
+    print("NOIR MODE opens with Black Label rules. EXIT returns to Mode Select.")
     return 0
 
 

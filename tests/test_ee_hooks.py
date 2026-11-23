@@ -188,14 +188,14 @@ class BuildTests(unittest.TestCase):
         words = {a: v for _p, a, v in b["words"]}
         tab, n = words[b["syms"]["kuro_tab"]], words[b["syms"]["kuro_tab_n"]]
         rows = [(words[tab + 12 * i], words[tab + 12 * i + 4], words[tab + 12 * i + 8]) for i in range(n)]
-        bl = hooks.HOOKS["bl_mode"]
-        self.assertEqual(n, len(hooks.HOOKS["kuro"]["dynamic"]["sites"]) + len(hooks.BL_SYM_PATCHES)
-                         + len(bl["jumps"]) + len(bl["patches"]) + len(bl["patches_extra"]) + len(hooks.BL_SHIP_PATCHES))
+        dynamic = hooks.HOOKS["kuro"]["dynamic"]
+        self.assertEqual(n, sum(len(group) for group in dynamic.values()))
         addrs = [a for a, _o, _n in rows]
         self.assertEqual(len(addrs), len(set(addrs)))
         self.assertFalse(set(addrs) & {a for a, _o, _n in b["sites"]})
         self.assertNotIn(0x001CA7F0, addrs)
         by_site = {site: (original, replacement) for site, original, replacement in rows}
+        self.assertEqual(by_site[0x002A8E40], (0xD0000003, 0x70700003))  # Arcade header UV, Noir while active
         self.assertEqual(by_site[0x00113610], (hooks.jal(0x0013D580), 0x0000102D))
         for site in (0x001155A8, 0x0012CEC0):
             self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))

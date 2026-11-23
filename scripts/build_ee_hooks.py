@@ -28,6 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import build_pnach  # noqa: E402
+from native_menu_label import HEADER_UV  # noqa: E402
 
 PS2 = ROOT / "ps2"
 CROSS = "mips-linux-gnu-"
@@ -407,7 +408,9 @@ HOOKS["kuro"] = {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
         "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES,
         "jumps": HOOKS["bl_mode"]["jumps"],
-        "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"],
+        "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"] + [
+            (0x002A8E40, 0xD0000003, HEADER_UV),  # Redirect the Arcade header to NOIR MODE while KURO is active.
+        ],
     },
     "requires": [],
     "establishes": [],
