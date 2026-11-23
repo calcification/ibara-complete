@@ -211,7 +211,7 @@ def main(argv):
     elif not rom_data and art_at is not None:
         print("No Black Label artwork was added. Supply --bl-rom ibarablk.zip for KURO's ship select and rank bar.")
     print(f"Done: {output}")
-    print("Boot it, press Start at the title; KURO is the third row of Mode Select (Circle to enter).")
+    print("Boot it, press Start at the title, then choose the third row of Mode Select to enter Black Label.")
     return 0
 
 

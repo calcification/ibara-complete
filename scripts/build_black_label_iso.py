@@ -8,7 +8,7 @@ What it does (nothing is downloaded; your ISO is only read):
 2. bakes this project's code into the game's executable (ps2/hooks/kuro.c "instant KURO": the Black Label code
    — XTC graze counter + HUD, weapon stock and change button, shot levels, rank and enemy rules — is switched on
    when KURO is chosen and off when you leave it, no reload; plus the video and menu options);
-3. builds a separate ISO whose Mode Select has an extra row (default: KURO, third, after Arcade and Arrange)
+3. builds a separate ISO whose Mode Select has an extra row (default: NOIR MODE, after Arcade and Arrange)
    (research/phase04/build_menu_probe.py).
 
 Requirements: Python 3.10+ and `pip install -r requirements-assets.txt` (Pillow, numpy). The MIPS cross
@@ -16,9 +16,9 @@ compiler is optional: without it the committed prebuilt hook image (ps2/prebuilt
 Output is ~3.7 GB and contains game data: keep it local, never upload it.
 
 Play: boot the new ISO (PCSX2 with cheats off, or your usual loader), Start at the title, then Down twice to
-KURO (third row) and Circle (Circle confirms, Cross cancels; Cross = shot, Circle = bomb, Square = weapon change).
-KURO opens ARCADE MODE's menu with Black Label rules; its EXIT returns to Mode Select. Report results with
-tests/manual/RESULT_TEMPLATE.md.
+NOIR MODE (third row) and Circle. Circle confirms, Cross cancels. NOIR MODE opens ARCADE MODE's menu with
+Black Label rules. Its EXIT returns to Mode Select. Cross shoots, Circle bombs, and Square changes weapon.
+Report results with tests/manual/RESULT_TEMPLATE.md.
 """
 from __future__ import annotations
 
@@ -35,6 +35,7 @@ sys.path.insert(0, str(ROOT / "research" / "phase03"))
 
 import build_ee_hooks  # noqa: E402
 import build_pnach  # noqa: E402
+import native_menu_label  # noqa: E402
 
 
 def main(argv=None) -> int:
@@ -44,7 +45,8 @@ def main(argv=None) -> int:
     ap.add_argument("--video-profile", default=build_ee_hooks.FULL_FRAME_AUTO,
                     help="auto_full_frame (default: interlaced Yoko, 240 active lines in NTSC Tate), auto (224-line "
                          "Tate), 240p_full_frame, 240p_cave_beta, 240p_halfpixel, 240p_core or retail")
-    ap.add_argument("--label", default="KURO", help="menu label for the Black Label entry (short, ASCII)")
+    ap.add_argument("--label", default=native_menu_label.LABEL,
+                    help="menu label for Black Label (default: NOIR MODE, assembled from retail art)")
     ap.add_argument("--position", type=int, choices=(2, 5), default=2,
                     help="menu row of the entry: 2 = third, right after Arcade and Arrange (default); 5 = bottom")
     ap.add_argument("--rank-gauge", choices=("arcade", "arrange"), default="arcade",

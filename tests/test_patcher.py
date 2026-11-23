@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import apply_kuro_patch  # noqa: E402
 import make_patch  # noqa: E402
+import native_menu_label  # noqa: E402
 
 
 class PatchTest(unittest.TestCase):
@@ -24,6 +25,23 @@ class PatchTest(unittest.TestCase):
         for at, length, ops in records:
             self.assertEqual(sum(op[2] if op[0] == 0 else len(op[1]) for op in ops), length)
             self.assertLessEqual(at + length, dst_size)
+
+    def test_native_menu_art_uses_only_disc_copies(self):
+        # SLPM-66301, IBARAR.PDM resource 945's image data starts after a 64-byte TIM2 header.
+        pixels = 0xDEB50840
+        spans = list(native_menu_label.copy_spans(pixels))
+        _s, _d, _m, _sha, _note, records = apply_kuro_patch.read_patch(ROOT / "patcher/ibara_kuro.patch")
+        copied = []
+        for at, length, ops in records:
+            if at >= pixels + 65536 or at + length <= pixels:
+                continue
+            for op in ops:
+                self.assertEqual(op[0], make_patch.OP_COPY)
+                _, src, size = op
+                if src != at:
+                    copied.append((at, src, size))
+                at += size
+        self.assertEqual(copied, spans)
 
     def test_patch_has_an_empty_rank_bar_art_slot(self):
         # the art slot is in the patch's literal bytes, tag then 2,240 zero bytes (art comes from the user's ROM)

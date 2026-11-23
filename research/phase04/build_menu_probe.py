@@ -17,6 +17,7 @@ import ibara_complete_bootstrap as disc
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'scripts'))
 import build_pnach as video
+import native_menu_label
 
 
 # Zero padding begins after the final instruction at 0x001D4280.
@@ -29,7 +30,7 @@ PAYLOAD_ARGV = 0x001D42F4  # argv[1] for the payload: pointer to PAYLOAD_ARG
 PAYLOAD_ARG = 0x001D42F8   # "S=0" (screen mode), refreshed by ps2/hooks/video.c when present
 RETAIL_BASE = 0x00100000
 RETAIL_LOAD_OFFSET = 0x80
-LABEL_BOX = (112, 192, 224, 208)
+LABEL_BOX = native_menu_label.LABEL_BOX
 DEFAULT_LABEL = 'ELF PROBE'
 # Additional field-state writes from cave-ps2-240p v0.1.0-beta.1.
 FIELD_STATE_EDITS = [
@@ -256,22 +257,19 @@ def label_writes(source, files, text=DEFAULT_LABEL):
     if not text.strip() or not text.isprintable():
         raise ValueError('The launcher label must be a single printable line')
     pdm = next(record for record in files if record['name'].split(';')[0].upper() == 'IBARAR.PDM')
+    width = native_menu_label.ATLAS_WIDTH
+    pixel_size = width * width
     with source.open('rb') as iso:
-        offset = pdm['lba'] * disc.SECTOR + 0x2D20800  # Resource 945.
-        header = disc.read_at(iso, offset, 16)
-        if header[:4] != b'TIM2':
-            raise ValueError('Unexpected magic for menu label atlas')
-        picture = offset + (128 if header[5] else 16)
-        fields = struct.unpack('<IIIHHBBBBHH', disc.read_at(iso, picture, 24))
-        _, palette_size, pixel_size, header_size, _, _, _, palette_type, image_type, width, height = fields
-        if (palette_size, pixel_size, palette_type & 0x1F, image_type, width, height) != (1024, 65536, 3, 5, 256, 256):
-            raise ValueError('Unexpected menu label atlas layout')
-        pixels = picture + header_size
+        pixels, palette_type = native_menu_label.atlas_layout(iso, pdm['lba'] * disc.SECTOR)
         original = disc.read_at(iso, pixels, pixel_size)
-        palette = atlas.palette_from_bytes(disc.read_at(iso, pixels + pixel_size, palette_size), palette_type)
+        palette = atlas.palette_from_bytes(disc.read_at(iso, pixels + pixel_size, 1024), palette_type)
     tile = atlas.original_image(original, palette).crop(LABEL_BOX)
     if tile.getchannel('A').getextrema() != (0, 0):
         raise ValueError('The probe label would overlap existing atlas artwork')
+    if text == native_menu_label.LABEL:
+        return [(pixels + target, original[src:src + size])
+                for target, src, size in native_menu_label.copy_spans(0)]
+
     label = Image.new('RGBA', tile.size)
     draw = ImageDraw.Draw(label)
     vertical = 7
