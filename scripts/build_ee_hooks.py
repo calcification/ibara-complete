@@ -247,7 +247,7 @@ HOOKS = {
         "title": "BLACK LABEL / XTC graze counter (+10 per graze)",
         "description": ("Kuro BL graze: holding shot 5+ frames near enemy bullets adds 10 points per bullet. "
                         "State at 000C0000: magic XTC1, then per player quarters(s32)/timer(u16)/held(u8). "
-                        "Run only after C00 passes. No HUD counter yet. RUNTIME UNTESTED."),
+                        "Use after C00. The retail HUD displays the score."),
         "sources": ["xtc.c", "spawnlog.c"],
         "stubs": [("xtc_entry", 0x0012AC60, "xtc_frame")],
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
@@ -361,6 +361,7 @@ BL_SHIP_PATCHES = [
     (0x001C9840, 0x24429384, "lo", "ship_help", 4),
     # player start: ship word = side * 4 + type -> side * 4 XOR value (values 4-7 = the other pilot's set)
     (0x001CE728, 0x00E51821, "raw", 0x00E51826),
+    (0x0012C604, 0x02E21021, "raw", 0x02E21026),  # same mapping on mid-game join or Continue
     # type-D bomb (0x0011B460): pattern table and repeat count by ship kind instead of player side
     (0x0011B480, 0x8C790000, "jal", "bomb_d_kind"),
     (0x0011B4F4, 0x24CE0001, "raw", 0x01207021),

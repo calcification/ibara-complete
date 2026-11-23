@@ -206,6 +206,7 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(by_site[0x001285EC], (0x106000D0, 0))
         self.assertEqual(by_site[0x0012E434], (hooks.jal(0x001285C0), hooks.jal(b["syms"]["kuro_weapon_bar"])))
         self.assertEqual(by_site[0x0012C3E0], (0x24A50001, 0x24A50003))
+        self.assertEqual(by_site[0x0012C604], (0x02E21021, 0x02E21026))  # Noir P2 join/continue stays in ship IDs 0-7
         self.assertEqual(by_site[0x00337EA0], (0, 2))
         self.assertEqual(by_site[0x00337EA8], (4, 6))
         for site in (0x0011536C, 0x0012C978, 0x0012C990):
