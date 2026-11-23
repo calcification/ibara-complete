@@ -56,7 +56,7 @@ PCSX2 driving: `tools/pcsx2_session/` (README there). Savestate RAM: `scripts/p2
 | 6 | XTC rules | `XTC_REQUIRE_PODS` is 0: BL also requires player +0x289 (very likely "pods out") — KURO may count grazes BL would not. 110 points per graze at rank 0 is untested in play. Popup / sphere for player 2 untested (ship-kind = `((ship word >> 2) ^ side) & 1` assumption). | `ps2/hooks/xtc.c`, `bl_rankbar.c`; research/phase21 |
 | 7 | Pod shot counts | Same-day PCSX2 vs BL (per 1,000 frames): 5-way 1540 vs 817, homing 64 vs 123, napalm 72 vs 38 — sparks are ruled out (K30); suspect targeting or fire rules. | research/phase16 README ("Shot sparks"); `tools/stage_compare/bl_pod_rate.lua`, `run_stage.py --define BL_RATE_TEST` |
 | 8 | Patch size limit | `scripts/make_patch.py` `MAX_DATA_RUN` raised to 16 KiB (longest literal run now 9,888 bytes). Confirm the run is only our hook image. | `scripts/make_patch.py` |
-| 9 | Overlays while selecting | The score HUD and a retail NOW LOADING banner appear behind the opening selector. Other gameplay layers are skipped by the selector stub. | `bl_select.c`, K39 capture |
+| 9 | Overlays while selecting | The score HUD still draws behind the selector; the retail NOW LOADING banner is skipped while it is up (K40). Other gameplay layers are skipped by the selector stub. | `bl_select.c`, K40 |
 
 ## Hardware feedback retest
 

@@ -167,7 +167,7 @@ class BuildTests(unittest.TestCase):
                 "opt_set", "cfg_value",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
-                "sel_layers_stub", "sel_begin", "sel_pause", "kuro_weapon_bar", "noir_practice_wrap"}
+                "sel_layers_stub", "sel_banner_stub", "sel_begin", "sel_pause", "kuro_weapon_bar", "noir_practice_wrap"}
         cur, bad = None, []
         for line in b["listing"].splitlines():
             m = re.match(r"^[0-9a-f]+ <(\w+)>:", line)

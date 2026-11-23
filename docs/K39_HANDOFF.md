@@ -11,6 +11,6 @@ Start from `codex/kuro-presentation` at [commit `aaa0344`](https://github.com/ca
 
 ## Where to pick up
 
-Use the hardware results to prioritize the old Exit freeze, Tate gameplay framing and diagonal shimmer, and the Noir ship-select-to-gameplay transition. For co-op, try P2 Start once during selection and again after takeoff. If checking save isolation, use a spare card. The known visual issue is the pink **NOW LOADING** banner behind Stage 1’s selector. Busy-stage texture cache behavior still needs longer play coverage.
+Use the hardware results to prioritize the old Exit freeze, Tate gameplay framing and diagonal shimmer, and the Noir ship-select-to-gameplay transition. For co-op, try P2 Start once during selection and again after takeoff. If checking save isolation, use a spare card. The pink **NOW LOADING** banner behind Stage 1’s selector is fixed in K40 (on `claude/ibara-black-label-ps2-rm9qnw`). Busy-stage texture cache behavior still needs longer play coverage.
 
 Use the [standalone patcher from the tested commit](https://github.com/calcification/ibara-complete/tree/aaa034409196c0b3b1d7b9869de08d9edfe04c77/patcher) with the clean Japanese ISO and `--bl-rom ibarablk.zip` to exercise the selector and Black Label rank art. The tested ISO is exactly **3,932,848,128 bytes**, and all **50 tests** passed. Keep the repository source-only and preserve the retail ISO size.

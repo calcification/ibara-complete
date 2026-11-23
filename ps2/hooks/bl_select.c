@@ -176,6 +176,21 @@ __asm__(
 	"1:	j	0x00112500\n"
 	"	nop\n"
 	".size sel_layers_stub, . - sel_layers_stub\n"
+	/* replaces `jal 0x0013BE30` at 0x0012E43C (the HUD pass's last call: the retail NOW LOADING banner, drawn while
+	 * its fade $gp-28936 is non-zero): skipped while the select screen is up. The fade runs elsewhere (0x0013BFA0), so
+	 * the banner is normally gone when the screen closes. Uses only $at. */
+	".globl sel_banner_stub\n"
+	".type sel_banner_stub, @function\n"
+	"sel_banner_stub:\n"
+	"	lui	$1, %hi(sel_active)\n"
+	"	lw	$1, %lo(sel_active)($1)\n"
+	"	bnez	$1, 1f\n"
+	"	nop\n"
+	"	j	0x0013BE30\n"
+	"	nop\n"
+	"1:	jr	$31\n"
+	"	nop\n"
+	".size sel_banner_stub, . - sel_banner_stub\n"
 	/* replaces `dsll32 a0,t0,0x10` at 0x001CE718 (player start; t0 = side 0 / 1): same result, and marks the side.
 	 * Uses only $at (ra is non-zero: stored as the flag). */
 	".globl sel_start_stub\n"

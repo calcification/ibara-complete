@@ -394,6 +394,10 @@ BL_SHIP_PATCHES = [
     # and the draw pass skips the stage's 24 layers while it is up (BL's screen covers the playfield; the stage's
     # textures and ours together overran the GS texture cache)
     (0x0012E234, 0x0C044940, "jal", "sel_layers_stub"),
+    # and the last HUD call, the retail NOW LOADING banner (0x0013BE30: draws while its alpha $gp-28936 is non-zero;
+    # the fade itself runs in 0x0013BFA0), is skipped while it is up — the banner kept scrolling over the Stage 1
+    # selector for its first ~2 s
+    (0x0012E43C, 0x0C04EF8C, "jal", "sel_banner_stub"),
 ]
 # Noir Practice uses DEFAULT play data and cannot open the shared slot picker or deletion menu.
 # The mode switch saves and restores the three retail Practice choices (ps2/hooks/kuro.c).
