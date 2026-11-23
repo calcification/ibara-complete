@@ -74,7 +74,7 @@ from the test card. Instrumented KURO game overs with qualifying scores kept the
 test card byte-identical with Auto Save off and on. Leaving KURO restored Arcade's fighter setting. The
 gameplay capture showed the centered rank bar clear of the HUD stage name. The attract capture showed the
 stage name without a gauge while Arcade's preference was ON. The builder and patcher produced identical
-`--bl-rom` images of 3,932,848,128 bytes. Original PS2 retest is pending.
+`--bl-rom` images of 3,932,848,128 bytes. The K40 build then passed the full checklist on an original PS2 (K41).
 
 ## Recently changed files (last commits on the branch)
 
