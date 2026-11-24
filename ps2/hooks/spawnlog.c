@@ -314,6 +314,39 @@ void spawn_log_frame(void)
 	if (EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_FLAGS) != 0)
 		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) = BL_LOCK_SHOT;
 #endif
+#ifdef BL_RANKLOG /* research/phase24: rank held at BL_RANKLOG and 3 bombs until P1's first bomb; then every rank
+		     * change (frame since the bomb, old, new) -> 0x01FD0000 (count, then 12-byte rows) */
+	{
+		static u32 armed, since, last;
+		volatile u32 *n = (volatile u32 *)0x01FD0000u;
+		volatile u32 *row = (volatile u32 *)0x01FD0010u;
+		const u32 rec = PS2_PLAYER_BASE;
+		if (EE_RAM(u32, rec + PS2_PLAYER_FLAGS) != 0) {
+			if (!armed) {
+				*n = 0;
+				if (EE_RAM(u8, rec + PS2_PLAYER_BOMBS) < 3u && since > 120u) {
+					armed = 1;
+					since = 0;
+					last = EE_RAM(u32, PS2_RANK_INV);
+				} else {
+					EE_RAM(u8, rec + PS2_PLAYER_BOMBS) = 3;
+					EE_RAM(u32, PS2_RANK_INV) = BL_RANKLOG;
+					since++;
+				}
+			} else {
+				const u32 r = EE_RAM(u32, PS2_RANK_INV);
+				since++;
+				if (r != last && *n < 1000u) {
+					row[3 * *n] = since;
+					row[3 * *n + 1] = last;
+					row[3 * *n + 2] = r;
+					(*n)++;
+				}
+				last = r;
+			}
+		}
+	}
+#endif
 #ifdef BL_SPAWN_RANK
 	EE_RAM(u32, PS2_RANK_INV) = BL_SPAWN_RANK; /* controlled comparisons: same stored rank as the MAME run */
 #endif

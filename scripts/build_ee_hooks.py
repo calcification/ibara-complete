@@ -145,7 +145,9 @@ PRACTICE_MODE_PATCHES = [
 ]
 PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
 RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
-BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry")]
+BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry"),
+                  # BL rose rank table (ps2/hooks/bl_player.c bl_rose_rank; research/phase24)
+                  (0x0012F6F4, 0x3C020021, "hi", "bl_rose_rank"), (0x0012F6F8, 0x2442BFD0, "lo", "bl_rose_rank")]
 
 HOOKS = {
     "h00_smoke": {
@@ -226,7 +228,26 @@ HOOKS = {
         # left the screen sooner and freed the MG pod slots early (~12-25 % more MG pod shots than BL). The
         # Arrange branch is taken always (0x0013BD0C / 0x0013BD28 beqz on $gp-28076 -> nop). MAME: 23 of 23 BL
         # sparks = speed / 4, same angle.
-        + [(0x0013BD0C, 0x10600020, 0x00000000), (0x0013BD28, 0x10600026, 0x00000000)],
+        + [(0x0013BD0C, 0x10600020, 0x00000000), (0x0013BD28, 0x10600026, 0x00000000)]
+        # BL rank has no time creep and no cost per shot (research/phase24: MAME write tap on 0C297A3C, shot held
+        # and released, 1,500 frames: only pickups, bullets and enemy code write it; BL's shooters make no rank
+        # call). PS2 Arcade makes rank harder every frame by $gp-28216 (0x0012E490 path) and per shot fired
+        # (0x0013ADE4 harder(10 n), 0x0013B410 harder(16)); Arrange skips all three. The frame routine takes
+        # Arrange's branch (0x0012E488 bnez -> b), which also caps the score at 999,999,999 as BL does
+        # (research/phase13); the two shot calls become nops (their delay slots only load a0).
+        + [(0x0012E488, 0x1480000D, 0x1000000D), (0x0013ADE4, 0x0C04A77C, 0x00000000),
+           (0x0013B410, 0x0C04A77C, 0x00000000)]
+        # BL rose rank: easier(table[level] << 11) (0x0012F70C sll a0,v0,10 -> 11; the table is BL_SYM_PATCHES').
+        + [(0x0012F70C, 0x00022280, 0x000222C0)]
+        # BL item rank (BL handlers 0C07CEC0 / 0C07D100 / 0C07E250 / 0C07E350 for item types 0 / 1 / 4 / 6): no rank
+        # change on a normal pickup; a pickup at the maximum (score path, BL 0C07D2E0 / PS2 0x0012EBF0) makes rank
+        # harder by 0x8000 / 0x80000 / 0x80000 / 0x400000 - Arrange's values. PS2 Arcade instead calls harder
+        # (4096 / 0x10000 / 0x10000 / 0x80000) on entry to every such pickup and skips the maximum-path call. KURO:
+        # the entry calls become nops (0x0012FC4C, 0x0012F064, 0x0012FA90, 0x0012F9B0; delay slots load a0 only)
+        # and the maximum-path mode tests fall through to Arrange's call (0x0012FC34, 0x0012FA78, 0x0012F998).
+        + [(a, 0x0C04A77C, 0x00000000) for a in (0x0012FC4C, 0x0012F064, 0x0012FA90, 0x0012F9B0)]
+        + [(0x0012FC34, 0x1060002C, 0x00000000), (0x0012FA78, 0x10600019, 0x00000000),
+           (0x0012F998, 0x10600017, 0x00000000)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
         "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },

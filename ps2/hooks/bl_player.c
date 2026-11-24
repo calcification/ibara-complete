@@ -2,6 +2,11 @@
  * from xtc_frame(). */
 #include "ibara_ps2.h"
 
+/* BL rose rank (research/phase24): a rose pickup makes rank easier by table[level] << 11 (BL 0C07E440, table
+ * 0C189C8C). PS2 Arrange's branch (0x0012F6F0) reads 0x0020BFD0 (0x100..0x400) << 10; in KURO it reads this
+ * table (lui/addiu at 0x0012F6F4/8) with shift 11 (0x0012F70C). */
+const u32 bl_rose_rank[4] __attribute__((used, aligned(4))) = {0x100u, 0x180u, 0x300u, 0x600u};
+
 /* BL pod formation per weapon (BL 0C077140 copies table 0C17F51B[weapon][pod] into the player's three pod bytes on
  * every pickup/change; measured in MAME). PS2 keeps the same three bytes at +0x26A..+0x26C, but Arrange sets them
  * from the formation the player picks (table 0x00212FF0, formation button), which the BLACK LABEL build disables.
