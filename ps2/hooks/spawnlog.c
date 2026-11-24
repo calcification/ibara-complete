@@ -473,6 +473,8 @@ void spawn_log_frame(void)
 			(*count)++;
 		}
 #ifdef BL_NOSHOT /* untouched-boss timelines: boss parts never lose HP while the stage is logged */
+		if (on && t == BL_BOSS_TYPE && !sl_hp0[i])
+			sl_hp0[i] = EE_RAM(u16, a + 0x3C); /* parts that get their HP after the spawn frame */
 		if (on && t == BL_BOSS_TYPE && sl_hp0[i])
 			EE_RAM(u16, a + 0x3C) = sl_hp0[i];
 #endif

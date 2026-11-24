@@ -13,9 +13,9 @@ draw different random numbers (phase 14). So only structure is compared: enemies
 |---|---|---|---|
 | 1–2 | phases 14–15 | phases 14–15 | matched earlier (HP, fire timer, boss logic) |
 | 3 | all 11 types equal; only subtype counters differ (logging artefact) | equal structure; boss (type 51, 46 parts) core destroyed at frame 11,456 in BL vs 11,352 on PS2 | **matches**. A first run showed 1.5× the boss bullets on PS2; a second run did not, so this is random attack choice. Small extras (type-50 pairs, type-21 escorts) follow how long their parents live. |
-| 4 | equal except the spawned escorts of the mid-boss (type 41: BL 93 type-21 + 10 type-4, PS2 34 + 23) | mid-boss window 2,900–4,000 uses other bullet types; the boss (type 58) minion bursts (type 43) come in two waves in BL, one longer wave on PS2 | **open**: mid-boss and boss timelines need the untouched (no-shot) comparison |
+| 4 | equal except the spawned escorts of the mid-boss (type 41: BL 93 type-21 + 10 type-4, PS2 34 + 23) | mid-boss window 2,900–4,000 uses other bullet types; boss minion bursts differ | **matches** (2026-11-25): the mid-boss untouched has the same entry, attack and exit, and wanders randomly; the boss runs the same skeleton in every run, with a random choice of opening attack (below) |
 | 5 | **type 52: BL 108, PS2 36** (9 waves vs 3); the rest equal (type 23 escorts follow the boss fight length) | BL fires far more in frames 1,500–4,500 (the extra type-52 waves) | **stage script difference; ported** (below) |
-| 6 | equal up to the final boss | equal up to ~16,000 | after the stage-6 boss, BL keeps going for ~12,500 frames with enemy types 77, 78, 79 and 60 (a further boss); the PS2 stage ends. See "Stage scripts". |
+| 6 | equal through the stage-6 boss | equal up to ~16,000 | both games continue the same way: green form, rose form, cutscene, staff roll (record 17). The PS2 logger stops when its stage counter changes, which is why the PS2 log ends earlier. Open: BL's rose form spawns enemy type 79 (6,815) and lasts longer; the PS2 rose form isn't logged yet. |
 
 ## Stage scripts
 
@@ -35,11 +35,11 @@ results per stage are:
 
 | Stage | Difference | Status |
 |---|---|---|
-| 1 | header `FF0F 0001` argument 0x0C (BL) vs 0x10 (PS2), probably the music track | left |
+| 1 | `FF0F 0001` (music) argument 0x0C (BL) vs 0x10 (PS2) | left (music handling) |
 | 3 | none; the reported block is BL's eight 15-word sub-scripts, which the PS2 also has, padded to 32 bytes | — |
 | 4 | the PS2 has an extra `FF0C 0033` | left (PS2 addition) |
 | 5 | BL has **six more type-52 records** after the third: times 0x348, 0x4B8, 0x578, 0x7A8 ×2 and 0x898. BL also has one 12-word block at `0C2025A0` that nothing references (dead data). | **ported** |
-| 6 | BL has an extra `FF0C 004A` at the start, and a different end (`FF05 0080 0001 FF04 003C 0000 FF26`, then a further script tagged `FF0F 0001 0001`). This is where BL continues into the extra boss. | open, belongs to game flow (G1–G3) |
+| 6 | BL has an extra `FF0C 004A` at the start (preloads graphics set 0x4A). The "different end" is the opening scene's script, stored right after stage 6 (see "Script commands identified"). | graphics preload; the opening only differs in music handling |
 
 ### Stage-5 waves (ported)
 
@@ -56,13 +56,77 @@ Check (K44): after the change, the stage-5 run gives **108 type-52 spawns on PS2
 and score distribution. The bullets in frames 1,500–4,500 are at BL's level. On the release disc, entering Noir sets
 `bl_s5_ready` and `0x001F1850` points to the copy.
 
+## Stage 4 mid-boss, untouched (2026-11-25)
+
+`run_stage.py --stage 4 --boss-type 41 --noshot` keeps the mid-boss's parts at full HP in both games:
+
+* **Entry path:** identical to the pixel for the first 650 frames.
+* **Movement after that:** it wanders between different points. The type-41 handler (`0C091A00`) calls the random
+  routine `0C062780` three times, and the two games draw different random numbers (phase 14), so this is not a rule
+  difference.
+* **Attack:** the same type-14 + type-1 ring, at about 280 (BL) vs 290 (PS2) bullets per 500 frames.
+* **Exit:** at the same time.
+
+**The mid-boss matches.** The escort and bullet differences in the shooting runs came from kill timing.
+
+The no-shot mode now also covers parts that receive their HP a frame after they appear
+(`bl_stage_log.lua` / `spawnlog.c` `BL_NOSHOT`). The stage-4 boss's parts were unprotected before this.
+
+## Script commands identified
+
+The interpreter is `0C071DB0`. After the time word comes either an enemy type (< 0xFF00), spawned through the
+per-type table `0C1756B0` (type 52 → `0C08CA10`), or a command 0xFFxx, run through the table `0C175610`.
+
+| Command | Meaning (BL handler) |
+|---|---|
+| `FF0C n` | load graphics set n: requests every resource in list n of `0C1DD458` (`0C069710`); the script waits until they are loaded (`0C072B30`) |
+| `FF0F a b` | music: the stage tracks, 8 = boss, 9 = stage-6 boss, 0x0C = staff roll (so the stage-1 difference, 0x0C vs 0x10, is the track) |
+| `FF26` | sound driver command `0C060078(0, 16)` (fade) and clears `0C3CA6F4` |
+| `FF1E n` | used inside the boss scene scripts (table `0x001F1C40` on PS2, `0C206540` in BL) |
+
+The stage list is BL `0C2065A0` and PS2 `0x001F1CB0`: entry 0 is the opening, entries 1–6 the stages, then the
+ending. Its first entry starts right after the stage-6 script, so the "stage-6 end" difference above is really the
+**opening**: BL fades the music with `FF26` where the PS2 runs `FF0A`. BL's extra `FF0C 004A` at the start of stage 6
+preloads graphics set 0x4A.
+
+## Stage 4 boss (2026-11-25)
+
+The no-shot mode cannot hold this boss: its main parts keep HP 0, so the health lives elsewhere. Instead, its bullets
+per 250 frames from its arrival were compared across one BL run and three PS2 runs:
+
+* **Skeleton, every run:** an opening attack, a type-6 burst of about 600 bullets, then alternating type-14 and
+  type-0 phases. The boss dies at about the same time in all runs.
+* **Opening attack:** type 13 in BL. On PS2 it was type 3 in two runs and type 13 in one.
+
+The type-58 handler (`0C0A6A70`) calls the random routine (`0C0A72C2`), so the opening attack is a random choice.
+**The boss matches.**
+
+## Stage order, playlists and after stage 6 (2026-11-25)
+
+The stage-list index ("stage record") is BL `0C23E0A6`, PS2 `$gp-28248`. Each record names a script:
+
+| Records | Content (both games) |
+|---|---|
+| 0 | opening |
+| 1, 3, 4, 2, 5, 6 | stages 1–6, in that order. The script "markers" used above are `FF0F` music commands, so the labels by music number were: music 3 = stage 2, music 4 = stage 3, music 2 = stage 4. The stage-4 extra `FF0C 0033` on PS2 therefore belongs to stage 3. |
+| 7, 8, 9 | the mode playlists: `FF02 n` = play record n. 7 runs 0, 1, 3, 4, 2, 5, 6, then `FF01`; 8 does the same after an `FF12`; 9 plays the loop twice |
+| 10–16 | the post-stage-6 scenes: the type-78 controller started by `FF01`, then the cutscene. All end with `FF02 0011`. |
+| 17 | staff roll (music 0x0C), then name entry (record 11) |
+
+* **Game start:** BL picks the playlist as table `0C173A94` = 7, 8, 9, 11, indexed by a mode byte that BL leaves at 0,
+  so it always plays record 7, the single loop. The PS2 does the same (`0x001CE68C`, table `0x00338970`), indexed by
+  the menu choice: NORMAL = 7, HARDER = 8, EXTENDED = 9 (two loops).
+* **After stage 6:** both pick the next record from the same table (BL `0C06BD80` / PS2 `0x0013C138`, table
+  0, 13, 14, 15 by which players are alive): cutscene, then staff roll.
+* **Correction:** the "extra boss after stage 6" in the first overview was the logger stopping early on PS2. Both
+  games run boss → green form → rose form → cutscene → staff roll. The MAME trace is `bl_scene_trace.lua`; the PS2
+  screenshots were taken in a full run.
+
 ## Next
 
-1. **Stage 4**: run the mid-boss (type 41) and boss (type 58) with `--noshot --boss-type N`, compare the untouched
-   timelines, and find the step that differs.
-2. **After stage 6**: work out what BL's `FF26` and the `FF0F 0001 0001` script do, and whether the PS2 Arcade code
-   has that boss (types 77–79; on PS2 probably the second-loop final boss). This is part of game flow G1–G3.
-3. The `FF0C` command (stage 4 PS2 `0x33`, stage 6 BL `0x4A`): identify what it loads.
+1. **Stage-6 rose form:** compare BL's type-79 roses (6,815 spawns) with the PS2's rose phase. The PS2 logger must
+   keep logging through that phase. BL's `FF0C 004A` preload is probably for these roses.
+2. **Mode choice in Noir:** NORMAL already equals BL's single loop. Decide whether Noir keeps HARDER/EXTENDED.
 
 ## Reproduce
 

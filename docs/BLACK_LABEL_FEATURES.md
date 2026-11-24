@@ -70,12 +70,12 @@ branch on the ship byte; implement the BL-only select screen with the game's own
 
 | # | Feature | BL facts | PS2 status |
 |---|---|---|---|
-| G1 | No Normal/Harder/Extended modes; single loop of 6 stages, stage byte 2–7 | [spec] | PS2 Arcade has modes; BL mode forces one; BL stage 6 script ends with `FF26` and a further script (`FF0F 0001 0001`): BL fights another boss after stage 6 (research/phase25) |
+| G1 | No Normal/Harder/Extended modes; single loop of 6 stages, stage byte 2–7 | [spec]; BL picks playlist record 7 always (table `0C173A94` = 7, 8, 9, 11, mode byte 0; research/phase25) | PS2: same table (`0x00338970`) indexed by the menu choice: NORMAL = record 7 = BL's loop; HARDER = 8, EXTENDED = 9 (two loops) are PS2 extras [decision: keep or hide in Noir] |
 | G2 | Opening / stage record id 0 before stage 1 | `0C23E0A6` = 0 [spec] | [todo] |
 | G3 | Start menu side select (1P/2P) | [spec] | [todo] |
 | G4 | Music = Ibara's list minus "Show Time" (seq 15/16) | [spec] | [PS2] PS2 soundtrack already on disc |
 | G5 | Bosses | run Ibara's boss code with Ibara's constants (checked constant by constant in ibara360 notes) [spec] | [PS2] reuse PS2 Arcade bosses; verify timing |
-| G6 | Stage content (regular enemies, scripts) | ~288 changed routines touching enemy parts, ~17k-instruction delta [delta]; stage 1 boss arena at scroll 2449.25 [spec] | Stage 1 placement equals PS2 Arcade (Phase 14); **enemy HP formula (K11) and fire timer (K12) ported**; stage-1 boss logic matches (spiral order is random); player shot damage/reach and stages 2–6 [todo] Stage scripts diffed for all 6 stages (research/phase25): only stage 5 differs in content (6 extra type-52 waves, **ported, K44**); stages 3 and 5 compared enemy by enemy and match; stage 4 mid-boss/boss timelines open; BL continues after the stage-6 boss (types 77-79, 60; game flow) |
+| G6 | Stage content (regular enemies, scripts) | ~288 changed routines touching enemy parts, ~17k-instruction delta [delta]; stage 1 boss arena at scroll 2449.25 [spec] | Stage 1 placement equals PS2 Arcade (Phase 14); **enemy HP formula (K11) and fire timer (K12) ported**; stage-1 boss logic matches (spiral order is random); player shot damage/reach and stages 2–6 [todo] Stage scripts diffed for all 6 stages (research/phase25): only stage 5 differs in content (6 extra type-52 waves, **ported, K44**); stages 3 and 5 compared enemy by enemy and match; stage 4 mid-boss/boss timelines open; stage 4 mid-boss and boss match (random attack choices); after stage 6 both run cutscene + staff roll; open: stage-6 rose form (BL type-79 roses) |
 | G7 | Enemy bullet pool | 256 × 0x54 at `0C297B40`; BL reaches the 256 cap at stage 1 boss [spec] | [PS2] pool `0x004682EC`, stride 0x54 (Phase 9) |
 
 ## 3. Presentation / assets

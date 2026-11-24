@@ -104,6 +104,7 @@ emu.register_frame_done(function()
       end
     end
     if on and (not alive[i] or typ[i] ~= t) then hp0[i] = sp:read_u16(a + 0x3C) end
+    if on and hp0[i] == 0 then hp0[i] = sp:read_u16(a + 0x3C) end  -- parts that get their HP after the spawn frame
     if NOSHOT and on and t == BOSST and hp0[i] and hp0[i] > 0 then sp:write_u16(a + 0x3C, hp0[i]) end
     alive[i] = on; typ[i] = t
     if on and t == BOSST and first and (frame - first) % (os.getenv("EVERY") and 1 or 4) == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
