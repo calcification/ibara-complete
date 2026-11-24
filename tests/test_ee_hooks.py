@@ -164,7 +164,8 @@ class BuildTests(unittest.TestCase):
         # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "isolate_practice", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "fix_full_frame_env",
-                "opt_set", "cfg_value", "cfg_set_noir", "cfg_toggle_row", "arcade_slowdown_apply",
+                "opt_set", "cfg_value", "cfg_set_noir", "cfg_toggle_row",
+                "arcade_slowdown_apply", "arcade_slowdown_reset_manual",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
                 "sel_layers_stub", "sel_banner_stub", "sel_begin", "sel_pause", "kuro_weapon_bar", "noir_practice_wrap"}

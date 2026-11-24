@@ -106,6 +106,18 @@ _Static_assert(__builtin_offsetof(struct slowdown_probe, holding) == 12, "slowdo
 void arcade_slowdown_gate(void);
 void arcade_slowdown_rank_gate(void);
 
+void arcade_slowdown_reset_manual(void)
+{
+	arcade_slowdown.enabled = 0;
+	arcade_slowdown.holding = 0;
+	/* The next run needs a fresh press, even if the chord is held
+	 * continuously through the menu or loading screen.
+	 */
+	arcade_slowdown.chord_down = 1;
+	arcade_slowdown.pending[0] = (struct pad_edges){0};
+	arcade_slowdown.pending[1] = (struct pad_edges){0};
+}
+
 void arcade_slowdown_apply(u32 active)
 {
 	/* Restore the two displaced retail branches while the option is off. */
@@ -113,11 +125,7 @@ void arcade_slowdown_apply(u32 active)
 		0x08000000u | (((u32)arcade_slowdown_gate >> 2) & 0x03FFFFFFu) : 0x144000F9u;
 	EE_RAM(u32, 0x0012E47Cu) = active ?
 		0x08000000u | (((u32)arcade_slowdown_rank_gate >> 2) & 0x03FFFFFFu) : 0x14400022u;
-	arcade_slowdown.enabled = 0;
-	arcade_slowdown.holding = 0;
-	arcade_slowdown.chord_down = 0;
-	arcade_slowdown.pending[0] = (struct pad_edges){0};
-	arcade_slowdown.pending[1] = (struct pad_edges){0};
+	arcade_slowdown_reset_manual();
 }
 #endif
 

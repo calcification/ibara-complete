@@ -32,7 +32,8 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **Arcade slowdown test:** In ARCADE MODE → CONFIG, select SLOWDOWN just above EXIT and press Circle.
   It starts OFF and uses the original PS2 timing. With it ON, press **L2 + R2** together during active
   Arcade gameplay or Arcade Practice to switch between normal and forced half-speed. Release the chord
-  before pressing it again. The menu setting lasts until reboot. This build provides the manual test.
+  before pressing it again. Returning to the frontend clears half-speed, so the next run starts at
+  normal speed. The Config setting lasts until reboot. This build provides the manual test.
   Automatic arcade slowdown is still being calibrated. [MAME findings](../research/phase22/README.md#check-the-draw-deadline-in-mame) · [Original PS2 checklist](../tests/manual/ARCADE_SLOWDOWN_PS2.md)
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE. For Black Label, choose
   NOIR MODE → PRACTICE. Noir can select a stage and uses the default start data. PLAY DATA LIST is

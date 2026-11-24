@@ -30,9 +30,10 @@ The menu enables a manual half-speed test. You can do the whole check in Stage 1
    there when you release both buttons. Press both again to return to normal speed.
 3. **Controls and mode changes.** In half speed, try a quick shot tap, bomb once with stock available,
    and pause and resume with Start. Each action should register once and gameplay should resume
-   at half speed. Back in the menus, check that **Noir → Config** has its usual **Exit** row and
-   no **Slowdown** entry. Return to Arcade and check that the setting still reads **On**.
-   Turn it **Off**, enter play, and confirm the chord leaves the speed at normal.
+   at half speed. While half speed is active, use **Pause → Exit** to return to the menus.
+   Confirm **Arcade → Config → Slowdown** still reads **On**. Start Stage 1 again and verify it
+   starts at full speed, then press **L2 + R2** to switch to half speed.
+   In **Noir → Config**, check that the usual **Exit** row is present and **Slowdown** is absent.
 
 ## If you have another minute
 
