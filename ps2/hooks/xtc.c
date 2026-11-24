@@ -6,8 +6,8 @@
  *   - each enemy bullet that can hit (flags & 0x10000000, not a long-bullet segment) inside the graze box,
  *     while the player can be hit, the shot button has been held >= 5 frames and the option pods are out:
  *     score += 10 and the counter's quarter-steps += 1, capped at 39996 (displayed value = quarters >> 2);
- *   - whenever the displayed value changes the wipe timer is set to 128; it counts down every frame and
- *     clears the counter at 0. A bomb clears it 16 frames after the bomb starts (PS2: a drop in the
+ *   - every fourth graze, and every graze at the cap, sets the wipe timer to 128; it counts down every frame
+ *     and clears the counter at 0. A bomb clears it 16 frames after the bomb starts (PS2: a drop in the
  *     player's bomb power, bombs x 40 + fragments);
  *   - box half sizes: 14 + e + 1 along the game's x, 19 + e + 1 along its y, with
  *     e = ((((2^24 - rank_inv) >> 3) * held) >> 3) >> 16, held = shot-held frames (0..8). Strict "<".
@@ -36,7 +36,7 @@ struct xtc_state {
 	u32 side;      /* the side tested next frame */
 	struct xtc_player pl[2];
 	u32 grazes;    /* total, for debugging */
-	u32 points;    /* total score added by XTC (runtime check: points == 10 * grazes) */
+	u32 points;    /* total score added by XTC (10 per graze, 110 at maximum rank) */
 	u16 power[2];  /* last bomb power (bombs * 40 + fragments) per side */
 	u8 wipe[2];    /* frames until a bomb's wipe (0 = none pending) */
 	u16 bombs_seen; /* debug: bomb starts detected */
@@ -89,12 +89,12 @@ static void xtc_add(unsigned side, int n)
 	/* BL 0C06F0CA: +10 per graze, +110 at the hardest rank (stored rank 0) */
 	const u32 pts = (EE_RAM(u32, PS2_RANK_INV) & 0x00FFFFFFu) ? 10u : 110u;
 	while (n-- > 0) {
-		const s32 shown = p->quarters >> 2;
 		EE_RAM(u32, rec + PS2_PLAYER_SCORE) += pts;
 		xtc.points += pts;
 		if (p->quarters < XTC_MAX_QUARTERS)
 			p->quarters++;
-		if ((p->quarters >> 2) != shown) {
+		/* Arcade 0C06F0F6 checks the low two bits even after the counter saturates. */
+		if ((p->quarters & 3) == 0) {
 			p->left = XTC_TIMER;
 			pop_x[side] = EE_RAM(u32, rec + PS2_PLAYER_X);
 			pop_y[side] = EE_RAM(u32, rec + PS2_PLAYER_Y);

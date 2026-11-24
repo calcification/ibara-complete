@@ -18,8 +18,9 @@ whenever it is non-zero.
 
 ## The XTC number popup (same routine, `0C071110`-`0C0712F2`)
 
-* State (graze test `0C06EF50`): on every graze the quarter count +0x280 goes up; when the displayed value
-  (+0x280 >> 2) changes, the timer +0x284 = 128 and the popup position +0x278 / +0x27C = the player's position.
+* State (graze test `0C06EF50`): a graze increases the quarter count at +0x280 up to 39,996. The arcade
+  checks the low two bits after the cap check (`0C06F0EC`–`0C06F0FA`). At every multiple of four, including
+  repeat grazes while capped, it sets timer +0x284 to 128 and anchors the popup (+0x278 / +0x27C) to the player.
   The graze also adds 10 points, **110 at stored rank 0** (`0C06F0CA`), and plays sound 89.
 * Drawn while the value is non-zero: "+" then the digits. Value <= 999: 8 × 8 digits (`0C1754B4`, VRAM (0x6F0,
   0x80 + 8 d), "+" (0x6F0, 0x58)), offset (−8, −8); above 999: 16 × 16 (`0C175418`, VRAM (0x690, 16 d), "+" (0x6A0,
