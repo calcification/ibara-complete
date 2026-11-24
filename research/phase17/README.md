@@ -21,6 +21,66 @@ the Xbox 360 from the arcade ROMs, so some features belong to that platform.
 | Debug: initialize rankings, attract demos on/off | no | small; low priority |
 | Achievements | no | n/a |
 
+## Arcade slowdown investigation (2026-11-23)
+
+The target is the cadence of **gameplay updates per video refresh**. A repeated gameplay frame during a
+busy attack changes how much time the player has to react. The normal video refresh, emulator wall-clock
+speed, loading time, and a single effect's animation speed are separate measurements.
+The [S01 retail Arcade probe](../phase22/README.md) tests whether that cadence can be controlled.
+
+### Retail PS2 timing points
+
+| Address | Meaning in clean SLPM-66301 (`420C7FAB`) |
+|---|---|
+| `0x00338CDC` | Outer game-loop counter. Increments at `0x001133B0` in the routine called at `0x0012E09C`. That routine also polls the pad via `0x00112A80`. |
+| `0x00338EA0` | Stage gameplay tick. Cleared at `0x0012DD48` and incremented at `0x0012E664` after the gameplay update calls. Collision code uses its low bit to alternate players. |
+| `0x0012E1E4` | Native gate for the core gameplay pass at `0x0012E5CC`. It checks pause through `0x0012C220` and two transition states. Both paths reach the draw/HUD path at `0x0012E1EC`. |
+
+The audited gate has no workload input. In PCSX2 2.8.2 on the retail disc, a no-shot Stage 1 window advanced
+3,417 gameplay ticks in 3,417 outer-loop iterations, with up to 46 live hostile bullets. The two-second native
+Pause control advanced the outer loop 105 times and the gameplay tick zero times.
+
+Two further no-shot runs used the clean retail code, held inverted rank at `0x200000` and refreshed
+P1 invulnerability (`0x0044C380 + 0x27A`) in RAM. Each started after its stage transition cleared.
+
+| Retail Arcade scene | VSyncs | Outer loops | Gameplay ticks | Peak sampled hostile bullets |
+|---|---:|---:|---:|---:|
+| Normal Stage 1 | 2,311 | 2,311 | 2,311 | 249 |
+| Practice Stage 5 | 2,632 | 2,632 | 2,632 | 176 |
+
+PCSX2 stores `g_FrameCount` immediately after the 32-byte `InputRecording` tag in
+`PCSX2 Internal Structures.dat`. Read that field and the EE counters from the same save state. The emulator’s
+wall-clock rate varied during concurrent captures. [PCSX2 VSync counter](https://github.com/PCSX2/pcsx2/blob/v2.8.2/pcsx2/Counters.cpp#L565-L569)
+
+### Original arcade reference
+
+MAME 0.276 verified the supplied `ibara` set, program U4 CRC `d5fb6657`. A no-shot Stage 1 run with P1
+invulnerability (`0x0C283794 + 0x269`) and inverted rank `0x200000` reached 252 live hostile bullets. Across
+2,989 consecutive-frame intervals sampled at 125 or more bullets, each VBlank advanced outer counter
+`0x0C392964` once and had one blitter submission and one or more game rank writes. The scene byte is
+`0x0C392B08`, the rank address is `0x0C27DFF8`, and the blitter submission register is at `0x18000004`.
+The Stage 1 measurements show normal cadence on both emulators even under high bullet load. Use late
+Stage 3 and the Stage 5 and 6 bosses to capture the reported PCB slowdown and calibrate the timing model.
+
+MAME’s CV1000 driver runs Ibara at 60.024 Hz and its EP1C12 device models blitter busy time based on the
+draw list. The driver labels the set’s timing imperfect. The `ibara360` author describes fitting the timing
+model to recordings of the original board. Treat MAME as a controlled reference and use the PCB recording
+for rates and attack landmarks. [MAME driver](https://github.com/mamedev/mame/blob/mame0276/src/mame/cave/cv1k.cpp) ·
+[MAME blitter](https://github.com/mamedev/mame/blob/mame0276/src/mame/cave/ep1c12.cpp) ·
+[ibara360 approach](https://github.com/PaulAtreides67/ibara360)
+
+### What a PS2 prototype would take
+
+1. Anchor a single boss pattern by state and attack step. Capture display refreshes, stage ticks, rank,
+   inputs, hostile bullet counts, and active enemies and effects. Use the same ship and firing pattern.
+2. Test delaying one core gameplay update at the native gate. Keep video, pad polling, and audio running.
+   Audit mutations outside the gate, especially rank, scrolling, and input edges. Buffer an actionable
+   shot or bomb edge through a held update so it can be consumed once on the next tick.
+3. Fit a bounded timing model against busy and quiet reference windows. Include drawing cost such as
+   effects, sprite coverage and blending alongside simulation load. Use bullet counts as telemetry.
+   Start with Arcade and fit Black Label separately to its own reference. Check the retained cadence
+   and input timing on PCSX2 and original PS2 before changing release behavior.
+
 ## Arcade RANK gauge
 
 The RANK gauge Arrange shows at the top right is drawn by `0x00129360`, called every frame from the HUD pass

@@ -71,23 +71,24 @@ def copy_spans(pixels):
 
 
 # Blue header glyph cuts from OPTION (N, O), EXIT (I), GALLERY (R), and
-# ARCADE MODE (MODE). Resize the wider letters horizontally to fit the plaque.
+# ARCADE MODE (MODE). Keep the MODE cut at its native width and leave room
+# for a word space after the one-pixel outlines on either side.
 # Each cut specifies source x/y/width, destination x/width, and source x limits
 # per row where neighboring outlines touch.
 HEADER_GLYPHS = (
-    (186, 48, 19, 16, 14,
+    (186, 48, 19, 13, 14,
      (189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 189, 188, 188, 188, 188, 188, 187, 186, 186, 187),
      (205,) * 20),
-    (128, 48, 15, 31, 12,
+    (128, 48, 15, 28, 12,
      (128,) * 20,
      (141, 141, 142, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 143, 142, 142, 141, 141, 139)),
-    (53, 96, 12, 44, 8,
+    (53, 96, 12, 41, 8,
      (54, 54, 54, 54, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 55, 54, 54, 53, 53, 53),
      (64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 63, 63, 63, 63)),
-    (68, 48, 15, 53, 11,
+    (68, 48, 15, 50, 11,
      (70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 70, 69, 68, 68, 68),
      (83, 83, 83, 83, 83, 83, 83, 83, 83, 83, 82, 82, 82, 82, 82, 82, 82, 83, 83, 83)),
-    (64, 0, 35, 65, 35, (64,) * 20, (99,) * 20),
+    (64, 0, 35, 67, 35, (64,) * 20, (99,) * 20),
 )
 
 
@@ -105,11 +106,10 @@ def header_spans(pixels, indices, clut, palette_type):
     exit_top = 96
     plaque = [[(exit_top + y) * ATLAS_WIDTH + x for x in range(width)] for y in range(height)]
     # Restore the center of EXIT's plate with bare metal from the same plate.
-    # Feather between the dark left bevel and the open metal to its right.
+    # Leave the left bevel intact and mirror the bare strip to its right.
     for y in range(11, 37):
         for x in range(16, 83):
-            from_bevel = (x * 13 + y * 7) % 23 > x - 14
-            source_x = 12 + (x + y) % 3 if from_bevel else 83 + abs(x % 28 - 14)
+            source_x = 83 + abs(x % 28 - 14)
             plaque[y][x] = (exit_top + y) * ATLAS_WIDTH + source_x
 
     glyphs = []

@@ -164,7 +164,8 @@ class BuildTests(unittest.TestCase):
         # Everything reachable from the leaf per-frame stub or from menu-code patches uses temporaries only.
         leaf = {"frame_hook", "kuro_frame", "kuro_set", "isolate_config", "isolate_practice", "kuro_enter", "kuro_leave", "kuro_enter_entry",
                 "kuro_leave_entry", "xtc_reset", "video_frame", "video_apply", "fix_one_env", "fix_full_frame_env",
-                "opt_set", "cfg_value",
+                "opt_set", "cfg_value", "cfg_set_noir", "cfg_toggle_row",
+                "arcade_slowdown_apply", "arcade_slowdown_reset_manual",
                 "cfg_toggle", "arr_practice", "cfg_accept_entry", "prac_start", "prac_exit_state", "arr_accept_entry",
                 "hdr_state", "bomb_d_kind", "frontend_rank_bar", "bl_rank_bar", "bl_rank_bar_off", "sel_menu", "sel_start_stub",
                 "sel_layers_stub", "sel_banner_stub", "sel_begin", "sel_pause", "kuro_weapon_bar", "noir_practice_wrap"}
@@ -213,6 +214,8 @@ class BuildTests(unittest.TestCase):
             self.assertEqual(by_site[site], (0x24050004, 0x24050005))
         self.assertFalse({0x0012C394, 0x0012C3BC} & set(by_site))  # native score calls, no fixed XTC text
         static = {site: (original, replacement) for site, original, replacement in b["sites"]}
+        self.assertEqual(static[0x0012E1E4], (0x144000F9, 0x144000F9))
+        self.assertEqual(static[0x0012E47C], (0x14400022, 0x14400022))
         self.assertEqual(static[0x0012CF2C], (0x0000302D, 0x24060002))
         self.assertEqual(static[0x0012C31C], (0x24030002, 0x24030004))
         self.assertEqual(by_site[0x0012E1AC], (hooks.jal(0x0012C220), hooks.jal(b["syms"]["sel_pause"])))

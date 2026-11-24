@@ -20,6 +20,7 @@
 #pragma GCC optimize("Os")
 
 #define GAME_SOUND(a, b) GAME_CALL2(0x001370E0u, a, b)
+#define MAIN_STATE  0x00338B08u /* 9: frontend (title and menus) */
 #define FRONT_STATE 0x00338F58u /* $gp-28056 */
 #define FRONT_ROW   0x0033948Cu /* $gp-26724: cursor row on entering a state */
 #define FRONT_ANIM  0x00338F64u /* $gp-28044 */
@@ -61,7 +62,12 @@ const char noir_start_help[] = /* ノワールモードでゲームを */
 	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xc5\x83\x51\x81\x5b\x83\x80\x82\xf0";
 const char noir_return_help[] = /* ノワールモードのメニューへ */
 	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xcc\x83\x81\x83\x6a\x83\x85\x81\x5b\x82\xd6";
+#ifdef ARCADE_SLOWDOWN_CONFIG
+void cfg_set_noir(u32 noir);
+void arcade_slowdown_reset_manual(void);
+#else
 extern const char *cfg_desc[20];
+#endif
 
 void bl_rank_bar_off(void);
 
@@ -113,10 +119,14 @@ static void kuro_set(u32 on)
 	u32 i, n = kuro_tab_n;
 	isolate_config(on);
 	isolate_practice(on);
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	cfg_set_noir(on);
+#else
 	/* Config's extended table when RANK GAUGE is present. The retail table is switched with the other words. */
 	cfg_desc[14] = (const char *)(on ? 0x003023F2u : 0x003023E0u); /* FIGHTER TYPE: omit the Arcade prefix */
 	cfg_desc[16] = (const char *)(on ? 0x00302432u : 0x00302420u); /* KEY CONFIG: omit the Arcade prefix */
 	cfg_desc[18] = on ? noir_return_help : (const char *)0x00301EF0u;
+#endif
 	if (!on)
 		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
 	for (i = 0; i < n; i++, w++) {
@@ -166,6 +176,13 @@ u32 kuro_off_why; /* diagnostics (read from a savestate): frontend state << 8 | 
 
 void kuro_frame(void)
 {
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	/* The update branch is idle in the frontend. Clear this run's half
+	 * speed here. Pausing and continuing within a run keep the latch.
+	 */
+	if (EE_RAM(u32, MAIN_STATE) == 9u)
+		arcade_slowdown_reset_manual();
+#endif
 	const u8 attract = EE_RAM(u8, ATTRACT);
 	if (kuro_on && (EE_RAM(u32, FRONT_STATE) == 1u || (attract && !attract_last))) {
 		kuro_off_why = EE_RAM(u32, FRONT_STATE) << 8 | (u32)attract << 1 | 1u;
