@@ -19,7 +19,7 @@ matrix. They are not a measurement.
 | Enemies and stages (G5–G7) | BL enemy HP, part HP all stages, fire timer, bullet cancel; stages 1–5 compared enemy by enemy and matching (bosses differ only by random attack choices); stage scripts diffed for all six stages, stage 5's extra waves ported (K44) | ~65 % — open: stage-6 rose form (BL type-79 roses), player-side damage |
 | Presentation (F11, A1) | BL RANK bar (exact colours); BL select screen (ship → type → confirm, 60-s timer, BL layout and art, BL ship-select theme from the user's sound ROMs); graze sphere and XTC popup | ~60 % (select animation / fly-in / runway background; title logo; XTC rank glow and graze sound) |
 | Arcade slowdown (Codex, phase 22) | Arcade CONFIG → SLOWDOWN (default Off); L2 + R2 toggles manual half speed in Arcade; cleared when leaving to the menu; Noir and Arrange untouched | manual mode ~90 % (menu-reset retest on hardware pending); automatic arcade-like slowdown ~15 % (research only: no predictor yet reaches the 80 % event target on held-out captures) |
-| Game flow (G1–G3) | KURO enters through Arcade's menu | ~30 % (single 6-stage loop rules, opening record, side select) |
+| Game flow (G1–G3) | KURO enters through Arcade's menu; single 6-stage loop as BL (K45: no difficulty choice); stage order, opening and post-stage-6 sequence match BL (research/phase25) | ~70 % (side select) |
 
 **Overall: roughly 70 %** toward a Black Label mode that plays like the arcade. Nearly everything the player touches
 directly is done and checked against MAME. Most of what's left is enemy and stage behaviour, plus presentation.
@@ -42,7 +42,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 3. Hadou drops (BL: medals and type-11 items, no roses), with the item and enemy comparison.
 4. Stage-6 rose form (BL's type-79 roses vs the PS2's rose phase); then player-side damage.
 5. Select screen stage two (animation, fly-in, girder background, player 2); BL title logo.
-6. Game flow G1–G3.
+6. Game flow: start-menu side select (G3).
 
 ## Since 23 November
 

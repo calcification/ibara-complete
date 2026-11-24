@@ -43,6 +43,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
 * **KURO Black Label RANK bar** (with `--bl-rom`): shown when enabled, centred under the high score as in Black
   Label — fill length, rank colours, the white flash at maximum rank and the fade when your ship is near it follow
   Black Label's code. The frame and plate use your ROM's artwork. KURO hides the stage-name line with either gauge.
+* **KURO game start:** GAME START begins the game at once. Black Label has one mode, so KURO skips Arcade's
+  NORMAL / HARDER / EXTENDED choice and always plays the single six-stage loop (Arcade's NORMAL). Arcade keeps its
+  choice.
 * **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game,
   pad settings and Practice selections so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択

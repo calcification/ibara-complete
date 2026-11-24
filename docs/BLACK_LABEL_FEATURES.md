@@ -70,7 +70,7 @@ branch on the ship byte; implement the BL-only select screen with the game's own
 
 | # | Feature | BL facts | PS2 status |
 |---|---|---|---|
-| G1 | No Normal/Harder/Extended modes; single loop of 6 stages, stage byte 2–7 | [spec]; BL picks playlist record 7 always (table `0C173A94` = 7, 8, 9, 11, mode byte 0; research/phase25) | PS2: same table (`0x00338970`) indexed by the menu choice: NORMAL = record 7 = BL's loop; HARDER = 8, EXTENDED = 9 (two loops) are PS2 extras [decision: keep or hide in Noir] |
+| G1 | No Normal/Harder/Extended modes; single loop of 6 stages, stage byte 2–7 | [spec]; BL picks playlist record 7 always (table `0C173A94` = 7, 8, 9, 11, mode byte 0; research/phase25) | PS2: same table (`0x00338970`) indexed by the menu choice: NORMAL = record 7 = BL's loop; HARDER = 8, EXTENDED = 9 (two loops) are PS2 extras. **Done (K45):** Noir's GAME START confirms NORMAL at once (submenu skipped, `0x001CAB64`), so Noir always plays record 7 |
 | G2 | Opening / stage record id 0 before stage 1 | `0C23E0A6` = 0 [spec] | [todo] |
 | G3 | Start menu side select (1P/2P) | [spec] | [todo] |
 | G4 | Music = Ibara's list minus "Show Time" (seq 15/16) | [spec] | [PS2] PS2 soundtrack already on disc |

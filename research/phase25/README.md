@@ -126,7 +126,7 @@ The stage-list index ("stage record") is BL `0C23E0A6`, PS2 `$gp-28248`. Each re
 
 1. **Stage-6 rose form:** compare BL's type-79 roses (6,815 spawns) with the PS2's rose phase. The PS2 logger must
    keep logging through that phase. BL's `FF0C 004A` preload is probably for these roses.
-2. **Mode choice in Noir:** NORMAL already equals BL's single loop. Decide whether Noir keeps HARDER/EXTENDED.
+2. ~~Mode choice in Noir~~ **done (K45):** Noir's GAME START confirms NORMAL at once (`0x001CAB64` / `0x001CAB68`: cursor = 0, branch to the submenu's confirm path), so Noir always plays record 7, BL's single loop. Arcade keeps its choice.
 
 ## Reproduce
 
