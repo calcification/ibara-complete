@@ -43,6 +43,12 @@ class PatchTest(unittest.TestCase):
                 at += size
         self.assertEqual(copied, spans)
 
+    def test_native_header_keeps_a_word_space_after_outlining(self):
+        # header_spans adds a one-pixel shadow to either side of the lettering.
+        *_, noir_r, mode = native_menu_label.HEADER_GLYPHS
+        noir_end = noir_r[3] + noir_r[4]
+        self.assertGreaterEqual(mode[3] - noir_end - 2, 4)
+
     def test_native_header_copies_the_reserved_plaque_from_its_atlas(self):
         pixels = 0xDEB61040  # SLPM-66301, IBARAR.PDM resource 946
         width = native_menu_label.ATLAS_WIDTH

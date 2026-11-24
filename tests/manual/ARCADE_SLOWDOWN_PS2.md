@@ -7,7 +7,7 @@ This checklist focuses on the changes in the Arcade slowdown build.
 
 ## Build the test ISO
 
-Download and unzip the [tested branch snapshot](https://github.com/calcification/ibara-complete/archive/cd10f9de6fc5545961cc33c8c580727778aaec5e.zip).
+Download and unzip the [current patcher branch](https://github.com/calcification/ibara-complete/archive/refs/heads/codex/arcade-slowdown-config.zip).
 In Terminal, go to the unzipped folder. If both input files are in Downloads, run:
 
 ```sh
@@ -35,6 +35,9 @@ The menu enables a manual half-speed test. You can do the whole check in Stage 1
    Turn it **Off**, enter play, and confirm the chord leaves the speed at normal.
 
 ## If you have another minute
+
+- On the Noir submenu, check the header reads **NOIR MODE**, with a visible gap between the
+  words. The revised plaque is part of the same patch.
 
 - With Arcade's setting **On**, try the chord in **Arrange Practice**. Gameplay should stay at
   Arrange's normal speed. Try a single chord in **Arcade → Game Start** after takeoff to check
