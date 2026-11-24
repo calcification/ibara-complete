@@ -43,6 +43,12 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 5. Select screen stage two (animation, fly-in, girder background, player 2); BL title logo.
 6. Game flow G1–G3.
 
+## Since 23 November
+
+* **Black Label ship-select theme** (K42). Decoded from the user's sound ROMs (`u23`/`u24`) and added to the
+  disc's resource archive without growing it. It loops while the selector is up and stops at takeoff
+  (research/phase23). It still needs a listen on hardware.
+
 ## Known gaps
 
 * The K40 build passed the full checklist on an original PS2 (K41, 23 Nov 2026).

@@ -82,22 +82,29 @@ def main(argv=None) -> int:
         rom = kp.read_bl_rom(args.bl_rom)
         found, pos = {}, 0
         with args.output.open("rb") as f:
-            while len(found) < 2:
+            while len(found) < 3:
                 chunk = f.read(1 << 26)
                 if not chunk:
                     break
-                for tag in (kp.BL_ART_TAG, kp.SELECT_TAG):
+                for tag in (kp.BL_ART_TAG, kp.SELECT_TAG, kp.bl_music.MUSIC_TAG):
                     k = chunk.find(tag)
                     if k >= 0 and tag not in found:
                         found[tag] = pos + k
                 pos += len(chunk) - 16
                 f.seek(pos)
-        if len(found) != 2:
+        if len(found) != 3:
             raise ValueError("Black Label art slots not found in the built disc")
         kp.inject_bl_art(args.output, found[kp.BL_ART_TAG], kp.read_bl_art(None, rom))
         atlas = json.loads((Path(__file__).resolve().parent.parent / "patcher/bl_select_atlas.json").read_text())
         kp.inject_bl_select(args.output, found[kp.SELECT_TAG], kp.build_select_pages(rom, atlas))
         print(f"Black Label RANK bar and select screen artwork copied from {args.bl_rom}")
+        sound = kp.bl_music.read_sound_roms(args.bl_rom)
+        if sound:
+            entry = kp.bl_music.inject_bl_music(args.output, found[kp.bl_music.MUSIC_TAG],
+                                                kp.bl_music.select_theme_stream(*sound))
+            print(f"Black Label ship-select theme added (archive entry {entry})")
+        else:
+            print("No ship-select theme: no sound ROMs (u23 / u24) next to the given ROM")
     print(f"\nCreated {args.output}")
     print(f"Launcher executable CRC {crc:08X}, SHA-256 {sha}")
     print(f"Boot it, press Start at the title, move to {args.label} (row {args.position + 1}), and press Circle.")

@@ -21,6 +21,8 @@ import zipfile
 import zlib
 from pathlib import Path
 
+import bl_music  # noqa: E402 (patcher/ is on sys.path when run as a script)
+
 MAGIC = b"IBKPATCH1\0"
 HERE = Path(__file__).resolve().parent
 
@@ -174,7 +176,7 @@ def main(argv):
         raise SystemExit("This is not the retail Japanese 'Ibara (Japan).iso' (SLPM-66301, MD5 " + src_md5 + ").")
     print("2/3 writing the new ISO ...")
     shutil.copyfile(source, output)
-    art_at = sel_at = None
+    art_at = sel_at = mus_at = None
     with source.open("rb") as src, output.open("r+b") as out:
         out.truncate(dst_size)
         for at, length, ops in records:
@@ -195,6 +197,9 @@ def main(argv):
             k = buf.find(SELECT_TAG)
             if k >= 0:
                 sel_at = at + k
+            k = buf.find(bl_music.MUSIC_TAG)
+            if k >= 0:
+                mus_at = at + k
     print("3/3 verifying ...")
     if digest(output, "sha256", "SHA-256") != dst_sha:
         output.unlink()
@@ -206,6 +211,13 @@ def main(argv):
         atlas = json.loads((HERE / "bl_select_atlas.json").read_text())
         inject_bl_select(output, sel_at, build_select_pages(rom_data, atlas))
         print("Black Label select screen artwork copied from your ROM.")
+        sound = bl_music.read_sound_roms(rom)
+        if sound and mus_at is not None:
+            print("Converting Black Label's ship-select theme from your sound ROMs (about a minute) ...")
+            entry = bl_music.inject_bl_music(output, mus_at, bl_music.select_theme_stream(*sound))
+            print(f"Black Label ship-select theme added (archive entry {entry}).")
+        elif not sound:
+            print("No ship-select theme: your ROM set has no sound ROMs (u23 / u24).")
     elif art:
         print("Note: this patch has no place for the RANK bar artwork; it was not added.")
     elif not rom_data and art_at is not None:

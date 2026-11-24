@@ -42,6 +42,21 @@ u32 ktex_claim(void);
 void ktex_release(void);
 u32 ktex_draw(u32 page, u32 px, u32 py, u32 pw, u32 ph, u32 flags, u32 tint, s32 x, s32 y);
 
+/* Black Label's ship-select theme (BL: sequence 0 -> phrase 0, 16 kHz AMM). The patcher (--bl-rom with the
+ * sound ROMs u23 / u24) decodes it, stores it as a BG00 stream in IBARAR.PDM and writes its archive entry here
+ * (0xFFFFFFFF: no theme on the disc). research/phase23. */
+struct sel_music_slot {
+	char tag[16];
+	u32 entry;  /* archive entry of the stream */
+	u32 volume; /* the track record's volume (retail tracks 0x46-0x6E) */
+};
+struct sel_music_slot sel_music = {"BLSELECT-MUS-01", 0xFFFFFFFFu, 0x58u};
+#define BGM_TRACK  0x00338B80u /* $gp-29040: the track number 0x001371A0 last started (0 = none) */
+#define BGM_START(rec) GAME_CALL4(0x0010F760u, 0, (rec), 12u, 0) /* request stream (a0 0, record, 12 bytes) */
+#define BGM_TRACK_START(t) GAME_CALL2(0x001371A0u, (t), 0)       /* track 1-16 by number; 0 stops */
+static struct { s16 entry, volume; u32 zero; u16 loop, pad; } sel_bgm __attribute__((aligned(4)));
+static u32 sel_bgm_on;
+
 u32 sel_pending[2] __attribute__((aligned(8))); /* set by sel_start_stub when a player starts */
 u32 sel_active, sel_phase, sel_kind, sel_type, sel_timer;
 static u32 last_dirs;
@@ -81,6 +96,15 @@ static void sel_begin(void)
 	last_dirs = EE_RAM(u32, PAD(0) + 0x0Cu);
 	sel_active = 1;
 	EE_RAM(u8, PAUSE_BYTE) = 1;
+	sel_bgm_on = 0;
+	if (sel_music.entry < 0x8000u) {
+		sel_bgm.entry = (s16)sel_music.entry;
+		sel_bgm.volume = (s16)sel_music.volume;
+		sel_bgm.zero = 0;
+		sel_bgm.loop = 1;
+		BGM_START((u32)&sel_bgm);
+		sel_bgm_on = 1;
+	}
 }
 
 /* The retail pause check returns zero in scene 1 even if the pause byte is set. Return one while selecting so
@@ -115,6 +139,11 @@ static void finish(void)
 	sel_active = 0;
 	ktex_release();
 	EE_RAM(u8, PAUSE_BYTE) = 0;
+	if (sel_bgm_on) { /* hand the music back: the stage's current track, or silence until its script starts one */
+		const u32 t = EE_RAM(u32, BGM_TRACK);
+		sel_bgm_on = 0;
+		BGM_TRACK_START(t >= 1u && t <= 16u ? t : 0u);
+	}
 }
 
 /* in place of the pause menu call (0x0012E778): returns what the main loop expects (0 = carry on) */

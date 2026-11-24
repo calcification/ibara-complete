@@ -14,7 +14,9 @@ this project has done so far. Your ISO is only read; no game data is in this fol
 **`--bl-rom` (optional):** your own Ibara Kuro Black Label arcade ROM set (MAME's `ibarablk.zip`, or the
 `ibarablk_u2` file from it; checked by size and CRC `5e46be44`). KURO's centred Black Label RANK bar and its ship
 select screen use that ROM's artwork, copied from your ROM into the new ISO after verification; nothing from that ROM
-is in this folder. Without it, KURO shows Arrange's RANK gauge instead and has no select screen (FIGHTER TYPE in
+is in this folder. If the same zip (or folder) also holds the sound ROMs `u23` and `u24` (CRCs `a436bb22`,
+`d11ab6b6`), the select screen also plays Black Label's ship-select theme: the patcher decodes it from those ROMs
+(about a minute) and stores it in the disc's resource archive; the disc does not grow. Without it, KURO shows Arrange's RANK gauge instead and has no select screen (FIGHTER TYPE in
 CONFIG still picks the ship).
 
 Needs ~3.7 GB of free space. The output is checked against the SHA-256 of the disc the patch was made from, and
@@ -48,7 +50,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the
   SPEED / POWER / bomb panel), then Circle or Cross starts takeoff. A 60-second timer keeps the current choice. The choice is
   also stored as FIGHTER TYPE. Player 2 presses Start once gameplay begins and joins with the ship chosen in
-  CONFIG → FIGHTER TYPE. The opening art is static and uses a black background.
+  CONFIG → FIGHTER TYPE. The opening art is static and uses a black background. With the sound ROMs, Black
+  Label's ship-select theme plays on a loop while the screen is up and stops at takeoff; the stage music
+  then starts as usual.
 * **KURO weapon bar.** Arrange's seven-slot stock bar appears at the bottom. It marks the weapons you have
   collected and highlights the equipped one. Bomb stock and fragments sit above the bar. Press Square to cycle
   through your stock.
