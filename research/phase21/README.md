@@ -34,9 +34,9 @@ whenever it is non-zero.
   the shot is held): "+996" small, then "+1002" … big, green, fading out after release. `xtc.c` also gives 110 per
   graze at rank 0.
 
-Not ported: the graze sound (BL sound 89; PS2 has no matching sound id located), and the rank-coloured glow drawn
-while player +0x289 is set (`0C1752A8`; +0x289 is also required for a graze — very likely BL's "pods out", which
-`xtc.c` still does not check, XTC_REQUIRE_PODS).
+Remaining work includes the graze sound (BL sound 89) and the rank-coloured glow drawn while the player has pods
+deployed (`0C1752A8` reads player `+0x289`). `xtc.c` now checks PS2 player `+0x27B` for the equivalent graze
+condition. See the [Stage 1 results](../../tests/results/2026-11-20_RUNTIME.md#xtc-graze-and-deployed-pods).
 
 ## PS2 (KURO, with `--bl-rom`)
 

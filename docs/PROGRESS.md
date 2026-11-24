@@ -36,7 +36,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 
 ## Next, in order
 
-1. ~~Graze sphere~~ done (K31); ~~XTC number popup~~ done (K32). Left on XTC: the rank glow, the graze sound, "pods out".
+1. Finish the XTC rank glow and graze sound. The graze sphere (K31), number popup (K32), and deployed-pod requirement are implemented.
 2. Pod shot counts still apart from BL: 5-way, homing, napalm (targeting / fire rules).
 3. Rank on bomb and Hadou cancels (F8).
 4. Enemy and stage delta, stage by stage, starting with player-shot damage and reach (G6). This is the biggest block.

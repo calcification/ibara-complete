@@ -14,14 +14,11 @@
  *
  * PS2 adaptation notes: the PS2 player record (stride 0x290) has no BL XTC fields, so state lives here in
  * the cave. Shot-held frames are counted from the record's held-button word (+0x24C & 0x10). Player and
- * bullet positions share one space on PS2 (no camera term). "Pods out" has no located PS2 equivalent yet;
- * XTC_REQUIRE_PODS stays 0 (documented deviation) until it is found.
+ * bullet positions share one space on PS2 (no camera term). The retail weapon pickup populates the deployed
+ * pod count at +0x27B, which serves the same purpose as Black Label's +0x289.
  */
 #include "ibara_ps2.h"
 
-#ifndef XTC_REQUIRE_PODS
-#define XTC_REQUIRE_PODS 0
-#endif
 #define XTC_MAX_QUARTERS 39996
 #define XTC_TIMER 128
 #define XTC_MIN_HELD 5
@@ -62,7 +59,7 @@ static int xtc_test_player(unsigned side)
 
 	if (!(EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT))
 		return 0;
-	if (p->held < XTC_MIN_HELD)
+	if (p->held < XTC_MIN_HELD || !EE_RAM(u8, rec + PS2_PLAYER_POD_COUNT))
 		return 0;
 	e = (s32)(((((0x01000000u - rank_inv) >> 3) * p->held) >> 3) >> 16);
 	hx = 14 + e + 1;

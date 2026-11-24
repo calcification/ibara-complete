@@ -245,7 +245,7 @@ HOOKS = {
     "bl_xtc": {
         "test_id": "K01",
         "title": "BLACK LABEL / XTC graze counter (+10 per graze)",
-        "description": ("Kuro BL graze: holding shot 5+ frames near enemy bullets adds 10 points per bullet. "
+        "description": ("Kuro BL graze: hold shot for 5+ frames near enemy bullets with pods deployed. "
                         "State at 000C0000: magic XTC1, then per player quarters(s32)/timer(u16)/held(u8). "
                         "Use after C00. The retail HUD displays the score."),
         "sources": ["xtc.c", "spawnlog.c"],
