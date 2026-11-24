@@ -29,11 +29,25 @@ static const u32 g_word[2][5] = {
 
 const char rank_label[] = "RANK GAUGE"; /* label-table word 0x002A9238 */
 /* Help text, Shift-JIS: "ランクゲージの表示を" / (retail) "設定できます。" */
+#ifdef ARCADE_SLOWDOWN_CONFIG
+const char slowdown_label[] = "SLOWDOWN";
+const char slowdown_help[] = "\x83\x58\x83\x8d\x81\x5b\x83\x5f\x83\x45\x83\x93\x82\xf0"; /* スローダウンを */
+extern const char noir_return_help[];
+extern u32 kuro_on;
+void arcade_slowdown_apply(u32 active);
+u32 cfg_rank_enabled = 1u;
+u32 opt_slowdown;
+#endif
+
 static const char rank_help[] = "\x83\x89\x83\x93\x83\x4e\x83\x51\x81\x5b\x83\x57\x82\xcc\x95\x5c\x8e\xa6\x82\xf0";
 
 /* Two help lines per row (retail 0x002A9310 holds 9 rows, with the next table right after it). */
 #ifdef KURO_PRESENTATION
+#ifdef ARCADE_SLOWDOWN_CONFIG
+const char *cfg_desc[22] = {
+#else
 const char *cfg_desc[20] = {
+#endif
 #else
 const char *const cfg_desc[20] = {
 #endif
@@ -46,21 +60,50 @@ const char *const cfg_desc[20] = {
 	rank_help, (const char *)0x00302300u,                 /* RANK GAUGE */
 	(const char *)0x003023E0u, (const char *)0x00302400u, /* FIGHTER TYPE */
 	(const char *)0x00302420u, (const char *)0x00302400u, /* KEY CONFIG */
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	slowdown_help, (const char *)0x00302300u,              /* SLOWDOWN */
+#endif
 	(const char *)0x00301EF0u, (const char *)0x00301F10u, /* EXIT */
 };
 
-void opt_set(u32 on)
+static void flush_option_edits(void)
 {
-	unsigned i;
-	opt_gauge = on;
-	for (i = 0; i < 5u; i++)
-		EE_RAM(u32, g_addr[i]) = g_word[on][i];
 	__asm__ __volatile__( /* FlushCache(0) write back data, FlushCache(2) invalidate instructions */
 		"move $4, $0\n\tli $3, 100\n\tsyscall\n"
 		"li $4, 2\n\tli $3, 100\n\tsyscall\n"
 		: : : "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7", "t8", "t9",
 		      "memory");
 }
+
+void opt_set(u32 on)
+{
+	opt_gauge = on;
+	for (unsigned i = 0; i < 5u; i++)
+		EE_RAM(u32, g_addr[i]) = g_word[on][i];
+	flush_option_edits();
+}
+
+#ifdef ARCADE_SLOWDOWN_CONFIG
+/* Arcade and Noir share the retail CONFIG routine. Noir uses the shorter
+ * list with EXIT in Arcade's SLOWDOWN slot. kuro_set flushes these edits.
+ */
+void cfg_set_noir(u32 noir)
+{
+	const u32 fighter = 6u + cfg_rank_enabled;
+	const u32 slowdown = fighter + 2u;
+	const u32 exit = slowdown + !noir;
+	EE_RAM(u32, 0x002A9220u + slowdown * 4u) = noir ? 0x00301C50u : (u32)slowdown_label;
+	EE_RAM(u32, 0x001CBFE4u) = 0x2A420000u | (exit + 1u);
+	EE_RAM(u32, 0x001CC170u) = 0x28410000u | (exit + 1u);
+	EE_RAM(u32, 0x001CC1FCu) = 0x24020000u | exit;
+	EE_RAM(u32, 0x001CC290u) = 0x24020000u | exit;
+	cfg_desc[fighter * 2u] = (const char *)(noir ? 0x003023F2u : 0x003023E0u);
+	cfg_desc[(fighter + 1u) * 2u] = (const char *)(noir ? 0x00302432u : 0x00302420u);
+	cfg_desc[slowdown * 2u] = noir ? noir_return_help : slowdown_help;
+	cfg_desc[slowdown * 2u + 1u] = (const char *)(noir ? 0x00301F10u : 0x00302300u);
+	arcade_slowdown_apply(!noir && opt_slowdown);
+}
+#endif
 
 /* Value text of a CONFIG row: replaces the retail CONTINUE lookup at 0x001CBF70 (row, CONTINUE's setting, value
  * chosen so far for the row) and returns the value to draw (0 = none). */
@@ -69,7 +112,13 @@ const char *cfg_value(u32 row, u32 cont, const char *cur)
 	const char *const *names = (const char *const *)ON_OFF_NAMES;
 	if (row == 5u)
 		return names[cont];
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	if (!kuro_on && row == 8u + cfg_rank_enabled)
+		return names[opt_slowdown];
+	if (cfg_rank_enabled && row == 6u)
+#else
 	if (row == 6u)
+#endif
 		return names[opt_gauge & 1u];
 	return cur;
 }
@@ -80,18 +129,38 @@ void cfg_toggle(void)
 	GAME_SOUND(95, 36);
 }
 
+#ifdef ARCADE_SLOWDOWN_CONFIG
+void cfg_toggle_row(u32 row)
+{
+	if (cfg_rank_enabled && row == 6u) {
+		cfg_toggle();
+	} else if (!kuro_on && row == 8u + cfg_rank_enabled) {
+		opt_slowdown ^= 1u;
+		arcade_slowdown_apply(opt_slowdown);
+		flush_option_edits();
+		GAME_SOUND(95, 36);
+	}
+}
+#endif
+
 /* Reached from the accept dispatcher for a row without a retail handler (v1 = cursor row). */
 __asm__(
 	".set push\n.set noreorder\n"
 	".globl cfg_accept_entry\n"
 	".type cfg_accept_entry, @function\n"
 	"cfg_accept_entry:\n"
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	"	jal	cfg_toggle_row\n"
+	"	move	$4, $3\n"
+#else
 	"	li	$2, 6\n"
 	"	bne	$3, $2, 1f\n"
 	"	nop\n"
 	"	jal	cfg_toggle\n"
 	"	nop\n"
-	"1:	j	0x001CBE20\n"
+	"1:\n"
+#endif
+	"	j	0x001CBE20\n"
 	"	nop\n"
 	".size cfg_accept_entry, . - cfg_accept_entry\n"
 	".set pop\n");

@@ -1,5 +1,13 @@
 # Retail Arcade slowdown prototype
 
+The integrated [test patcher](../../patcher/README.md) adds **Arcade Mode → Config → Slowdown**.
+It starts OFF with both retail gameplay branches in place. In PCSX2 2.8.2, the repatched
+disc produced 60 gameplay ticks in 60 Arcade Practice refreshes with the switch OFF and
+L2+R2 held. With the switch ON, L2+R2 changed the measured cadence from 60/60 to 30/60
+and back to 60/60 on the next press. A held chord fired once. Noir kept its shorter
+Config menu and restored the Arcade setting on exit. Original PS2 validation is pending.
+
+
 S01 tests the gameplay gate in the Japanese retail PS2 executable (SLPM-66301, PCSX2 CRC
 `420C7FAB`). When armed in live Arcade play, it holds every other core update. The fixed cadence is
 a diagnostic for a future arcade timing model. Arcade Normal and Arcade Practice are eligible.

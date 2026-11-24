@@ -57,7 +57,7 @@ FACTS = {
 }
 
 # Sources behind HOOK_AFTER_LEAF stubs (no callee-saved register preservation): keep the compiler off s0-s7/fp.
-LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c", "bl_tex.c", "bl_select.c"}
+LEAF_SOURCES = {"video.c", "options.c", "kuro.c", "bl_rankbar.c", "bl_tex.c", "bl_select.c", "arcade_slowdown.c"}
 LEAF_CFLAGS = [f"-ffixed-s{i}" for i in range(8)] + ["-ffixed-fp"]
 
 VIDEO_SITE = 0x0010BC78  # main loop: jal 0x0010E480 (per-frame display output, every screen)
@@ -425,11 +425,13 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c"],
-    "defines": ["KURO_PRESENTATION"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "arcade_slowdown.c"],
+    "defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
     "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
+    # Validate the retail branches even though they are swapped only at runtime.
+    "patches": [(0x0012E1E4, 0x144000F9, 0x144000F9), (0x0012E47C, 0x14400022, 0x14400022)],
     "dynamic": {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
         "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES + NOIR_MENU_PATCHES,
@@ -443,7 +445,8 @@ HOOKS["kuro"] = {
     "bake_only": True,
     "frontend": True,  # sites include words of the launcher builder's dispatcher (not in the retail executable)
 }
-KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n", "opt_gauge")
+KURO_EXPORTED_SYMS = ("kuro_row", "video_enabled", "kuro_tab", "kuro_tab_n", "opt_gauge",
+                      "cfg_rank_enabled", "cfg_desc", "slowdown_label")
 
 EXTRA_DEFINES: list[str] = []  # --define NAME (test builds only; never for committed profiles)
 
@@ -725,13 +728,42 @@ def _select_sites(baked: dict, video: str, rank_gauge: bool) -> dict:
     return baked
 
 
+def _arcade_config_sites(built: dict, rank_gauge: bool) -> None:
+    """Install Arcade's extra config row before EXIT using the retail label table's spare words."""
+    replace = {0x001CBFE4, 0x001CC170, 0x001CC1FC, 0x001CC290}
+    if not rank_gauge:
+        # Keep the shared CONFIG value, accept, and help hooks. Fighter Type and
+        # Key Config use their original indices on this build.
+        replace |= {0x002A9238, 0x002A923C, 0x002A9240, 0x002A9244, 0x001CC270, 0x001CC280,
+                    0x001CC5E4, 0x001CC5F4, 0x001CC68C, 0x001CC69C, 0x001CA08C}
+        set_sym_word(built, "cfg_rank_enabled", 0)
+        help_start = built["syms"]["cfg_desc"] + 6 * 8
+        image = {addr: word for _place, addr, word in built["words"]}
+        built["words"] = [(place, addr, image[addr + 8] if help_start <= addr < help_start + 4 * 8 else word)
+                          for place, addr, word in built["words"]]
+
+    slow_row = 8 + rank_gauge
+    exit_row = slow_row + 1
+    label_slot = 0x002A9220 + 4 * slow_row
+    built["sites"] = [site for site in built["sites"] if site[0] not in replace and site[0] != label_slot]
+    built["sites"] += [
+        (label_slot, 0 if rank_gauge else 0x00301C50, built["syms"]["slowdown_label"]),
+        (label_slot + 4, 0, 0x00301C50),
+        (0x001CBFE4, 0x2A420009, 0x2A420000 | exit_row + 1),
+        (0x001CC170, 0x28410009, 0x28410000 | exit_row + 1),
+        (0x001CC1FC, 0x24020008, 0x24020000 | exit_row),
+        (0x001CC290, 0x24020008, 0x24020000 | exit_row),
+    ]
+
+
 def frontend_video_hook(video: str, rank_gauge: bool = False, position: int = 2):
     """Callable for build_menu_probe.build(executable_hook=...): bakes the instant-KURO image (ps2/hooks/kuro.c,
     with video.c and options.c) into the frontend executable: Black Label switched at runtime from the KURO row,
     PRACTICE in ARRANGE MODE, the runtime video switch with the auto profiles, ARCADE CONFIG > RANK GAUGE with the rank
     gauge."""
     built = _load_hook("kuro")[0]
-    drop = set() if rank_gauge else set(RANK_OPTION_SITES)
+    _arcade_config_sites(built, rank_gauge)
+    drop = set()
     if video == FULL_FRAME_AUTO:
         set_sym_word(built, "video_enabled", 2)
     elif video not in VIDEO_HOOK_PROFILES:  # keep the per-frame call (KURO's switch-off); no video switching

@@ -29,6 +29,11 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   240p with 240 active lines on NTSC output. Change the orientation in OPTION → SCREEN SETTING → SCREEN MODE.
 * **RANK gauge:** Arcade defaults to OFF and KURO defaults to ON. Change either setting in its CONFIG menu.
   Both settings last for the current session. Attract mode suppresses the gauge.
+* **Arcade slowdown test:** In ARCADE MODE → CONFIG, select SLOWDOWN just above EXIT and press Circle.
+  It starts OFF and uses the original PS2 timing. With it ON, press **L2 + R2** together during active
+  Arcade gameplay or Arcade Practice to switch between normal and forced half-speed. Release the chord
+  before pressing it again. The menu setting lasts until reboot. This build provides the manual test.
+  Automatic arcade slowdown is still being calibrated. [MAME findings](../research/phase22/README.md#check-the-draw-deadline-in-mame)
 * **Practice in every mode:** ARRANGE MODE now has PRACTICE (row 2), like ARCADE MODE. For Black Label, choose
   NOIR MODE → PRACTICE. Noir can select a stage and uses the default start data. PLAY DATA LIST is
   available in Arcade and Arrange Practice.

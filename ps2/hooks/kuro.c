@@ -61,7 +61,11 @@ const char noir_start_help[] = /* ノワールモードでゲームを */
 	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xc5\x83\x51\x81\x5b\x83\x80\x82\xf0";
 const char noir_return_help[] = /* ノワールモードのメニューへ */
 	"\x83\x6d\x83\x8f\x81\x5b\x83\x8b\x83\x82\x81\x5b\x83\x68\x82\xcc\x83\x81\x83\x6a\x83\x85\x81\x5b\x82\xd6";
+#ifdef ARCADE_SLOWDOWN_CONFIG
+void cfg_set_noir(u32 noir);
+#else
 extern const char *cfg_desc[20];
+#endif
 
 void bl_rank_bar_off(void);
 
@@ -113,10 +117,14 @@ static void kuro_set(u32 on)
 	u32 i, n = kuro_tab_n;
 	isolate_config(on);
 	isolate_practice(on);
+#ifdef ARCADE_SLOWDOWN_CONFIG
+	cfg_set_noir(on);
+#else
 	/* Config's extended table when RANK GAUGE is present. The retail table is switched with the other words. */
 	cfg_desc[14] = (const char *)(on ? 0x003023F2u : 0x003023E0u); /* FIGHTER TYPE: omit the Arcade prefix */
 	cfg_desc[16] = (const char *)(on ? 0x00302432u : 0x00302420u); /* KEY CONFIG: omit the Arcade prefix */
 	cfg_desc[18] = on ? noir_return_help : (const char *)0x00301EF0u;
+#endif
 	if (!on)
 		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
 	for (i = 0; i < n; i++, w++) {
