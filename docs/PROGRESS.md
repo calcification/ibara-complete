@@ -1,4 +1,4 @@
-# Progress report — 22 November 2026
+# Progress report — 24 November 2026
 
 Where Ibara Complete stands: the retail PS2 Ibara (SLPM-66301) plus **KURO**, the Black Label rules switched on
 from Mode Select. Arrange stays as on the original disc, with one addition: a PRACTICE row. Delivered as
@@ -17,14 +17,15 @@ matrix. They are not a measurement.
 | Player rules (F1–F7, F10) | XTC graze counter + HUD + bomb wipe; weapon stock + change button; shot levels to 6, no secret; held fire every 2 frames; 32-shot cap; pod aiming, pod fire rules, no rank per pod shot; BL hit sparks; bombs (no rank, type D by ship); straight/spread A–D; bullet cancel after bosses and mid-bosses | ~85 % |
 | Rank (F8) | stored-rank format, fragment / medal / rose rules, enemy fire timer from rank, RANK bar | ~70 % (bomb and Hadou cancel rank rules open) |
 | Enemies and stages (G5–G7) | BL enemy HP formula, enemy part HP stages 1–6, fire timer, stage-1 placement and boss checked against MAME | ~35 % — the largest open area: ~288 BL routines that touch enemy parts changed; stages 2–6 behaviour not compared routine by routine |
-| Presentation (F11, A1) | BL RANK bar (exact colours); BL select screen stage one (ship → type → confirm, 60-s timer, BL layout and art) | ~50 % (select animation / fly-in / girder background / player 2; graze sphere; title logo) |
+| Presentation (F11, A1) | BL RANK bar (exact colours); BL select screen (ship → type → confirm, 60-s timer, BL layout and art, BL ship-select theme from the user's sound ROMs); graze sphere and XTC popup | ~60 % (select animation / fly-in / runway background; title logo; XTC rank glow and graze sound) |
+| Arcade slowdown (Codex, phase 22) | Arcade CONFIG → SLOWDOWN (default Off); L2 + R2 toggles manual half speed in Arcade; cleared when leaving to the menu; Noir and Arrange untouched | manual mode ~90 % (menu-reset retest on hardware pending); automatic arcade-like slowdown ~15 % (research only: no predictor yet reaches the 80 % event target on held-out captures) |
 | Game flow (G1–G3) | KURO enters through Arcade's menu | ~30 % (single 6-stage loop rules, opening record, side select) |
 
-**Overall: roughly 60–65 %** toward a Black Label mode that plays like the arcade. Nearly everything the player touches
+**Overall: roughly 65 %** toward a Black Label mode that plays like the arcade. Nearly everything the player touches
 directly is done and checked against MAME. Most of what's left is enemy and stage behaviour, plus presentation.
 
-Tests: 65 entries in `TEST_MATRIX.csv`, 39 PASS. Every KURO row from K02 to K30 passes; K01 (the early attract-demo
-check) is superseded by K03. The rest are older optional or hardware rows. Unit tests: 48 pass.
+Tests: 70 entries in `TEST_MATRIX.csv`, 44 PASS (K02–K42 pass; the S-rows are the slowdown research and console checklist, mostly READY / PENDING). Every KURO row from K02 to K30 passes; K01 (the early attract-demo
+check) is superseded by K03. The rest are older optional or hardware rows. Unit tests: 64 pass.
 
 ## Done since the last report
 
