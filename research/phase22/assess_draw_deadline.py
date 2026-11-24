@@ -11,9 +11,10 @@ from statistics import median
 
 import numpy as np
 
+from assess_budget import read_quiet
 from assess_workload import HISTORY, predict, stock_counts
 from score_slowdown import compare
-from workload_capture import CYCLE_HEADER
+from workload_capture import CYCLE_HEADER, DRAW_PASS_HEADER
 
 IRQ_PERIOD_MS = 1000 / 60.024
 LIST_PUBLISHED = 0x19671010
@@ -122,27 +123,37 @@ def test_model(model, fields, route):
     }
 
 
-def aligned_ee(path, route):
-    samples = stock_counts(path, len(route.updates), CYCLE_HEADER)
+def aligned_ee(path, route, columns=CYCLE_HEADER[:2]):
+    samples = stock_counts(path, len(route.updates), columns)
     # The recorder labels the work with the tick before simulation. Match
     # the work already finished when MAME samples its tick at the video IRQ.
-    return np.asarray(samples[2 * HISTORY - 1:-1], dtype=float)[:, :2]
+    return np.asarray(samples[2 * HISTORY - 1:-1], dtype=float)
 
 
-def test_ee_bridge(train, test, train_ee, test_ee):
+def test_ee_bridge(train, test, train_ee, test_ee, control=None):
     phases = ("simulation_ms", "draw_ms")
     native_train = matrix(train, phases)
     native_test = matrix(test, phases)
     estimates = []
+    control_estimates = []
     accuracy = {}
     for col, phase in enumerate(phases):
-        coefficient, intercept = linear_fit(train_ee[:, col:col + 1], native_train[:, col])
-        predicted = intercept + coefficient[0] * test_ee[:, col]
+        features = slice(0, 1) if col == 0 else slice(1, None)
+        coefficient, intercept = linear_fit(train_ee[:, features], native_train[:, col])
+        predicted = intercept + test_ee[:, features] @ coefficient
         estimates.append(predicted)
         accuracy[phase] = round(float(np.mean(abs(predicted - native_test[:, col]))), 3)
+        if control is not None:
+            control_estimates.append(intercept + control[1][:, features] @ coefficient)
     fixed_work = (matrix(train, ("elapsed_ms",)).ravel() - native_train.sum(axis=1)).mean()
     estimated_total = sum(estimates) + fixed_work
-    return {"phase_mae_ms": accuracy, "same_tick": score(test, estimated_total)}
+    report = {"phase_mae_ms": accuracy, "same_tick": score(test, estimated_total)}
+    if control is not None:
+        report["stage1"] = score(control[0], sum(control_estimates) + fixed_work)
+        report["previous_tick"] = score(test, np.concatenate(([0], estimated_total[:-1])))
+        # Isolate the drawing proxy by supplying the measured arcade simulation time.
+        report["with_arcade_simulation"] = score(test, native_test[:, 0] + estimates[1] + fixed_work)
+    return report
 
 
 def main():
@@ -153,6 +164,8 @@ def main():
     parser.add_argument("--holdout", nargs=2, action="append", default=[], metavar=("NAME", "TRACE"))
     parser.add_argument("--ee-cycles", nargs=2, type=Path, metavar=("BOND", "DYNE"),
                         help="optional release- and Rose Pod-aligned stock S01 cycle captures")
+    parser.add_argument("--ee-draw-passes", nargs=3, type=Path, metavar=("BOND", "DYNE", "STAGE1"),
+                        help="release-aligned Stage 6 and stock Stage 1 draw-pass exports")
     args = parser.parse_args()
     try:
         bond, dyne, quiet = map(read_route, (args.bond, args.dyne, args.quiet))
@@ -162,6 +175,20 @@ def main():
             raise ValueError("use distinct names for the capture windows")
         ee = dict(zip((bond.name, dyne.name),
                       (aligned_ee(path, route) for path, route in zip(args.ee_cycles or (), (bond, dyne)))))
+        pass_samples = {}
+        if args.ee_draw_passes:
+            bond_path, dyne_path, stage1_path = args.ee_draw_passes
+            for family, draw_columns in (("pass_counts", DRAW_PASS_HEADER[:3]),
+                                         ("pass_sprite_slots", DRAW_PASS_HEADER[3:])):
+                columns = (CYCLE_HEADER[0], *draw_columns)
+                stage1 = np.asarray(read_quiet(stage1_path, columns), dtype=float)
+                if len(stage1) != len(quiet.updates):
+                    raise ValueError("PS2 and MAME Stage 1 controls must have the same duration")
+                pass_samples[family] = {
+                    bond.name: aligned_ee(bond_path, bond, columns),
+                    dyne.name: aligned_ee(dyne_path, dyne, columns),
+                    quiet.name: stage1,
+                }
         folds = {}
         for train, test in ((bond, dyne), (dyne, bond)):
             fold = {}
@@ -174,6 +201,9 @@ def main():
                 }
             if ee:
                 fold["ps2_ee_bridge"] = test_ee_bridge(train, test, ee[train.name], ee[test.name])
+            for family, samples in pass_samples.items():
+                fold[family] = test_ee_bridge(train, test, samples[train.name], samples[test.name],
+                                               (quiet, samples[quiet.name]))
             folds[f"{train.name} -> {test.name}"] = fold
         diagnostics = {}
         for route in named_routes:

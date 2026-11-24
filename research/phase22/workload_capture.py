@@ -28,6 +28,7 @@ SCENE = 0x00338E9C
 PRACTICE = 0x00338FA4
 ROW = struct.Struct("<IIIii6H4B")
 CYCLE_ROW = struct.Struct("<5I")
+DRAW_PASS_ROW = struct.Struct("<12I")
 CYCLE_BASE = CAPTURE_BASE + CAPTURE_LIMIT * ROW.size
 HEADER = (
     "outer_loop", "gameplay_tick", "inverted_rank", "player_x_16_16", "player_y_16_16",
@@ -35,11 +36,15 @@ HEADER = (
     "active_items", "bombs", "holding", "scene", "flying_form",
 )
 CYCLE_HEADER = ("ee_sim_counts", "ee_draw_counts", "ee_submit_counts")
+DRAW_PASS_HEADER = (
+    "ee_draw_setup_counts", "ee_layers_counts", "ee_overlays_counts",
+    "ee_setup_slots", "ee_layers_slots", "ee_overlays_slots", "ee_submit_slots",
+)
 
 
 def verify_probe(pine):
     signature = pine.read(CAPTURE_SIGNATURE)
-    if signature not in (0x31544C53, 0x32544C53, 0x33544C53, 0x34544C53):
+    if signature not in (0x31544C53, 0x32544C53, 0x33544C53, 0x34544C53, 0x35544C53):
         raise ValueError("load the S01 workload or cycle recorder")
     return (signature >> 24) - ord("0")
 
@@ -113,8 +118,10 @@ def read_sample_buffer(pine, base, layout, count):
     return rows
 
 
-def read_rows(pine, *, cycles=False):
+def read_rows(pine, *, cycles=False, draw_passes=False):
     version = verify_probe(pine)
+    if draw_passes and version < 5:
+        raise ValueError("draw-pass export requires the S01 profile built with --measure-draw-passes")
     if cycles and version < 4:
         raise ValueError("cycle export requires the S01 profile built with --measure-cycles")
     pine.write(CAPTURE_ENABLED, 0)
@@ -122,18 +129,27 @@ def read_rows(pine, *, cycles=False):
     if count > CAPTURE_LIMIT:
         raise ValueError("invalid sample count")
     rows = read_sample_buffer(pine, CAPTURE_BASE, ROW, count)
-    if not cycles:
+    if not (cycles or draw_passes):
         return rows
-    marks = read_sample_buffer(pine, CYCLE_BASE, CYCLE_ROW, count)
+    layout = DRAW_PASS_ROW if version >= 5 else CYCLE_ROW
+    marks = read_sample_buffer(pine, CYCLE_BASE, layout, count)
     timed = []
     wrap = 0xFFFFFFFF
-    for index, (row, (sim, draw, submit, end, complete)) in enumerate(zip(rows, marks)):
+    for index, (row, mark) in enumerate(zip(rows, marks)):
+        sim, draw, submit, end, complete = mark[:5]
         if not complete and index == count - 1:
             break  # Recording can be stopped while the last update is still being drawn.
         if complete != 1:
             raise RuntimeError(f"timing marks incomplete for sample {index}")
         sim_counts = 0 if row[12] else (draw - sim) & wrap
-        timed.append((*row, sim_counts, (submit - draw) & wrap, (end - submit) & wrap))
+        sample = (*row, sim_counts, (submit - draw) & wrap, (end - submit) & wrap)
+        if draw_passes:
+            layers, overlays, setup_end, layer_end, overlay_end, final, initial = mark[5:]
+            if not (0 <= initial <= setup_end <= layer_end <= overlay_end <= final <= 3000):
+                raise RuntimeError(f"sprite-slot counter went out of order on sample {index}")
+            sample += ((layers - draw) & wrap, (overlays - layers) & wrap, (submit - overlays) & wrap,
+                       setup_end - initial, layer_end - setup_end, overlay_end - layer_end, final - overlay_end)
+        timed.append(sample)
     return timed
 
 
@@ -176,7 +192,9 @@ def main():
     start.add_argument("--cadence", type=Path, help="single-window timing CSV to replay after bomb release")
     save = subcommands.add_parser("export", help="stop recording and write CSV")
     save.add_argument("csv", type=Path)
-    save.add_argument("--cycles", action="store_true", help="include timing from --measure-cycles")
+    format_flags = save.add_mutually_exclusive_group()
+    format_flags.add_argument("--cycles", action="store_true", help="include timing from --measure-cycles")
+    format_flags.add_argument("--draw-passes", action="store_true", help="include timing and sprite slots by draw pass")
     timing = subcommands.add_parser("timing", help="extract a timing window from a workload CSV")
     timing.add_argument("capture", type=Path)
     timing.add_argument("trace", type=Path)
@@ -203,10 +221,15 @@ def main():
                     cadence = next(iter(windows.values()))
                 arm(pine, args.bomb_delay, args.charge_ticks, args.shot_ticks, cadence)
             else:
-                rows = read_rows(pine, cycles=args.cycles)
+                rows = read_rows(pine, cycles=args.cycles, draw_passes=args.draw_passes)
+                columns = HEADER
+                if args.cycles or args.draw_passes:
+                    columns += CYCLE_HEADER
+                if args.draw_passes:
+                    columns += DRAW_PASS_HEADER
                 with args.csv.open("x", newline="", encoding="utf-8") as target:
                     writer = csv.writer(target)
-                    writer.writerow(HEADER + CYCLE_HEADER if args.cycles else HEADER)
+                    writer.writerow(columns)
                     writer.writerows(rows)
                 print(f"Exported {len(rows)} samples to {args.csv}")
         finally:

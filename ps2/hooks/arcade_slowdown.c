@@ -57,8 +57,21 @@ struct cycle_marks {
 	u32 submit_start;
 	u32 submit_end;
 	u32 complete;
+#ifdef SLOWDOWN_DRAW_PASSES
+	u32 layers_start;
+	u32 overlays_start;
+	u32 setup_end_slots;
+	u32 layers_end_slots;
+	u32 overlays_end_slots;
+	u32 final_slots;
+	u32 initial_slots;
+#endif
 };
+#ifdef SLOWDOWN_DRAW_PASSES
+_Static_assert(sizeof(struct cycle_marks) == 48, "draw-pass capture format");
+#else
 _Static_assert(sizeof(struct cycle_marks) == 20, "cycle capture format");
+#endif
 _Static_assert(CYCLE_BASE + CAPTURE_LIMIT * sizeof(struct cycle_marks) <= PS2_CAVE_END,
 	       "cycle capture exceeds research cave");
 volatile u32 arcade_slowdown_cycle_row;
@@ -93,7 +106,9 @@ struct slowdown_probe {
 
 volatile struct slowdown_probe arcade_slowdown __attribute__((section(".hookhdr"))) = {
 	.signature = 0x31574453u, /* SDW1 */
-#if defined(SLOWDOWN_CYCLES)
+#if defined(SLOWDOWN_DRAW_PASSES)
+	.capture_signature = 0x35544C53u, /* SLT5 */
+#elif defined(SLOWDOWN_CYCLES)
 	.capture_signature = 0x34544C53u, /* SLT4 */
 #elif defined(SLOWDOWN_CAPTURE)
 	.capture_signature = 0x33544C53u, /* SLT3 */
@@ -396,7 +411,7 @@ __asm__(
 __asm__(
 	".set push\n"
 	".set noreorder\n"
-	".macro slowdown_mark offset\n"
+	".macro slowdown_mark offset, slots=-1\n"
 	"sq $8,0($sp)\n"
 	"sq $9,16($sp)\n"
 	"lui $8,%hi(arcade_slowdown_cycle_row)\n"
@@ -406,6 +421,12 @@ __asm__(
 	"mfc0 $9,$9\n"
 	"nop\n"
 	"sw $9,\\offset($8)\n"
+#ifdef SLOWDOWN_DRAW_PASSES
+	".if \\slots >= 0\n"
+	"lw $9,-29172($gp)\n" /* retail GS sprite-slot count */
+	"sw $9,\\slots($8)\n"
+	".endif\n"
+#endif
 	".if \\offset == 12\n"
 	"addiu $9,$0,1\n"
 	"sw $9,16($8)\n"
@@ -415,24 +436,42 @@ __asm__(
 	"1: lq $9,16($sp)\n"
 	"lq $8,0($sp)\n"
 	".endm\n"
-	".macro slowdown_phase entry,retail,offset\n"
+	".macro slowdown_phase entry,retail,offset,slots=-1\n"
 	".globl \\entry\n"
 	"\\entry:\n"
 	"addiu $sp,$sp,-32\n"
-	"slowdown_mark \\offset\n"
+	"slowdown_mark \\offset,\\slots\n"
 	"j \\retail\n"
 	"addiu $sp,$sp,32\n"
 	".endm\n"
 	"slowdown_phase arcade_slowdown_sim_start,0x00138cd0,0\n"
-	"slowdown_phase arcade_slowdown_draw_start,0x00116c20,4\n"
+	"slowdown_phase arcade_slowdown_draw_start,0x00116c20,4,44\n"
+#ifdef SLOWDOWN_DRAW_PASSES
+	".globl arcade_slowdown_layer_setup\n"
+	"arcade_slowdown_layer_setup:\n"
+	"addiu $sp,$sp,-48\n"
+	"sq $ra,32($sp)\n"
+	"jal 0x00112500\n" /* initialize the command list */
+	"nop\n"
+	"slowdown_mark 20,28\n"
+	"lq $ra,32($sp)\n"
+	"jr $ra\n"
+	"addiu $sp,$sp,48\n"
+	".globl arcade_slowdown_overlay_start\n"
+	"arcade_slowdown_overlay_start:\n"
+	"addiu $sp,$sp,-32\n"
+	"slowdown_mark 24,32\n"
+	"j 0x00128960\n" /* start the HUD/overlay calls */
+	"addiu $sp,$sp,32\n"
+#endif
 	".globl arcade_slowdown_submit\n"
 	"arcade_slowdown_submit:\n"
 	"addiu $sp,$sp,-48\n"
 	"sq $ra,32($sp)\n"
-	"slowdown_mark 8\n"
+	"slowdown_mark 8,36\n"
 	"jal 0x001117d0\n"
 	"nop\n"
-	"slowdown_mark 12\n"
+	"slowdown_mark 12,40\n"
 	"lq $ra,32($sp)\n"
 	"jr $ra\n"
 	"addiu $sp,$sp,48\n"

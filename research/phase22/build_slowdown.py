@@ -33,6 +33,7 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--capture", action="store_true", help="add the research workload recorder")
     mode.add_argument("--measure-cycles", action="store_true", help="record workload and EE phase timing")
+    mode.add_argument("--measure-draw-passes", action="store_true", help="record EE draw-pass timing and sprite slots")
     mode.add_argument("--export-hardware", action="store_true", help="export the controller-triggered hook")
     args = parser.parse_args()
 
@@ -40,16 +41,23 @@ def main():
         parser.error("the MIPS n32 cross toolchain is required")
     retail = pnach.load_elf(args.retail)
     profile = dict(PROFILE)
-    capture = args.capture or args.measure_cycles
+    capture = args.capture or args.measure_cycles or args.measure_draw_passes
     if capture:
         profile.update(title="Arcade slowdown workload recorder", defines=["SLOWDOWN_CAPTURE"])
-    if args.measure_cycles:
+    if args.measure_cycles or args.measure_draw_passes:
         profile["title"] = "Arcade slowdown EE cycle recorder"
         profile["defines"].append("SLOWDOWN_CYCLES")
         profile["sites"] = [
             (0x0012E5CC, 0x0C04E334, "arcade_slowdown_sim_start"),
             (0x0012E1EC, 0x0C045B08, "arcade_slowdown_draw_start"),
             (0x0012E464, 0x0C0445F4, "arcade_slowdown_submit"),
+        ]
+    if args.measure_draw_passes:
+        profile["title"] = "Arcade slowdown EE draw-pass recorder"
+        profile["defines"].append("SLOWDOWN_DRAW_PASSES")
+        profile["sites"] += [
+            (0x0012E234, 0x0C044940, "arcade_slowdown_layer_setup"),
+            (0x0012E424, 0x0C04A258, "arcade_slowdown_overlay_start"),
         ]
     if args.export_hardware:
         profile.update(defines=["SLOWDOWN_HARDWARE"])

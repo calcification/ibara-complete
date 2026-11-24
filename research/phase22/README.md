@@ -666,6 +666,78 @@ enters its 24-layer loop at `0x0012E234`, and reaches the final call at
 `0x0012E464`. The combined EE timing can hide changes in how those passes
 contribute to each frame.
 
+### Measure PS2 draw passes
+
+Cold-boot the retail ISO in PCSX2 with only the new S01 draw-pass profile enabled. The
+production ISO patch uses the same manual slowdown gate and the research counters are
+available through this PNACH profile.
+
+```sh
+python3 research/phase22/build_slowdown.py 'Ibara (Japan).iso' \
+  --measure-draw-passes --output /path/to/pcsx2/cheats
+python3 research/phase22/workload_capture.py arm
+# Pause PCSX2 at the end of the capture.
+python3 research/phase22/workload_capture.py export stage1-ps2.csv --draw-passes
+```
+
+The stock profiling path always advances gameplay according to the retail timing gate. Leave
+the manual enable word at zero for these captures. For the two Stage 6 captures, restore the
+flying-form checkpoint, seed the ship and rank as above, and arm with `--bomb-delay 138`
+for Bond or `--bomb-delay 147` for Dyne, plus `--charge-ticks 138 --shot-ticks 360`.
+Capture at least 600 gameplay ticks after release. Use the MAME fixtures above with
+`IBARA_DRAW_LIST=1` for the corresponding arcade traces.
+
+| Boundary | What is measured |
+|---|---|
+| `0x0012E1EC` | Start of the retail draw path |
+| After `0x0012E234` | Setup done, 24-layer loop about to run |
+| `0x0012E424` | Layer loop done, overlay and HUD pass starting |
+| `0x0012E464`, before and after call | Start and end of game-side finalization |
+
+The exporter reports CP0 Count deltas and differences in the active sprite-slot counter
+at `$gp-29172`. The retail increment at `0x00110F18` follows insertion of a sprite into
+its draw queue. The pool caps the count at 3,000. These are software queue entries, so
+GIF transfers, VU work and GS execution remain distinct. The cursor at `$gp-28600` belongs
+to a different retail list path and stayed flat in the Stage 1 probe.
+
+```sh
+python3 research/phase22/assess_draw_deadline.py mame-bond.csv mame-dyne.csv mame-stage1.csv \
+  --ee-draw-passes bond-ps2.csv dyne-ps2.csv stage1-ps2.csv
+```
+
+PCSX2 2.8.2 captured 300 stock Stage 1 updates and 600 stock updates after Hadou
+release for each Stage 6 ship. Both Stage 6 runs used the same restored PS2
+checkpoint. All three runs advanced every refresh. In the 24-refresh forced
+control, 12 updates held and the draw passes still ran on every refresh.
+The timing components summed to the full draw interval in every stock sample.
+
+| PCSX2 route | Layer CP0 counts, median | Overlay CP0 counts, median | Layer slots, median | Overlay slots, median |
+|---|---:|---:|---:|---:|
+| Stage 1 | 243,556 | 33,155 | 506 | 53 |
+| Stage 6 Bond | 583,566 | 29,612 | 964 | 46 |
+| Stage 6 Dyne | 556,396 | 29,788 | 913 | 46 |
+
+The MAME cadence again matched the prior traces. Fit the arcade draw phase to
+the PS2 pass timings or sprite counts, fit arcade simulation to PS2 simulation
+time separately, then test the combined budget against the opposite ship.
+
+| Model and held-out ship | Correct / actual holds | Extra holds | Event score |
+|---|---:|---:|---:|
+| Pass timing, Dyne | 3 / 4 | 297 | 0% |
+| Sprite slots, Dyne | 3 / 4 | 317 | 14.29% |
+| Pass timing, Bond | 0 / 200 | 0 | 0% |
+| Sprite slots, Bond | 0 / 200 | 0 | 0% |
+
+Both models left the Stage 1 control at full speed, and using the previous
+update's estimate left their event scores unchanged. Supplying measured arcade
+simulation time left the best event score at 9.09%. These are same-checkpoint
+PS2 runs with fixed scripted Hadou release. The first Rose Pod in each new run
+appeared one gameplay tick later than in the previous PS2 captures. The first
+hostile bullet in the new Dyne capture appeared 301 ticks after release, versus
+two ticks before release in the earlier capture. The mismatch limits the
+comparison. Match both landmarks and reproduce the enemy sequence across
+fresh checkpoints before treating these scores as a limit of the model.
+
 ## Accuracy check
 
 The [timing audit](../phase17/README.md#arcade-slowdown-investigation-2026-11-23) records the retail
