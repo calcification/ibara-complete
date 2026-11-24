@@ -599,6 +599,73 @@ interval. Exact publication and blitter completion timestamps and PCB timing rem
 [Draw-list emitter](https://github.com/PaulAtreides67/ibara360/blob/main/gen/ibara_drc/recomp_08.c#L122) ·
 [List-building helper](https://github.com/PaulAtreides67/ibara360/blob/main/gen/ibara_drc/recomp_02.c#L1756)
 
+### Fit the CPU cost of a draw list
+
+Set `IBARA_DRAW_LIST=1` alongside `IBARA_DEADLINE` on the MAME 0.289 `-drc` commands
+above. Keep `IBARA_CPU_ONLY=1` for Stage 6. The callback reads the finished
+command list directly from SH-3 RAM once the game publishes it. A repeated
+gameplay tick has an initial sample with no published list and a later sample
+with the completed list. Pair the completed list with that tick's first video
+deadline. The parser checks for exactly this sequence and requires the blitter
+to be ready in these captures. The new reads reproduced the prior Bond, Dyne
+and Stage 1 cadence traces frame for frame.
+
+```sh
+python3 research/phase22/assess_draw_deadline.py bond.csv dyne.csv stage1.csv \
+  --holdout stage6-bond-rank200000 bond-rank200000.csv \
+  --ee-cycles bond-ee-cycles.csv dyne-ee-cycles.csv
+```
+
+The two optional EE files are stock S01 exports with `--cycles` from the
+release- and Rose Pod-aligned runs described above. The additional Stage 6
+holdout uses Bond, `IBARA_SIDE=1 IBARA_RANK=200000 IBARA_POST_RELEASE=600`.
+
+| MAME route | Advances / holds | Median sprite commands, advances / holds | Median draw time, advances / holds | Median simulation time, advances / holds |
+|---|---:|---:|---:|---:|
+| Stage 6 Bond, max rank | 400 / 200 | 1,580 / 2,318 | 7 / 9 ms | 6 / 8 ms |
+| Stage 6 Dyne, max rank | 596 / 4 | 1,436 / 1,815 | 7 / 8 ms | 6 / 9 ms |
+| Stage 1 control | 300 / 0 | 980 / — | 3 ms / — | 3 ms / — |
+
+A linear fit to the native draw checkpoints gave 2.37 µs per draw on Bond
+and 2.34 µs per draw on Dyne, in addition to a fixed term. The draw-time error
+on the other route averaged 0.56–0.62 ms. Add the arcade's separately measured
+simulation time and a fixed overhead fitted on the training route, then
+compare that total to the 16.660 ms video period.
+
+| Training → held-out route | Correct / actual holds | Extra holds | Slowdown event score |
+|---|---:|---:|---:|
+| Bond → Dyne | 3 / 4 | 1 | 40% |
+| Dyne → Bond | 177 / 200 | 21 | 37.5% |
+
+The arcade draw-count and command-mix models left Stage 1 at full speed. Splitting draws into visible, offscreen
+and blended counts reduced timing error on Dyne slightly. On Bond it increased
+misses at the event level despite correctly classifying more individual holds.
+Using each previous update's estimate instead, the simple model classified
+160 of Bond's 200 holds and none of Dyne's four on their exact gameplay ticks.
+The same-tick result uses a list and timing samples available after the work
+finishes. Separate linear calibrations from PS2 EE simulation and draw counts to
+the corresponding arcade phases predicted zero holds on both held-out routes.
+
+Even the game’s own elapsed checkpoint at a fixed deadline threshold
+overpredicted individual holds by 22 on Bond and two on Dyne. That estimate
+includes work through the checkpoint and uses a timer with roughly 1 ms
+resolution. The checkpoint and first deadline shared the same timer value
+on 90 max-rank Bond updates (45 advances, 45 holds) and eight max-rank Dyne
+updates (seven advances, one hold). The publication bit sampled at the IRQ
+distinguished them.
+
+The independent rank-`0x200000` Bond run had 166 holds in 600 updates.
+The draw-count rule classified 132 of them correctly when trained on max-rank
+Bond and 136 when trained on max-rank Dyne. The rules added 47 and 52 extra
+holds and scored 3.03% and 0% on events. These are emulator diagnostics.
+PCB agreement and an automatic PS2 rule remain open.
+
+For a PS2 predictor, the next measurements are the amounts of work produced by
+individual CPU draw passes. The retail draw path begins at `0x0012E1EC`,
+enters its 24-layer loop at `0x0012E234`, and reaches the final call at
+`0x0012E464`. The combined EE timing can hide changes in how those passes
+contribute to each frame.
+
 ## Accuracy check
 
 The [timing audit](../phase17/README.md#arcade-slowdown-investigation-2026-11-23) records the retail

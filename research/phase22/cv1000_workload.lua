@@ -75,6 +75,13 @@ function M.inspect_list(read_word, start, clip_x, clip_y)
     return nil, "blitter list exceeded RAM or the capture size"
 end
 
+-- Read only after the game has published the current frame's list.
+function M.read_list(space)
+    local start = space:read_u32(GAME_LIST) & 0x1fffffff
+    return M.inspect_list(function(addr) return space:read_u16(addr) end, start,
+        space:read_i32(GAME_CLIP_X), space:read_i32(GAME_CLIP_Y))
+end
+
 function M.attach(machine)
     local space = machine.devices[":maincpu"].spaces["program"]
     local delay
@@ -89,9 +96,7 @@ function M.attach(machine)
         if capture.enabled and (data & mask & 1) ~= 0 then
             record_modeled_delay(capture.frame[#capture.frame])
             -- The retail submit routine reads this pointer immediately before kicking the FPGA.
-            local start = space:read_u32(GAME_LIST) & 0x1fffffff
-            local totals, message = M.inspect_list(function(addr) return space:read_u16(addr) end,
-                start, space:read_i32(GAME_CLIP_X), space:read_i32(GAME_CLIP_Y))
+            local totals, message = M.read_list(space)
             capture.frame[#capture.frame + 1] = {list = totals, error = message}
         end
     end)
