@@ -146,9 +146,12 @@ static void kuro_set(u32 on)
 	}
 }
 
+void bl_scripts_build(void);
+
 void kuro_enter(void)
 {
 	xtc_reset();
+	bl_scripts_build(); /* before kuro_set points stage 5 at the copy */
 	kuro_set(1u);
 	EE_RAM(u32, FRONT_STATE) = 2u; /* as the Arcade row (0x001CA800) */
 	EE_RAM(u32, FRONT_ROW) = 0u;

@@ -147,7 +147,9 @@ PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
 RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
 BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry"),
                   # BL rose rank table (ps2/hooks/bl_player.c bl_rose_rank; research/phase24)
-                  (0x0012F6F4, 0x3C020021, "hi", "bl_rose_rank"), (0x0012F6F8, 0x2442BFD0, "lo", "bl_rose_rank")]
+                  (0x0012F6F4, 0x3C020021, "hi", "bl_rose_rank"), (0x0012F6F8, 0x2442BFD0, "lo", "bl_rose_rank"),
+                  # BL stage-5 script with its six extra type-52 waves (ps2/hooks/bl_enemy.c; research/phase25)
+                  (0x001F1850, 0x001ECF80, "word", "bl_s5_script")]
 
 HOOKS = {
     "h00_smoke": {

@@ -84,3 +84,39 @@ void bl_boss_cancel_frame(void)
 			EE_RAM(u32, a) = 0u;
 	}
 }
+
+/* BL stage-5 script (research/phase25). The stage scripts are time-ordered records (time, type, position,
+ * subtype, flags) and commands (0xFFxx). BL's stage-5 script (0C202142) has six more type-52 waves than the PS2
+ * script (0x001ECF80, pointed to by stage 5's table word 0x001F1850): MAME and PCSX2 spawn logs show 9 waves vs 3,
+ * and the scripts are otherwise the same records. The PS2 script cannot grow in place, so KURO builds a copy here
+ * from the retail words (up to the end command FF03 7FFF) with BL's six records inserted after the third wave, and
+ * the runtime table points 0x001F1850 at it. If the retail words are not the expected ones, the copy is the plain
+ * retail script. Leaf, temporaries only. */
+#define S5_SCRIPT 0x001ECF80u
+#define S5_INSERT 0x001ED01Au /* after the record (0x188, 52, 0x240, 2, 0x4000) */
+#define S5_END    0x001ED0B6u /* past FF03 7FFF */
+static const u16 bl_s5_waves[30] = {
+	0x0348, 0x0034, 0x0200, 0x0002, 0x4000, 0x04B8, 0x0034, 0x01C0, 0x0002, 0x4000,
+	0x0578, 0x0034, 0x0240, 0x0002, 0x4000, 0x07A8, 0x0034, 0x01C0, 0x0002, 0x4000,
+	0x07A8, 0x0034, 0x0240, 0x0002, 0x4000, 0x0898, 0x0034, 0x01E0, 0x0002, 0x4000,
+};
+u16 bl_s5_script[(S5_END - S5_SCRIPT) / 2u + 30u] __attribute__((aligned(16)));
+u32 bl_s5_ready;
+
+void bl_scripts_build(void)
+{
+	const volatile u16 *src = (const volatile u16 *)S5_SCRIPT;
+	const u32 n_ins = (S5_INSERT - S5_SCRIPT) / 2u, n_all = (S5_END - S5_SCRIPT) / 2u;
+	const u32 ok = src[n_ins - 5u] == 0x0188u && src[n_ins - 4u] == 0x0034u && src[n_ins] == 0x08C0u &&
+		       src[n_all - 2u] == 0xFF03u && src[n_all - 1u] == 0x7FFFu;
+	u32 i, k = 0;
+
+	for (i = 0; i < n_ins; i++)
+		bl_s5_script[k++] = src[i];
+	if (ok)
+		for (i = 0; i < 30u; i++)
+			bl_s5_script[k++] = bl_s5_waves[i];
+	for (i = n_ins; i < n_all; i++)
+		bl_s5_script[k++] = src[i];
+	bl_s5_ready = 1;
+}

@@ -166,6 +166,8 @@ void spawn_log_frame(void);
 /* BLACK LABEL build only (ps2/hooks/bl_player.c); absent in the XTC-only test profile. */
 void bl_player_frame(u32 rec) __attribute__((weak));
 void bl_boss_cancel_frame(void) __attribute__((weak)); /* bl_enemy.c: bullet cancel after a boss */
+void bl_scripts_build(void) __attribute__((weak));     /* bl_enemy.c: BL stage-5 script copy */
+extern u32 bl_s5_ready __attribute__((weak));
 #ifndef KURO_PRESENTATION
 void bl_select_tick(void) __attribute__((weak));       /* bl_select.c: open the select screen at a game start */
 #endif
@@ -186,6 +188,8 @@ void xtc_frame(void)
 #endif
 	if (bl_boss_cancel_frame)
 		bl_boss_cancel_frame();
+	if (bl_scripts_build && !bl_s5_ready)
+		bl_scripts_build(); /* BLACK LABEL build (no kuro_enter): before the first stage starts */
 #ifndef KURO_PRESENTATION
 	if (bl_select_tick)
 		bl_select_tick();
