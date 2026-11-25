@@ -22,21 +22,42 @@ with the test define `BL_TEST_XTC_POPUP` (one graze per frame while shot is held
 is sample 32's (SPU byte 0x43CA0) and whose play address moves between two savestates; none after the shot is
 released, and none in an Arrange game.
 
-## Rank glow (not built)
+## Rank glow (K50)
 
-`0C0713F2`-`0C071500`, after the graze sphere, while player `+0x289` (pods deployed) is non-zero:
+BL `0C0713F2`-`0C071500`, inside the routine that draws the graze sphere (so only while the shot is held, held count
+player `+0x270` > 0), when pods are deployed (`+0x289`):
 
-* Drawn only when `2 × ((0xFFFFFF − stored rank) >> 16) − 255 ≥ 0`, i.e. in the harder half of the rank range
-  (stored rank below ~0x800000). At the stage-1 rank of a normal run (~0xE00000) it never shows.
-* A level 0-15 from the rank term and a per-player byte (+0x274; 0x42–0xBE in the runs below, not decoded yet),
-  clamped at 15; the colour word `0x02070000 | …` mixes the rank into the tint. (Read from the listing only; to be
-  confirmed with the draw-op capture before porting.)
-* Four quadrant descriptors `0C1752A8[level × 4 + q]`, sprite ids from `0C1754E8[(~(frame >> 2) & 7) | level << 3]`
-  (8 animation frames), offsets from `0C1754E0[kind]` as the sphere.
-* What it looks like: MAME `-nodrc` (the code patch `0C0713F6` → `sett`, skip, is not seen by the recompiler),
-  rank held at 0x300000, the same frame with and without: a faint additive ring about 68 px across around the ship,
-  orange at this rank, with a cross pattern.
+* **Rank gate and tint.** h = (0xFFFFFF − stored rank) >> 16. Drawn only when 2h − 255 ≥ 0 (the harder half of the
+  rank range). Tint R = 2h − 255, G = 510 − 2h, B = 0 (green at the gate, red at rank 0).
+* **Level** = min(15, held × (h >> 4) >> 3): levels 8–15 with the shot held 8 frames; lower levels only in the first
+  frames of a press.
+* **Strength** (`+0x274`, the alpha of both blend factors): a graze ORs 0x8000 into it (`0C06F0DE`); the per-frame
+  update (`0C07114E`) adds 16 (max 0xC0) when that flag is set, otherwise takes 2 off (min 0). Grazes are tested on
+  alternate frames, so it sits at 0xBE / 0xC0 while grazing steadily.
+* **Sprites.** Four quadrants around the sphere's centre + 1 px along game x: quadrant 0 right / +y, 1 right / −y
+  (flip y, attr 0x400), 2 left / +y (flip x, 0x800), 3 both; blend attr 0x307 (PS2 flags `0x12070000`). Each level
+  has 8 quadrant frames (32 × 32 for levels 8–11, 40 × 40 for 12–15; levels 10 and 11 share theirs), all in the ROM
+  block x 0x1500–0x16FF, y 0x700–0x7FF; quadrants 1 and 2 show frame seq[p], quadrants 0 and 3 seq[7 − p],
+  p = (~(frame >> 2)) & 7. BL draws each frame in up to four pieces; the pieces tile the whole square.
 
-Porting it is the same kind of work as the graze sphere (phase 21): capture the 8 frames × 16 levels of quadrant
-art from the ROM into the atlas, then draw four sprites from the HUD pass. Open questions: the texture budget for
-the frames (64 × 64 per frame before quadrant mirroring) and whether the PS2's additive blend matches.
+**How it was found.** `glow_log.lua`-style MAME runs: the same session with and without the branch at `0C0713F6`
+forced to skip (`-nodrc`; the recompiler ignores the code patch) gives the glow as the frame difference and as the
+extra blitter ops. `glow_cap.lua` (rank held per level, `+0x274` = 0xC0, `+0x289` = 3) logged 32 frames per level;
+the per-(level, phase, quadrant) tiles are in `glow_tiles.json` (coordinates only). Levels 8 and 9 missed two or
+three phases in the capture; their order follows the identity pattern of the captured phases (as levels 10–11).
+
+**PS2.** 56 distinct tiles (24 small, 32 large, 75,776 px) do not fit the free space of the existing pages, so:
+
+* the select art moved off page 5 (it fits pages 0–4, 6, 7), making page 5 — the rank bar's always-registered object
+  — the in-game page: rank bar (rows 0–17, cols 0–79), 19 small glow tiles, sphere, XTC digits;
+* the art segment grows from 8 to 10 pages (`0x01F20000`–`0x01FBFFFF`; RAM there was zero in every savestate);
+  pages 8 and 9 hold the other 32 large and 5 small tiles and are registered in-game as objects 1113 and 1115 under
+  the empty texture-table row 6, columns 8 and 9 (`ps2/hooks/bl_tex.c`);
+* `research/phase20/make_select_data.py` places the tiles and generates `ps2/hooks/bl_glow_data.c`; the patcher
+  copies the pixels from the user's ROM with the rest of the atlas;
+* `xtc.c` keeps the strength per side (`xtc_glow`), `bl_rankbar.c` `bl_glow()` draws after the sphere, with PS2 pods
+  (`+0x27B`) for BL's `+0x289`.
+
+Not ported: levels 0–7 (at most the first four frames of a press). PCSX2 (test defines `BL_TEST_XTC_POPUP`,
+`BL_TEST_GLOW_LEVELS`: rank stepped through levels 8–15, pod check off): the ring is drawn around the ship with the
+cross pattern, seamless quadrants, red at the top levels and green at level 8, as BL.

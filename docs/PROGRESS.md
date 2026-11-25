@@ -18,7 +18,7 @@ matrix. They are not a measurement.
 | Player rules (F1–F7, F10) | XTC graze counter + HUD + bomb wipe; weapon stock + change button; shot levels to 6, no secret; held fire every 2 frames; 32-shot cap; pod aiming, pod fire rules, no rank per pod shot; BL hit sparks; bombs (no rank, type D by ship); straight/spread A–D; bullet cancel after bosses and mid-bosses | ~85 % |
 | Rank (F8) | stored-rank format, fragment / medal / rose / item rules at BL's amounts, no time creep or shot cost (K43), bombs as BL, enemy fire timer from rank, RANK bar | ~90 % (Hadou drops open) |
 | Enemies and stages (G5–G7) | BL enemy HP, part HP all stages, fire timer, bullet cancel; stages 1–5 compared enemy by enemy and matching (bosses differ only by random attack choices); stage scripts diffed for all six stages, stage 5's extra waves ported (K44) | ~65 % — open: stage-6 rose form (BL type-79 roses), player-side damage |
-| Presentation (F11, A1) | BL RANK bar (exact colours); BL select screen (ship → type → confirm, 60-s timer, BL layout and art, two players with the join panel (K46), BL ship-select theme from the user's sound ROMs); graze sphere and XTC popup | ~65 % (select animation / fly-in / runway background; title logo; XTC rank glow) |
+| Presentation (F11, A1) | BL RANK bar (exact colours); BL select screen (ship → type → confirm, 60-s timer, BL layout and art, two players with the join panel (K46), BL ship-select theme from the user's sound ROMs); graze sphere and XTC popup | ~65 % (select animation / fly-in / runway background; title logo) |
 | Arcade slowdown (Codex, phase 22) | Arcade CONFIG → SLOWDOWN (default Off); L2 + R2 toggles manual half speed in Arcade; cleared when leaving to the menu; Noir and Arrange untouched | manual mode ~90 % (menu-reset retest on hardware pending); automatic arcade-like slowdown ~15 % (research only: no predictor yet reaches the 80 % event target on held-out captures) |
 | Game flow (G1–G3) | KURO enters through Arcade's menu; single 6-stage loop as BL (K45: no difficulty choice); stage order, opening and post-stage-6 sequence match BL (research/phase25) | ~70 % (side select) |
 
@@ -38,7 +38,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 
 ## Next, in order
 
-1. XTC rank glow (mapped, research/phase28). The graze sphere (K31), number popup (K32), deployed-pod requirement and graze sound (K49) are implemented.
+1. XTC is complete: graze sphere (K31), number popup (K32), deployed-pod requirement, graze sound (K49) and rank glow (K50).
 2. Pod shot counts still apart from BL: 5-way, homing, napalm (targeting / fire rules).
 3. Hadou drops (BL: medals and type-11 items, no roses), with the item and enemy comparison.
 4. Stage-6 rose form: BL spawns roses ≈15 % faster and adds a type-14 barrage, so its rose core lasts ≈40 % longer (research/phase25); port from the type-74 handler. Then player-side damage.

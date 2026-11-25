@@ -86,11 +86,11 @@ def inject_bl_art(iso, at, art):
         f.write(art)
 
 
-# Black Label select screen (research/phase20): eight 256 x 128 PSMCT16 texture pages (players 1 and 2) after SELECT_TAG in the
+# Black Label select screen (research/phase20): ten 256 x 128 PSMCT16 texture pages (select screen, players 1 and 2; in-game page 5 and the rank glow pages 8-9) after SELECT_TAG in the
 # executable's art segment, assembled from the ROM's blitter images as described by bl_select_atlas.json.
 SELECT_TAG = b"BLSELECT-ART-01\0"
 SELECT_ON = b"BLSELECT-ART-ON\0"
-SELECT_PAGES = 8
+SELECT_PAGES = 10
 
 
 def build_select_pages(rom_data, atlas):

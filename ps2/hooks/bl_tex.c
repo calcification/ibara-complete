@@ -10,12 +10,15 @@
  * descriptors and TEX0 block — as the game's own pages, which share cache slots (one object with its descriptor
  * swapped between sprites drew the wrong pixels).
  *  - KT_BAR (the rank bar, page 5's pixels): always registered, object index 1114 (the loader uses 0-1112; 1113-1115
- *    are zero) under the free entry row 1 / col 5.
+ *    are zero) under the free entry row 1 / col 5. Page 5 also holds the graze sphere, the XTC digits and part of
+ *    the rank glow.
+ *  - KT_GLOW, KT_GLOW + 1 (the rest of the XTC rank glow, pages 8 and 9; research/phase28): always registered,
+ *    object indices 1113 and 1115 under row 6 / cols 8 and 9 (row 6 is empty in the retail table).
  *  - pages 0-7 (the select screen, players 1 and 2): registered only while the select screen is up (ktex_claim /
  *    ktex_release: entries row 6 / cols 0-7, free in the retail table; object slots borrowed from the empty ones, the game update
  *    being stopped meanwhile, and given back).
- * Pixels at KT_PIXELS (0x01F20000-0x01F9FFFF: the select art segment loaded with the executable; page 5 rows 0-19 the
- * rank bar's, built at run time). Leaf code (no s-registers).
+ * Pixels at KT_PIXELS (0x01F20000-0x01FBFFFF: the art segment loaded with the executable, ten pages; page 5 rows 0-17
+ * / cols 0-79 the rank bar's, built at run time). Leaf code (no s-registers).
  */
 #include "ibara_ps2.h"
 
@@ -29,6 +32,10 @@
 #define KT_PIXELS  0x01F20000u
 #define KT_PAGES   8u
 #define KT_BAR     8u /* object slot of ours for the rank bar (after the select pages) */
+#define KT_GLOW    9u /* objects 9, 10: the rank glow's pages 8, 9 */
+#define GLOW_INDEX0 1113u
+#define GLOW_INDEX1 1115u
+#define GLOW_COL   8u /* row 6, cols 8 and 9 */
 
 struct ktex_obj {
 	u32 obj[64];   /* clone of the HUD page object (0x100 bytes) */
@@ -37,7 +44,7 @@ struct ktex_obj {
 	u32 tbl[2];    /* object +0x24: [image descriptor, CLUT descriptor] */
 	u32 index;     /* object slot while registered */
 } __attribute__((aligned(16)));
-static struct ktex_obj kt[KT_PAGES + 1];
+static struct ktex_obj kt[KT_PAGES + 3];
 u32 kt_ready, kt_claimed;
 
 static void copy_words(u32 *dst, u32 src, u32 n)
@@ -129,6 +136,10 @@ u32 ktex_init(void)
 		clone(&kt[p], obj, KT_PIXELS + p * 0x10000u, dbp);
 	clone(&kt[KT_BAR], obj, KT_PIXELS + 5u * 0x10000u, dbp);
 	kt[KT_BAR].index = BAR_INDEX;
+	clone(&kt[KT_GLOW], obj, KT_PIXELS + 8u * 0x10000u, dbp);
+	kt[KT_GLOW].index = GLOW_INDEX0;
+	clone(&kt[KT_GLOW + 1u], obj, KT_PIXELS + 9u * 0x10000u, dbp);
+	kt[KT_GLOW + 1u].index = GLOW_INDEX1;
 	kt_ready = 1;
 	return 1;
 }
@@ -141,7 +152,7 @@ static u32 refresh(void)
 	u32 p;
 	if (!obj)
 		return 0;
-	for (p = 0; p <= KT_PAGES; p++) {
+	for (p = 0; p <= KT_PAGES + 2u; p++) {
 		kt[p].tbl[1] = EE_RAM(u32, obj + 0x20u);
 		kt[p].tex0[5] = EE_RAM(u32, obj + 0x20u);
 		kt[p].obj[0x20 / 4] = EE_RAM(u32, obj + 0x20u);
@@ -150,6 +161,14 @@ static u32 refresh(void)
 		return 0;
 	EE_RAM(u32, TEX_OBJS + BAR_INDEX * 4u) = (u32)kt[KT_BAR].obj;
 	EE_RAM(s32, TEX_TABLE + BAR_ENTRY * 4u) = (s32)BAR_INDEX;
+	for (p = 0; p < 2u; p++) { /* the glow pages: only while their entries are free or ours */
+		const u32 ent = TEX_TABLE + (SEL_ROW * 32u + GLOW_COL + p) * 4u;
+		const s32 g = EE_RAM(s32, ent);
+		if (g != -1 && g != (s32)kt[KT_GLOW + p].index)
+			continue;
+		EE_RAM(u32, TEX_OBJS + kt[KT_GLOW + p].index * 4u) = (u32)kt[KT_GLOW + p].obj;
+		EE_RAM(s32, ent) = (s32)kt[KT_GLOW + p].index;
+	}
 	return 1;
 }
 
@@ -196,10 +215,18 @@ void ktex_release(void)
 /* Leaving KURO: the game's table as it was. */
 void ktex_off(void)
 {
+	u32 p;
 	ktex_release();
 	if (EE_RAM(s32, TEX_TABLE + BAR_ENTRY * 4u) == (s32)BAR_INDEX)
 		EE_RAM(s32, TEX_TABLE + BAR_ENTRY * 4u) = -1;
 	EE_RAM(u32, TEX_OBJS + BAR_INDEX * 4u) = 0;
+	for (p = 0; p < 2u; p++) {
+		const u32 ent = TEX_TABLE + (SEL_ROW * 32u + GLOW_COL + p) * 4u;
+		if (EE_RAM(s32, ent) == (s32)kt[KT_GLOW + p].index)
+			EE_RAM(s32, ent) = -1;
+		if (EE_RAM(u32, TEX_OBJS + kt[KT_GLOW + p].index * 4u) == (u32)kt[KT_GLOW + p].obj)
+			EE_RAM(u32, TEX_OBJS + kt[KT_GLOW + p].index * 4u) = 0;
+	}
 }
 
 void ktex_flush(void)
@@ -232,15 +259,21 @@ __asm__(
 /* Draw page rectangle (px, py, pw, ph) (screen orientation: page x = screen x, page y = screen y) at game x, y
  * (x = the rectangle's lowest game x, i.e. its screen bottom edge; y = its screen left edge), with 0x00110B70's
  * flags and tint. Game orientation: w = ph (along game x), h = pw (along game y); u = 256 - py - ph.
- * page 0-7: the select screen's (claimed); KT_BAR: the rank bar's object (page 5 pixels). */
+ * page 0-7: the select screen's (claimed); KT_BAR: the rank bar's object (page 5 pixels); KT_GLOW, KT_GLOW + 1: the
+ * rank glow's pages 8, 9. */
 u32 ktex_draw(u32 page, u32 px, u32 py, u32 pw, u32 ph, u32 flags, u32 tint, s32 x, s32 y)
 {
 	u32 col, row;
-	if (!kt_ready || page > KT_PAGES || !refresh())
+	if (!kt_ready || page > KT_GLOW + 1u || !refresh())
 		return 0;
 	if (page == KT_BAR) {
 		col = BAR_ENTRY % 32u;
 		row = BAR_ENTRY / 32u;
+	} else if (page >= KT_GLOW) {
+		if (EE_RAM(s32, TEX_TABLE + (SEL_ROW * 32u + GLOW_COL + page - KT_GLOW) * 4u) != (s32)kt[page].index)
+			return 0;
+		col = GLOW_COL + page - KT_GLOW;
+		row = SEL_ROW;
 	} else {
 		if (!kt_claimed)
 			return 0;

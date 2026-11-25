@@ -111,8 +111,14 @@ def main(argv):
 
 
 # --- atlas and generated files ---------------------------------------------------------------------------------
-PAGES, PAGE_W, PAGE_H = 8, 256, 128
-RESERVED = (5, 20)  # page 5 rows 0-19: the rank bar (bl_rankbar.c)
+PAGES, PAGE_W, PAGE_H = 10, 256, 128
+# Page 5 is the in-game page (the rank bar's texture object, always registered): rank bar (rows 0-17, cols 0-79),
+# XTC rank glow tiles, graze sphere (rows 96-111) and XTC digits (rows 112-127). Pages 8-9 hold the rest of the rank
+# glow (research/phase28). The select art goes on the other pages.
+SELECT_PAGES = (0, 1, 2, 3, 4, 6, 7)
+GLOW_TILES = Path(__file__).resolve().parents[1] / "phase28" / "glow_tiles.json"
+# ktex objects (ps2/hooks/bl_tex.c): page 5 -> KT_BAR (8), page 8 -> KT_GLOW (9), page 9 -> KT_GLOW + 1 (10)
+GLOW_OBJECT = {5: 8, 8: 9, 9: 10}
 SPHERE_PAGE, SPHERE_ROW, SPHERE_SX, SPHERE_SY = 5, 96, 0x1498, 0x700  # graze sphere frames (bl_rankbar.c)
 STATE_ORDER = ["head", "join_P2", "ship_S", "ship_P"] + [f"type_{k}{t}" for k in "SP" for t in "ABCD"] + \
     ["ship_S2", "ship_P2"] + [f"type_{k}2{t}" for k in "SP" for t in "ABCD"]
@@ -121,17 +127,16 @@ STATE_ORDER = ["head", "join_P2", "ship_S", "ship_P"] + [f"type_{k}{t}" for k in
 def pack(sprites):
     """Skyline-pack sprites in screen orientation (pw = blitter h, ph = blitter w) into 256 x 128 pages."""
     order = sorted(range(len(sprites)), key=lambda i: (-sprites[i][2], -sprites[i][3]))
-    sky = [[RESERVED[1] if pg == RESERVED[0] else 0] * PAGE_W for pg in range(PAGES)]
+    sky = [[0] * PAGE_W for pg in range(PAGES)]
     place = [None] * len(sprites)
     for i in order:
         pw, ph = sprites[i][3], sprites[i][2]
         best = None
-        for pg in range(PAGES):
+        for pg in SELECT_PAGES:
             col = sky[pg]
             for x in range(0, PAGE_W - pw + 1):
                 y = max(col[x:x + pw])
-                limit = SPHERE_ROW if pg == SPHERE_PAGE else PAGE_H  # page 5 rows 96-127: sphere and XTC digits
-                if y + ph <= limit and (best is None or (y, pg) < (best[0], best[2])):
+                if y + ph <= PAGE_H and (best is None or (y, pg) < (best[0], best[2])):
                     best = (y, x, pg)
             if best is not None and best[2] == pg:
                 break
@@ -187,18 +192,55 @@ def emit(scene, vmap, root):
     for (sx, sy, w, h), (pg, x, y) in zip(sprites, place):
         if pg == SPHERE_PAGE and y < 128 and SPHERE_ROW < y + w:
             raise SystemExit("select art overlaps the graze sphere / XTC digit rows (page 5 rows 96-127)")
+    glow = emit_glow(root)
     used = []
     for i, (dx, dy, w, h, off) in enumerate(vmap):
-        if any(dx < sx + sw and sx < dx + w and dy < sy + sh and sy < dy + h for sx, sy, sw, sh in sprites + extra + [x[:4] for x in xtc]):
+        if any(dx < sx + sw and sx < dx + w and dy < sy + sh and sy < dy + h for sx, sy, sw, sh in sprites + extra + [x[:4] for x in xtc] + [g[:4] for g in glow]):
             used.append([dx, dy, w, h, off])
     atlas = {"note": "Black Label select screen atlas: sprite = [blitter x, y, w, h, page, page x, page y] (screen "
                      "orientation: page pixel (row i, col j) = blitter (x + w - 1 - i, y + j)); rects = blitter "
                      "uploads [x, y, w, h, ibarablk_u2 offset], later ones win. Coordinates only.",
              "sprites": [list(s) + list(p) for s, p in zip(sprites, place)] +
                         [list(e) + [SPHERE_PAGE, 16 * f, SPHERE_ROW] for f, e in enumerate(extra)] +
-                        [list(x) for x in xtc], "rects": used}
+                        [list(x) for x in xtc] + glow, "rects": used}
     (root / "patcher/bl_select_atlas.json").write_text(json.dumps(atlas, separators=(",", ":")) + "\n")
     print(f"atlas: {max(p[0] for p in place) + 1} pages, {len(used)} upload rects; {len(ops)} ops")
+
+
+def glow_layout():
+    """Rank glow tiles (research/phase28) -> page positions: 24 distinct 32 x 32 tiles (levels 8-11), 32 distinct
+    40 x 40 tiles (levels 12-15). 32s: page 5 cols 80-255 rows 0-95 (15), cols 0-63 rows 18-81 (4; the rank bar
+    uses rows 0-17 of cols 0-79), page 9 row 80 cols 80-239 (5). 40s: page 8 (3 rows of 6), page 9 rows 0-79 (12)
+    and row 80 cols 0-79 (2). Returns ({rect: (page, x, y)}, levels)."""
+    levels = {int(k): [tuple(r) for r in v] for k, v in json.load(open(GLOW_TILES))["levels"].items()}
+    small, big = [], []
+    for lv in sorted(levels):
+        for r in levels[lv]:
+            (small if r[2] == 32 else big).append(r) if r not in small + big else None
+    s_slots = [(5, x, y) for y in (0, 32, 64) for x in (80, 112, 144, 176, 208)] + \
+              [(5, x, y) for y in (18, 50) for x in (0, 32)] + [(9, x, 80) for x in (80, 112, 144, 176, 208)]
+    b_slots = [(8, x, y) for y in (0, 40, 80) for x in range(0, 240, 40)] + \
+              [(9, x, y) for y in (0, 40) for x in range(0, 240, 40)] + [(9, 0, 80), (9, 40, 80)]
+    if len(small) > len(s_slots) or len(big) > len(b_slots):
+        raise SystemExit("rank glow tiles do not fit their pages")
+    where = dict(zip(small, s_slots))
+    where.update(zip(big, b_slots))
+    return where, levels
+
+
+def emit_glow(root):
+    where, levels = glow_layout()
+    lines = ["/* GENERATED by research/phase20/make_select_data.py from research/phase28/glow_tiles.json (MAME captures",
+             " * of Black Label's XTC rank glow): page positions only; the pixels come from the user's ROM through the",
+             " * patcher's atlas. Do not edit. */", '#include "ibara_ps2.h"', "",
+             "/* [level - 8][frame]: ktex object (8 = page 5, 9 = page 8, 10 = page 9), page x, page y, size */",
+             "const u8 bl_glow_tiles[8][8][4] = {"]
+    for lv in range(8, 16):
+        lines.append("\t{" + ", ".join("{%d, %d, %d, %d}" % (GLOW_OBJECT[where[r][0]], where[r][1], where[r][2], r[2])
+                                       for r in levels[lv]) + "},")
+    lines.append("};")
+    (root / "ps2/hooks/bl_glow_data.c").write_text("\n".join(lines) + "\n")
+    return [list(r) + list(where[r]) for r in where]
 
 
 def vram_pixel_fn(vmap, raw):

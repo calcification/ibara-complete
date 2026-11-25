@@ -82,6 +82,15 @@ static int xtc_test_player(unsigned side)
  * last changed; research/phase21) */
 static u32 pop_x[2], pop_y[2];
 
+/* the XTC rank glow's strength (BL player +0x274, research/phase28): a graze sets a flag (BL 0C06F0DE, | 0x8000);
+ * the per-frame update (0C07114E) adds 16 up to 0xC0 when it is set, else takes 2 off down to 0 */
+static u8 glow_a[2], glow_hit[2];
+
+u32 xtc_glow(u32 side)
+{
+	return glow_a[side & 1u];
+}
+
 static void xtc_add(unsigned side, int n)
 {
 	struct xtc_player *p = &xtc.pl[side];
@@ -104,6 +113,7 @@ static void xtc_add(unsigned side, int n)
 		 * matches BL's phrase 89, correlation 0.97, research/phase28). 0x001372B0 queues a code for the side, as
 		 * the PS2's extend sound does (0x0013AC84); one request per frame, like BL's per-graze calls. */
 		GAME_CALL2(0x001372B0u, side, 89);
+		glow_hit[side] = 1u;
 	}
 }
 
@@ -192,6 +202,13 @@ void xtc_frame(void)
 #endif
 	if (bl_boss_cancel_frame)
 		bl_boss_cancel_frame();
+#ifdef BL_TEST_GLOW_LEVELS
+	{ /* TEST BUILDS ONLY: rank stepped through the rank glow's levels 8-15, 120 frames each (research/phase28) */
+		static u32 n;
+		const u32 lv = 8u + (n++ / 120u) % 8u;
+		EE_RAM(u32, PS2_RANK_INV) = 0xFFFFFFu - ((16u * lv + 8u) << 16);
+	}
+#endif
 	if (bl_scripts_build && !bl_s5_ready)
 		bl_scripts_build(); /* BLACK LABEL build (no kuro_enter): before the first stage starts */
 #ifndef KURO_PRESENTATION
@@ -208,7 +225,14 @@ void xtc_frame(void)
 			p->held = 0;
 			xtc.power[s] = 0;
 			xtc.wipe[s] = 0;
+			glow_a[s] = glow_hit[s] = 0;
 			continue;
+		}
+		if (glow_hit[s]) {
+			glow_a[s] = glow_a[s] < 0xC0u - 16u ? glow_a[s] + 16u : 0xC0u;
+			glow_hit[s] = 0;
+		} else {
+			glow_a[s] = glow_a[s] > 2u ? glow_a[s] - 2u : 0;
 		}
 #ifdef BL_TEST_ALL_WEAPONS
 		test_grant_weapons(rec);
@@ -270,5 +294,6 @@ void xtc_reset(void)
 		xtc.pl[s].held = 0;
 		xtc.power[s] = 0;
 		xtc.wipe[s] = 0;
+		glow_a[s] = glow_hit[s] = 0;
 	}
 }

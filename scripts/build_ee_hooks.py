@@ -501,7 +501,7 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "arcade_slowdown.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c"],
     "defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
@@ -672,7 +672,7 @@ def video_profile(name: str) -> list:
 # user's own ROM by patcher/apply_kuro_patch.py --bl-rom (the tag then reads BLSELECT-ART-ON).
 SELECT_ART_ADDR = 0x01F1FFF0
 SELECT_ART_TAG = b"BLSELECT-ART-01\0"
-SELECT_ART_PAGES = 8
+SELECT_ART_PAGES = 10
 
 
 def select_art_segment() -> tuple[int, bytes]:
