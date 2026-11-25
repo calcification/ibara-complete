@@ -100,6 +100,10 @@ static void xtc_add(unsigned side, int n)
 			pop_y[side] = EE_RAM(u32, rec + PS2_PLAYER_Y);
 		}
 		xtc.grazes++;
+		/* BL 0C06F10E: sound 89 on every graze. The PS2 bank still holds it (archive entry 1129, sample 32; it
+		 * matches BL's phrase 89, correlation 0.97, research/phase28). 0x001372B0 queues a code for the side, as
+		 * the PS2's extend sound does (0x0013AC84); one request per frame, like BL's per-graze calls. */
+		GAME_CALL2(0x001372B0u, side, 89);
 	}
 }
 
