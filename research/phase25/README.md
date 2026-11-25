@@ -124,10 +124,11 @@ The stage-list index ("stage record") is BL `0C23E0A6`, PS2 `$gp-28248`. Each re
 
 ## Stage-6 rose form (2026-11-25)
 
-**Logger limits found first.** The PS2 logger keeps at most 2,600 spawns and 7,000 bullets. Stage 6 fills both, so the
+**Original logger limits.** The fixed PS2 logger stopped at 2,600 spawns and 7,000 bullets. Stage 6 filled both, so the
 earlier PS2 stage-6 logs simply stop at frame ~16,000. The test define `BL_COUNTS` (`ps2/hooks/spawnlog.c`) adds
 uncapped totals at EE `0x01F5C000`: per enemy type, the count and the first and last frame; new bullets per 500
 frames and type. MAME runs can stop shooting at a given stage frame with `SHOTOFF=N` (`bl_stage_log.lua`).
+Current logger builds retain the latest records and report overwrite counts. See [Phase 26](../phase26/README.md).
 
 **Full stage 6, BL vs PS2 (shot level 2, rank 0x800000, invincible, shot held).** Everything up to the boss matches:
 types, counts and bullets per bin. The boss is type 74 (103 parts). Its first core (subtype 0, 359 HP) dies at

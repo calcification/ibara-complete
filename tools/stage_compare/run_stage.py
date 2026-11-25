@@ -18,6 +18,7 @@ does, raise it.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import struct
@@ -121,24 +122,60 @@ def build_logger_iso(args, work: Path) -> Path:
     return iso
 
 
+RING_MAGIC = 0x31474E52
+RING_LAYOUTS = {
+    "spawns": (0x1F20000, 0x1F20000, 2600, "<IHHIIIhh", "<IHHIIIhhIB3x"),
+    "bullets": (0x1F35000, 0x1F40000, 7000, "<IHBBhhhh", "<IHBBhhhhI"),
+    "core": (0x1F60000, 0x1F60000, 16000, "<IHHIhhBB2x", "<IHHIhhBBBxI"),
+}
+
+
+def read_ps2_log(ram, name):
+    """Return retained records in write order and the number overwritten."""
+    address, legacy, limit, old_format, new_format = RING_LAYOUTS[name]
+    total, magic, capacity = struct.unpack_from("<III", ram, address)
+    if magic == RING_MAGIC:
+        if capacity != limit and not (name == "core" and capacity == 8000):
+            raise ValueError(f"{name}: unexpected ring capacity {capacity}")
+        first = max(0, total - capacity)
+        layout = struct.Struct(new_format)
+        rows = [layout.unpack_from(ram, address + 16 + layout.size * (i % capacity))
+                for i in range(first, total)]
+        return rows, first, True
+
+    total, = struct.unpack_from("<I", ram, legacy)
+    layout = struct.Struct(old_format)
+    return [layout.unpack_from(ram, legacy + 16 + layout.size * i)
+            for i in range(min(total, limit))], 0, False
+
+
 def extract_ps2(p2s: Path, out: Path):
     from p2s_tools import load_ee
     r = load_ee(p2s)
-    n = struct.unpack_from("<I", r, 0x1F20000)[0]
-    with open(out / "ps2_spawns.txt", "w") as f:
-        for i in range(n):
-            fr, slot, hp, t, sub, sc, x, y = struct.unpack_from("<IHHIIIhh", r, 0x1F20010 + 24 * i)
-            f.write(f"{fr} {slot} {t} {sub:08X} {hp} {sc} {x} {y}\n")
-    m = struct.unpack_from("<I", r, 0x1F40000)[0]
-    with open(out / "ps2_bullets.txt", "w") as f:
-        for i in range(m):
-            fr, t, slot, _p, x, y, dx, dy = struct.unpack_from("<IHBBhhhh", r, 0x1F40010 + 16 * i)
-            f.write(f"{fr} {slot} {t} {x} {y} {dx / 256:.3f} {dy / 256:.3f}\n")
-    c = min(struct.unpack_from("<I", r, 0x1F60000)[0], 8000)
-    with open(out / "ps2_core.txt", "w") as f:
-        for i in range(c):
-            fr, slot, hp, sub, x, y, mode, step = struct.unpack_from("<IHHIhhBB", r, 0x1F60010 + 20 * i)
-            f.write(f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y} {mode} {step}\n")
+    coverage = {}
+    for name in RING_LAYOUTS:
+        rows, overwritten, rolling = read_ps2_log(r, name)
+        coverage[name] = {
+            "retained": len(rows), "overwritten": overwritten,
+            "first_frame": rows[0][0] if rows else None,
+            "last_frame": rows[-1][0] if rows else None,
+        }
+        with (out / f"ps2_{name}.txt").open("w") as f:
+            for record in rows:
+                if name == "spawns":
+                    fr, slot, hp, t, sub, sc, x, y, *extra = record
+                    line = f"{fr} {slot} {t} {sub:08X} {hp} {sc} {x} {y}"
+                    suffix = (extra[1], extra[0]) if rolling else ()
+                elif name == "bullets":
+                    fr, t, slot, stage, x, y, dx, dy, *extra = record
+                    line = f"{fr} {slot} {t} {x} {y} {dx / 256:.3f} {dy / 256:.3f}"
+                    suffix = (stage, extra[0]) if rolling else ()
+                else:
+                    fr, slot, hp, sub, x, y, mode, step, *extra = record
+                    line = f"{fr} {slot & 0xFF} {hp} {sub:08X} {x} {y} {mode} {step}"
+                    suffix = extra if rolling else ()
+                f.write(" ".join((line, *map(str, suffix))) + "\n")
+    (out / "ps2_log_coverage.json").write_text(json.dumps(coverage, indent=2) + "\n")
     ns = min(struct.unpack_from("<I", r, 0x1FD0000)[0], 30000)
     if ns:  # BL_SHOT_LOG: frame slot type +8 +C
         with open(out / "ps2_shots.txt", "w") as f:
@@ -150,8 +187,10 @@ def extract_ps2(p2s: Path, out: Path):
         for i in range(t):
             ty, tb = struct.unpack_from("<II", r, 0x1FC0010 + 8 * i)
             f.write(f"{ty} {tb:08X}\n")
-    print(f"  PS2: {n} spawns, {m} bullets, {c} boss samples; scene counter now {r[0x338E9C]}")
-    if n == 0:
+    for name, info in coverage.items():
+        print(f"  PS2 {name}: {info['retained']} retained, {info['overwritten']} overwritten")
+    print(f"  PS2 scene counter at save: {r[0x338E9C]}")
+    if not coverage["spawns"]["retained"]:
         print("  WARNING: nothing logged - the capture ended before the stage started (raise --seconds)")
 
 
@@ -214,18 +253,34 @@ def compare(args, out: Path):
     import io
     import compare_bullets
     import compare_spawns
+    coverage_path = out / "ps2_log_coverage.json"
+    coverage = json.loads(coverage_path.read_text()) if coverage_path.exists() else {}
+    spawns = coverage.get("spawns", {})
+    bullets = coverage.get("bullets", {})
     anchor = args.anchor_type
-    if anchor is None:  # first type spawned in the BL log
-        anchor = int(open(out / "bl_spawns.txt").readline().split()[3])
+    if spawns.get("overwritten") and anchor is None:
+        raise ValueError("PS2 spawn ring wrapped; use --anchor-type with a unique, retained event shared by both logs")
+    bl_rows = compare_spawns.load_bl(out / "bl_spawns.txt", args.stage + 1)
+    ps_rows = compare_spawns.load_ps2(out / "ps2_spawns.txt")
+    if not bl_rows or not ps_rows:
+        raise ValueError("An emulator produced no spawns for the selected stage")
+    if anchor is None:
+        anchor = bl_rows[0]["type"]
+    if not all(any(row["type"] == anchor for row in rows) for rows in (bl_rows, ps_rows)):
+        raise ValueError(f"Type {anchor} is missing from one comparison log; use --anchor-type")
+    if any(log.get("overwritten") for log in coverage.values()):
+        print("  PS2 ring wrapped. See ps2_log_coverage.json for the retained window.")
+    spawn_window = ["--retained-start", str(spawns["first_frame"])] if spawns.get("overwritten") else []
+    bullet_start = bullets.get("first_frame") if bullets.get("overwritten") else None
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         compare_spawns.main([str(out / "bl_spawns.txt"), str(out / "ps2_spawns.txt"), "--stage", str(args.stage + 1),
-                             "--anchor-type", str(anchor)])
+                             "--anchor-type", str(anchor), *spawn_window])
     (out / "compare_spawns.txt").write_text(buf.getvalue())
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         compare_bullets.main(str(out / "bl_spawns.txt"), str(out / "bl_bullets.txt"), str(out / "ps2_spawns.txt"),
-                             str(out / "ps2_bullets.txt"), anchor=anchor)
+                             str(out / "ps2_bullets.txt"), anchor=anchor, retained_start=bullet_start)
     (out / "compare_bullets.txt").write_text(buf.getvalue())
     print(f"Wrote {out / 'compare_spawns.txt'} and {out / 'compare_bullets.txt'} (aligned at type {anchor})")
 

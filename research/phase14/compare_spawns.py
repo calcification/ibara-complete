@@ -67,11 +67,21 @@ def main(argv=None):
     ap.add_argument("ps2")
     ap.add_argument("--stage", type=int, default=2, help="BL stage byte (2 = stage 1)")
     ap.add_argument("--anchor-type", type=int, default=54)
+    ap.add_argument("--retained-start", type=int, help="first retained PS2 frame after a ring wrap")
     ap.add_argument("--json")
     a = ap.parse_args(argv)
     bl = align(load_bl(a.bl, a.stage), a.anchor_type)
     span = bl[-1]["frame"]
-    ps = [r for r in align(load_ps2(a.ps2), a.anchor_type) if r["frame"] <= span]
+    ps_raw = load_ps2(a.ps2)
+    ps = align(ps_raw, a.anchor_type)
+    lower = 0
+    if a.retained_start is not None:
+        ps_anchor = next(r["frame"] for r in ps_raw if r["type"] == a.anchor_type)
+        lower = max(0, a.retained_start - ps_anchor + 1)
+        span = min(span, ps[-1]["frame"])
+        print(f"Wrapped capture: shared spawn window [{lower}, {span}] after the anchor.")
+    bl = [r for r in bl if lower <= r["frame"] <= span]
+    ps = [r for r in ps if lower <= r["frame"] <= span]
     sb, sp = summary(bl), summary(ps)
     rows = []
     for t in sorted(set(sb) | set(sp), key=lambda t: min(sb.get(t, {"first": 1e9})["first"], sp.get(t, {"first": 1e9})["first"])):
@@ -84,7 +94,7 @@ def main(argv=None):
                     f"hp={s['hp']} score={s['score']}")
         flag = "" if (b and p and b["count"] == p["count"] and b["subtypes"] == p["subtypes"]) else "  <-- differs"
         print(f"type {t:3d}{flag}\n   BL : {fmt(b)}\n   PS2: {fmt(p)}")
-    print(f"\nBL stage span {span} frames; BL spawns {len(bl)}, PS2 spawns in the same span {len(ps)}")
+    print(f"\nAligned frames {lower}–{span}; BL spawns {len(bl)}, PS2 spawns {len(ps)}")
     if a.json:
         json.dump({"span": span, "types": rows}, open(a.json, "w"), indent=1)
 
