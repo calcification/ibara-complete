@@ -124,9 +124,9 @@ per-element fade matches it, except that overlapping pieces can show through eac
 
 **Water shimmer.** BL composes stage 1's water from 32 × 32 tiles off screen and copies it to the screen one row at a
 time with the 0–6 px wave in **normal play** too (344 row copies in a stage-1 gameplay frame), not only behind the select
-screen. Whether the PS2 port reproduces it is not settled: the wave profile is computed (no table in either program),
-and comparing PCSX2 screenshots was ambiguous (repeating texture, screenshot timing). Reproducing it would mean drawing
-the PS2's stage-1 water ourselves in strips; parked.
+screen. The PS2 port has it too (the user's observation watching stage 1; screenshot comparison here was ambiguous:
+the wave is computed, no table in either program, and the texture repeats). Open nuance: behind the select screen the
+PS2's update is paused, so its shimmer may stand still there while BL's keeps moving (mostly hidden by the launch pad).
 
 Not reproduced: the slight flicker during the flash, transitions that depend on the
 direction a type was reached from (each state has the transition of one entry: type B from A, C from B, D from C).
