@@ -122,10 +122,46 @@ The stage-list index ("stage record") is BL `0C23E0A6`, PS2 `$gp-28248`. Each re
   games run boss → green form → rose form → cutscene → staff roll. The MAME trace is `bl_scene_trace.lua`; the PS2
   screenshots were taken in a full run.
 
+## Stage-6 rose form (2026-11-25)
+
+**Logger limits found first.** The PS2 logger keeps at most 2,600 spawns and 7,000 bullets. Stage 6 fills both, so the
+earlier PS2 stage-6 logs simply stop at frame ~16,000. The test define `BL_COUNTS` (`ps2/hooks/spawnlog.c`) adds
+uncapped totals at EE `0x01F5C000`: per enemy type, the count and the first and last frame; new bullets per 500
+frames and type. MAME runs can stop shooting at a given stage frame with `SHOTOFF=N` (`bl_stage_log.lua`).
+
+**Full stage 6, BL vs PS2 (shot level 2, rank 0x800000, invincible, shot held).** Everything up to the boss matches:
+types, counts and bullets per bin. The boss is type 74 (103 parts). Its first core (subtype 0, 359 HP) dies at
+about the same time in both, after ≈7,800 frames. Then the rose form:
+
+| | BL | PS2 (two runs) |
+|---|---|---|
+| rose core (type 74 subtype 2, 300 000 points) HP | 430 | 430 |
+| rose core killed after | 6,876 frames | 4,956 frames |
+| roses (type 79, HP 2 in both; PS2 table `0x00225330`) | 6,815 at 1.10 per frame | 3,455 / 3,875 at 0.98 / 0.91 per frame |
+| bullets during the roses, per 500 frames | ≈700 (types 14 and 0) | ≈280 (type 0) |
+| end-of-stage controller (type 78) | frame 26,619 | 23,296 / 24,874 |
+
+* **Damage-driven.** With the shot released at the start of the rose form (`SHOTOFF=19100`), BL's roses kept coming
+  until frame 37,686 (≈18,500 frames) and only then ended. So the phase ends when the rose core is destroyed, with a
+  long fallback timer.
+* **No invulnerable windows.** The rose core's HP falls steadily in both games; BL's rate is about 0.68× the PS2's.
+  The first form shows that the player's damage itself matches.
+* **Most likely cause.** The roses absorb most of the shots: about 6,800 × 2 HP against the core's 430. So the
+  core only receives what is left over, and BL's ≈15 % faster rose spawning, plus its denser type-14 barrage, is
+  enough to stretch the phase. The rose logic is in the type-74 handler (BL `0C0A3800`, 4,315 instructions, not
+  paired with the arcade by phase 11; PS2 `0x00173790`). Type 79 itself differs from the arcade by operands only.
+* **Type 77** (13 objects) appears only in the BL log because BL's stage byte does not change during the cutscene;
+  it is not stage content.
+
+**Next for this phase:** find the rose spawn timer and the type-14 barrage in BL `0C0A3800`, against PS2 `0x00173790`
+(for example a write tap on the enemy pool for type 79 spawns, as `bl_spawn_pc.lua` does for type 52). The HP-write
+tap on the rose core caught nothing: the store probably isn't the 16-bit write the tap expected, so check the store
+width first.
+
 ## Next
 
-1. **Stage-6 rose form:** compare BL's type-79 roses (6,815 spawns) with the PS2's rose phase. The PS2 logger must
-   keep logging through that phase. BL's `FF0C 004A` preload is probably for these roses.
+1. **Stage-6 rose form:** measured (above). BL's rose core lasts ≈40 % longer, with the same HP; next is the rose
+   spawn timer and type-14 barrage in the type-74 handler.
 2. ~~Mode choice in Noir~~ **done (K45):** Noir's GAME START confirms NORMAL at once (`0x001CAAE8`: GAME START branches into the submenu's confirm path in the same frame, so the cursor is row 0 = NORMAL and the press picks player 1; a first version that confirmed a frame later started player-2 games), so Noir always plays record 7, BL's single loop. Arcade keeps its choice.
 
 ## Reproduce

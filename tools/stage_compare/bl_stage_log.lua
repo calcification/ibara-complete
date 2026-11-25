@@ -11,6 +11,7 @@
 --             (same rule as the PS2 logger's BL_NOSHOT; the player keeps shooting)
 --   ALLTABLES=1 tables.txt lists the part-record tables of every stage (not only STAGE)
 --   MAXFRAMES frames after the game starts before exiting (default 60000); also exits when STAGE ends
+--   SHOTOFF   release the shot button from this frame of STAGE on (timer-driven or damage-driven phase?)
 -- The player is kept invincible (BL +0x288). Output formats (frames count from the first spawn of STAGE):
 --   spawns.txt  frame stage slot type subtype hp score x y segment
 --   bullets.txt frame slot type x0 y0 dx dy   (px/frame averaged over the first 6 frames)
@@ -87,6 +88,10 @@ emu.register_frame_done(function()
   if stage > STAGE and first then left = true end
   if left or frame > t0 + 700 + MAXF then finish(); return end
   if stage ~= STAGE then return end
+  -- SHOTOFF=N: release the shot button from logged-stage frame N on (does a phase end on a timer or on damage?)
+  if os.getenv("SHOTOFF") and first and frame - first == tonumber(os.getenv("SHOTOFF")) then
+    fld(":PORT_D", "P1 Button 1"):clear_value()
+  end
   for i = 0, 191 do
     local a = EN + i * 0xB4
     local fl = sp:read_u32(a); local on = (fl & 0x80000000) ~= 0

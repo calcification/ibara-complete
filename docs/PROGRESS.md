@@ -40,7 +40,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 1. Finish the XTC rank glow and graze sound. The graze sphere (K31), number popup (K32), and deployed-pod requirement are implemented.
 2. Pod shot counts still apart from BL: 5-way, homing, napalm (targeting / fire rules).
 3. Hadou drops (BL: medals and type-11 items, no roses), with the item and enemy comparison.
-4. Stage-6 rose form (BL's type-79 roses vs the PS2's rose phase); then player-side damage.
+4. Stage-6 rose form: BL spawns roses ≈15 % faster and adds a type-14 barrage, so its rose core lasts ≈40 % longer (research/phase25); port from the type-74 handler. Then player-side damage.
 5. Select screen stage two (animation, fly-in, girder background, player 2); BL title logo.
 6. Game flow: start-menu side select (G3).
 
