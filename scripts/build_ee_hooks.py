@@ -144,7 +144,7 @@ PRACTICE_MODE_PATCHES = [
     (0x001C9570, 0x8F839268, "jal", "hdr_state"),
 ]
 # ARRANGE CONFIG gets PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE rows with Arrange's own values (ps2/hooks/options.c,
-# research/phase26): FIGHTER TYPE, BULLET DESIGN, PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE, KEY CONFIG, EXIT.
+# research/phase27): FIGHTER TYPE, BULLET DESIGN, PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE, KEY CONFIG, EXIT.
 ARRANGE_CONFIG_PATCHES = [
     # label table 0x002A9060 (4 rows) -> arrcfg_label (8 rows)
     (0x001CCDCC, 0x3C15002B, "hi", "arrcfg_label"),

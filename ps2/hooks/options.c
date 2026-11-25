@@ -257,7 +257,7 @@ __asm__(
  * CONTINUE, KEY CONFIG, EXIT. A Circle press on a new row cycles its value. The defaults play as retail Arrange,
  * and the values last for the session (like RANK GAUGE; not saved).
  *
- * Retail Arrange's rules (research/phase26):
+ * Retail Arrange's rules (research/phase27):
  *   PLAYER STOCK  fixed 2 (0x0012D8E4 `li a0,2` in the player set-up 0x0012D840)
  *   BOMB STOCK    one full bomb (+40 fragments; 0x0012D5D4 sends Arrange to 0x0012D7CC) unless Arcade's BOMB STOCK
  *                 is 0 (0x0012D5BC)

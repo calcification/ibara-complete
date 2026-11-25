@@ -1,4 +1,4 @@
-# Phase 26 — Arrange CONFIG: PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE
+# Phase 27 — Arrange CONFIG: PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE
 
 The user's request (25 Nov): give ARRANGE CONFIG Arcade's CONFIG rows except DIFFICULTY, with defaults that play
 exactly like retail Arrange. Code: `ps2/hooks/options.c` (arrcfg_*, arr_rules_*), patch rows:
