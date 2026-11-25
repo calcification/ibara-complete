@@ -164,10 +164,10 @@ def run_ps2(args, out: Path):
             x.start_x()
             x.boot(iso, out / "pcsx2.log")
             # title -> Start, Mode Select: Up to the sixth row (BL LOG), Circle; in the BL game: Start, Start,
-            # Circle x3 = Arcade, Normal, default ship
+            # Circle x2 = Arcade, GAME START
             time.sleep(24)
-            for k, wait in (("Return", 3), ("Up", 1), ("x", 30), ("Return", 6), ("Return", 3), ("x", 5), ("x", 4),
-                            ("x", 3)):
+            # (Circle on GAME START starts the game at once: the BL build skips Arcade's difficulty menu, K45)
+            for k, wait in (("Return", 3), ("Up", 1), ("x", 30), ("Return", 6), ("Return", 3), ("x", 5), ("x", 7)):
                 x.key(k, after=wait)
             x.down("z")  # hold shot; with --noshot the logger build still shoots: see README
             secs = args.seconds or 60 + 240 * args.stage

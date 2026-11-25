@@ -25,6 +25,9 @@ struct spawn_rec {
 
 #define BULLET_LOG 0x01F40000u
 #define BULLET_MAX 7000u
+/* BL_COUNTS: uncapped totals beside the capped logs (stage 6 overflows them): per enemy type (128) count, first and
+ * last frame at COUNT_LOG; new enemy bullets per 500-frame bin (64) and type (& 15) as u16 at COUNT_LOG + 0x1000. */
+#define COUNT_LOG 0x01F5C000u /* free gap between the bullet log (ends 0x01F5B590) and CORE_LOG */
 struct bullet_rec {
 	u32 frame;
 	u16 type;
@@ -407,6 +410,10 @@ void spawn_log_frame(void)
 		EE_RAM(u32, TABLE_LOG) = 0;
 #endif
 		sl_started = 1;
+#ifdef BL_COUNTS
+		for (i = 0; i < 0x1800u / 4u; i++)
+			EE_RAM(u32, COUNT_LOG + 4u * i) = 0;
+#endif
 	}
 	{
 		volatile u32 *bcount = (volatile u32 *)BULLET_LOG;
@@ -431,6 +438,13 @@ void spawn_log_frame(void)
 					bl_pending[i] = 0;
 				}
 			}
+#ifdef BL_COUNTS
+			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first) {
+				const u32 bin = (sl_frame - sl_first) / 500u;
+				if (bin < 64u)
+					EE_RAM(u16, COUNT_LOG + 0x1000u + 2u * (bin * 16u + (EE_RAM(u32, a + 4) & 15u))) += 1;
+			}
+#endif
 			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first && *bcount < BULLET_MAX) {
 				struct bullet_rec *r = &bl[*bcount];
 				r->frame = sl_frame - sl_first;
@@ -456,6 +470,16 @@ void spawn_log_frame(void)
 		const u32 fl = EE_RAM(u32, a);
 		const u32 t = EE_RAM(u32, a + 4);
 		const int on = (fl & 0x80000000u) != 0;
+#ifdef BL_COUNTS
+		if (on && (!sl_alive[i] || sl_type[i] != t) && t < 128u) {
+			const u32 f = sl_first ? sl_frame - sl_first : 0;
+			const u32 c = COUNT_LOG + 12u * t;
+			if (!EE_RAM(u32, c))
+				EE_RAM(u32, c + 4) = f;
+			EE_RAM(u32, c) += 1;
+			EE_RAM(u32, c + 8) = f;
+		}
+#endif
 		if (on && (!sl_alive[i] || sl_type[i] != t) && *count < SPAWN_MAX) {
 			struct spawn_rec *r = &log[*count];
 			if (!sl_first)

@@ -251,11 +251,13 @@ HOOKS = {
         + [(0x0012FC34, 0x1060002C, 0x00000000), (0x0012FA78, 0x10600019, 0x00000000),
            (0x0012F998, 0x10600017, 0x00000000)]
         # BL has one mode: the single loop, playlist record 7 (BL table 0C173A94 indexed by a mode byte left at 0;
-        # research/phase25). PS2 Arcade's GAME START opens a NORMAL / HARDER / EXTENDED submenu (menu state 3, handler
-        # 0x001CAB64) whose choice indexes the same table (0x001CE68C: 7 / 8 / 9). KURO confirms row 0 at once:
-        # 0x001CAB64 `andi v1,s2,1` -> `sw zero,$gp-26732` (cursor = NORMAL), 0x001CAB68 `bnez v1,..` -> `b 0x001CACE4`
-        # (the submenu's confirm path; its delay slot is a nop).
-        + [(0x001CAB64, 0x32430001, 0xAF809794), (0x001CAB68, 0x14600051, 0x1000005E)],
+        # research/phase25). PS2 Arcade's GAME START opens a NORMAL / HARDER / EXTENDED submenu (menu state 3) whose
+        # choice indexes the same table (0x001CE68C: 7 / 8 / 9). KURO runs the submenu's confirm path (0x001CACE4)
+        # straight from GAME START, in the same frame as the press: the cursor is on row 0 (GAME START), which the
+        # confirm path stores as the choice (NORMAL), and the game start reads that frame's press to pick the side
+        # (confirming a frame later started a player-2 game). 0x001CAAE8 `li v0,3` -> `b 0x001CACE4` (delay slot
+        # `li a0,95` is the confirm path's own sound argument).
+        + [(0x001CAAE8, 0x24020003, 0x1000007E)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
         "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },
