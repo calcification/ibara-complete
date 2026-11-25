@@ -122,6 +122,33 @@ The stage-list index ("stage record") is BL `0C23E0A6`, PS2 `$gp-28248`. Each re
   games run boss → green form → rose form → cutscene → staff roll. The MAME trace is `bl_scene_trace.lua`; the PS2
   screenshots were taken in a full run.
 
+## Music (K54, 2026-11-25)
+
+The stage scripts start music with `FF0F a b`. The PS2 handler (`0x001152E0`) plays **a**, or **b** when the Arrange flag
+is set (or in mode 1, or mode 2 before stage record 7); the HUD's "♪title" line uses the same number (`0x00137100`,
+title table `0x00211760`: 1 Show Time, 2 Sky High, 3 Like a Rolling Stone, 4 Endress Train, 5 Robot No28, 6 Rose
+Garden, 7 (unnamed; archive 1113, probably the ending), 8 Guardian Angel, 9 Rose of Zeal, 10 Game Over, 11 Ranking,
+12 Bonds of Steel, 13 The Family's Work, 14 Air Pollution, 15 Mother Teresa, 16 Bonds of Steel again). Track records
+`0x002FCF70` + 16 (n − 1): archive entry, volume, loop; tracks 12 and 16 are the same recording (entry 1125, volume 76 / 70).
+
+| Stage | PS2 Arcade (a) | PS2 Arrange (b) | Black Label |
+|---|---|---|---|
+| 1 | Show Time | Bonds of Steel | Bonds of Steel (`FF0F 1 0x0C`; ♪Bonds of Steel in MAME) |
+| 2 | Sky High | Air Pollution | Air Pollution |
+| 3 | Like a Rolling Stone | Like a Rolling Stone | Like a Rolling Stone |
+| 4 | Endress Train | Endress Train | Endress Train |
+| 5 | Robot No28 | The Family's Work | The Family's Work |
+| 6 | Rose Garden | Rose Garden | Rose Garden |
+| bosses | Guardian Angel / Rose of Zeal (stage 6) | same | same |
+
+BL's scripts carry the same `FF0F a b` pairs except stage 1 (`1, 0x0C`; the PS2 has `1, 0x10`), and BL plays the second
+number: its title table (`0C2070D0`, indexed from two entries before Sky High) has no Show Time and adds "Ending".
+**Black Label follows Arrange's assignment.** Audio check: BL's stage-1 phrases (YMZ770 27 intro / 28 loop) against
+PS2 entry 1125: correlation 0.86 (different codecs, rough resampling) — the same recording.
+
+Noir now takes the Arrange column: `0x00115338` `lw v0,$gp-28076` → `li v0,1` in the KURO runtime table. PCSX2:
+stage 1 plays track 16 (entry 1125) with "♪Bonds of Steel" on the HUD; Arcade keeps its own music.
+
 ## Stage-6 rose form (2026-11-25)
 
 **Original logger limits.** The fixed PS2 logger stopped at 2,600 spawns and 7,000 bullets. Stage 6 filled both, so the

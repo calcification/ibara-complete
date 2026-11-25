@@ -253,6 +253,11 @@ HOOKS = {
         # BL's rule on its Arrange path (held >= 8 frames -> interval 2); the held-frame path is taken for Arcade too
         # (0x0013B310 lw v1,$gp-28076 -> li v1,1). The new-press path (Arcade rank on press) is unchanged.
         "patches_extra": [(0x0013B310, 0x8F839254, 0x24030001),
+        # BL's music (research/phase25 "Music"): the stage scripts' FF0F a b plays a, or b in Arrange (handler
+        # 0x001152E0); BL plays b in every stage - Arrange's assignment (stage 1 Bonds of Steel, 2 Air Pollution,
+        # 5 The Family's Work instead of Show Time, Sky High, Robot No28) - and the HUD's song title follows it.
+        # 0x00115338 `lw v0,$gp-28076` (Arrange flag) -> `li v0,1`.
+        (0x00115338, 0x8F829254, 0x24020001),
         # BL shot cap (Phase 16): BL's type-0 shot spawner (0C073830) allows 32 slots for one player (10 for two);
         # PS2's fire routine 0x0013ACC0 allows 32 in Arrange but halves it to 16 in Arcade (0x0013AD14
         # lw v0,$gp-28076 -> li v0,1 keeps 32). Per-frame logs: BL uses slots 0-31, PS2 Arcade only 0-15.

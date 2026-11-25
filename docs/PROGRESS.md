@@ -69,5 +69,4 @@ Full update, the Codex handoff list and the hardware test list: `docs/HANDOFF_20
 ## Known gaps
 
 * The K40 build passed the full checklist on an original PS2 (K41, 23 Nov 2026).
-* While the select screen is up, the stage isn't drawn (black background). The HUD's "♪Show Time" track
-  line still shows (BL has no Show Time).
+* Fixed: the select screen shows the stage behind it (K51); Noir plays BL's music and titles (K54).
