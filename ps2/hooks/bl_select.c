@@ -12,8 +12,10 @@
  * word = kind * 4 + type, FIGHTER TYPE config likewise, pause byte cleared. All of this is KURO-table code, so it
  * exists only inside KURO. Leaf code (no s-registers: called from the middle of the main loop).
  *
- * While it is up the draw pass skips the stage's 24 layers (sel_layers_stub): BL's screen covers the playfield, and
- * the GS texture cache then holds our pages next to the HUD's. (The freezes met on the way were not the cache: our
+ * As on BL, the stage stays drawn behind the screen: BL's select screen sits over the running stage 1 opening (the
+ * launch pad; research/phase20 "Stage two"), so the screen opens once the PS2's NOW LOADING fade is over and the
+ * launch pad is up, and the stage's layers keep drawing under our panels (a 60-s PCSX2 run with both players showed
+ * no texture-cache trouble; the layers used to be skipped). (The freezes met on the way were not the cache: our
  * hooks were o32 code with 8-byte-aligned frames, and a thread switch inside our draw loops saved and restored the
  * main thread's registers with sq / lq on a misaligned stack — gp came back as garbage and the next sprite call
  * wrote through it. The hooks are n32 now: 16-byte frames.)
@@ -97,7 +99,9 @@ static void side_start(u32 s, u32 value)
 
 static void sel_begin(void)
 {
-	if (sel_active || !sel_pending[0] || !pausable())
+	/* BL's select screen sits over the running stage 1 opening (research/phase20 "Stage two"): wait until the PS2's
+	 * NOW LOADING fade ($gp-28936) is over and the launch pad is drawn, then hold the game there */
+	if (sel_active || !sel_pending[0] || !pausable() || EE_RAM(u32, 0x00338BE8u))
 		return;
 	if (!art_present()) {
 		sel_pending[0] = sel_pending[1] = 0;
@@ -231,21 +235,6 @@ u32 sel_menu(void)
 
 __asm__(
 	".set push\n.set noreorder\n.set noat\n"
-	/* replaces `jal 0x00112500` at 0x0012E234 (draw pass, before the stage's 24-layer loop): while the select screen
-	 * is up, 0x00112500 returns past the loop to the HUD calls (0x0012E424); nothing after the loop reads the loop's
-	 * registers. Uses only $at and ra. */
-	".globl sel_layers_stub\n"
-	".type sel_layers_stub, @function\n"
-	"sel_layers_stub:\n"
-	"	lui	$1, %hi(sel_active)\n"
-	"	lw	$1, %lo(sel_active)($1)\n"
-	"	beqz	$1, 1f\n"
-	"	nop\n"
-	"	lui	$31, 0x0012\n"
-	"	ori	$31, $31, 0xE424\n"
-	"1:	j	0x00112500\n"
-	"	nop\n"
-	".size sel_layers_stub, . - sel_layers_stub\n"
 	/* replaces `jal 0x0013BE30` at 0x0012E43C (the HUD pass's last call: the retail NOW LOADING banner, drawn while
 	 * its fade $gp-28936 is non-zero): skipped while the select screen is up. The fade runs elsewhere (0x0013BFA0), so
 	 * the banner is normally gone when the screen closes. Uses only $at. */

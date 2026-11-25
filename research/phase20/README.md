@@ -84,11 +84,13 @@ blitter VRAM read through the `*m_bitmaps` item):
 the PS2 select screen opens on the first frame of scene 1, under NOW LOADING, and the game update is paused from then
 on (`sel_pause`), so the launch tower has not been spawned and the stage never fades in. After confirm, the stage
 appears within ~0.5 s (with the retail "Bond 01 Agent" pilot panel, the PS2 counterpart of BL's pilot illustration).
-Options: (a) let the update run until the launch pad is up (NOW LOADING fade done, `$gp-28936` = 0), then pause and open
-the screen — the stage would then sit behind the panels as in BL; needs a check that the takeoff and the pilot panel
-have not started by then; (b) keep the update running while the screen is up and hold the takeoff script — closest to
-BL, more invasive; (c) leave it black. The shimmer would only apply to the water layer, which the PS2 stage draws itself;
-it is not reproduced in any of these.
+Options were: (a) let the update run until the launch pad is up, then pause and open the screen; (b) keep the update
+running and hold the takeoff script; (c) leave it black. **(a) is built (K51):** `sel_begin` also waits for the NOW
+LOADING fade (`$gp-28936`, 0x00338BE8) to reach 0, and the stage-hiding stub at `0x0012E234` is gone, so the launch
+pad (tower girders) stays drawn under the panels. Before the screen opens the PS2's own NOW LOADING plays (BL: 44 black
+frames); the takeoff and the "Bond 01 Agent" pilot panel still follow the confirm. PCSX2: the full 60-s timer with both
+players (P2 joining, ship and type changes) ran without texture-cache trouble and started a two-player game. Not
+reproduced: BL's water shimmer and its fade-in of the stage behind the screen.
 
 ## Running on PS2 (stage one, 2026-11-22)
 

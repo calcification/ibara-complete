@@ -467,9 +467,6 @@ BL_SHIP_PATCHES = [
     (0x001CE718, 0x0008243C, "jal", "sel_start_stub"),
     (0x0012E1AC, 0x0C04B088, "jal", "sel_pause"),
     (0x0012E778, 0x0C04A384, "jal", "sel_menu"),
-    # and the draw pass skips the stage's 24 layers while it is up (BL's screen covers the playfield; the stage's
-    # textures and ours together overran the GS texture cache)
-    (0x0012E234, 0x0C044940, "jal", "sel_layers_stub"),
     # and the last HUD call, the retail NOW LOADING banner (0x0013BE30: draws while its alpha $gp-28936 is non-zero;
     # the fade itself runs in 0x0013BFA0), is skipped while it is up — the banner kept scrolling over the Stage 1
     # selector for its first ~2 s
