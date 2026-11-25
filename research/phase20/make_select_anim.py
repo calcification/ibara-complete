@@ -102,7 +102,7 @@ def windows(kind, region, frames):
 
 
 def build(cap):
-    """cap: {"S": L_S, "P": L_P, "S2": L2_S, "P2": L2_P} file names -> {state: tracks}."""
+    """cap: {"S": L_S, "P": L_P, "S2": L2_S, "P2": L2_P[, "J1": J1]} file names -> {state: tracks}."""
     f = {k: frames_ff(v) for k, v in cap.items()}
     st = {}
     st.update(windows("S", "p1", f["S"]))
@@ -114,6 +114,9 @@ def build(cap):
     st["join_P2"] = state_tracks(f["S"], first, "p2", S0 - first)
     st["open_S"] = state_tracks(f["S"], first, "p1", S0 - first)           # player 1 when the screen opens
     st["open_S2"] = state_tracks(f["S2"], 120, "p2", S0 - 120)             # player 2 joining
+    if "J1" in f:  # player 2 started alone (bl_select_capture_join_p1.lua): player 1's join panel
+        j = f["J1"]
+        st["join_P1"] = state_tracks(j, min(j), "p1", S0 - min(j))
     return st
 
 

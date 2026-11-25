@@ -10,11 +10,11 @@ frames as player 1 does in CAP_S / CAP_P (research/phase20/bl_select_capture_p2.
 VRAM_MAP: map_uploads.py output. Writes OUTDIR/select_scene.json (states -> draw ops, sprites -> blitter rects) and,
 with --rom, preview PNGs of every state (local checks only; never commit them).
 
-Stage one: one steady frame per state. Stage two (--long L_S L_P L2_S L2_P, the long captures of
-bl_select_capture_long.lua / bl_select_capture_long_p2.lua): every state animated (make_select_anim.py), which is how
+Stage one: one steady frame per state. Stage two (--long L_S L_P L2_S L2_P J1, the long captures of
+bl_select_capture_long.lua / bl_select_capture_long_p2.lua / bl_select_capture_join_p1.lua): every state animated (make_select_anim.py), which is how
 ps2/hooks/bl_select_data.c is generated now:
 
-    make_select_data.py CAP_S CAP_P CAP_FULL VRAM_MAP OUTDIR --p2 CAP_S2 CAP_P2 --long L_S L_P L2_S L2_P --emit ROOT
+    make_select_data.py CAP_S CAP_P CAP_FULL VRAM_MAP OUTDIR --p2 CAP_S2 CAP_P2 --long L_S L_P L2_S L2_P J1 --emit ROOT
 """
 import json
 import struct
@@ -109,7 +109,8 @@ def main(argv):
     if "--long" in argv and "--emit" in argv:  # stage two: animated states from the long captures
         import make_select_anim
         i = argv.index("--long")
-        anim = make_select_anim.build({"S": argv[i + 1], "P": argv[i + 2], "S2": argv[i + 3], "P2": argv[i + 4]})
+        anim = make_select_anim.build({"S": argv[i + 1], "P": argv[i + 2], "S2": argv[i + 3], "P2": argv[i + 4],
+                                       "J1": argv[i + 5]})
         emit_anim(anim, scene, json.load(open(vmap)), Path(argv[argv.index("--emit") + 1]))
         return
     if "--emit" in argv:
@@ -218,7 +219,7 @@ def emit(scene, vmap, root):
     print(f"atlas: {max(p[0] for p in place) + 1} pages, {len(used)} upload rects; {len(ops)} ops")
 
 
-ANIM_ORDER = STATE_ORDER + ["open_S", "open_S2"]
+ANIM_ORDER = STATE_ORDER + ["open_S", "open_S2", "join_P1"]
 # the ship renders (straight / spread; player 1 / player 2): BL flashes them on confirm
 SHIP_RENDERS = {(4768, 1792, 96, 112), (4704, 1792, 64, 120), (4768, 1920, 96, 96), (4704, 1920, 64, 112)}
 

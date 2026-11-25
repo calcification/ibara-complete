@@ -121,6 +121,25 @@ frame 64 after the last confirm (or the timer). The PS2's own pilot panel and ta
 Not reproduced: the frame-buffer dissolve itself, the slight flicker during the flash, transitions that depend on the
 direction a type was reached from (each state has the transition of one entry: type B from A, C from B, D from C).
 
+## Side select and the opening's music (G2 / G3, K53, 2026-11-25)
+
+**Black Label** (MAME, a coin and only 2P Start): player 2 plays alone. The select screen opens with player 2's panel
+and player 1's 参戦可能 join panel; stage record 7 → 0 (the opening, with the select screen over it) → 1. Either side
+can start, and the free side can join with its Start while the screen is up.
+
+**Noir before K53:** GAME START on controller 2 started a player-2 game (the retail start reads the pressing pad) but
+skipped the select screen. Now `sel_begin` opens for whichever side started; the free side shows its join panel
+(`join_P1`, from `bl_select_capture_join_p1.lua`, or `join_P2`); either free side joins with Start; on confirm each
+side gets FIGHTER TYPE and ship word `value XOR 4 * side` (K25), with the retail player set-up `0x0012D840` for a
+side that joined on the screen. PCSX2: controller 2 starts → player 2's panel and player 1's join panel; player 1
+joins with Start, picks spread; both confirm; two-player takeoff (P1 ship word 4, P2 4). Player-1 starts unchanged.
+
+**The opening's music (G2).** Both games play record 0 (the opening) before stage 1; BL's opening script fades the
+music (`FF26` = sound command (0, 16)) where the PS2's runs `FF0A`. The PS2's fade is `0x0010F570(0, 16)` (used by its
+scene scripts, e.g. `0x001150C0`): the update `0x0010FBD0` lowers the request volume (`0x00345572`) 16 steps a frame
+while `$gp-29212` is set, then stops the stream. Noir's select theme used to stop abruptly at confirm; it now fades
+out over about 1.5 s (PCSX2: volume 88 → 0, stream stopped) unless the stage already has a track.
+
 ## Running on PS2 (stage one, 2026-11-22)
 
 `ps2/hooks/bl_select.c` with the art pages from `--bl-rom` (`bl_tex.c`: six PSMCT16 pages, each a texture object

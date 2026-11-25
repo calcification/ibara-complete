@@ -43,7 +43,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 3. Hadou drops (BL: medals and type-11 items, no roses), with the item and enemy comparison.
 4. Stage-6 rose form: BL spawns roses ≈15 % faster and adds a type-14 barrage, so its rose core lasts ≈40 % longer (research/phase25); port from the type-74 handler. Then player-side damage.
 5. BL title logo.
-6. Game flow: start-menu side select (G3).
+6. Game flow: side select done (K53).
 
 ## Since 23 November
 

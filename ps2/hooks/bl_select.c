@@ -116,7 +116,7 @@ static void sel_begin(void)
 {
 	/* BL's select screen sits over the running stage 1 opening (research/phase20 "Stage two"): wait until the PS2's
 	 * NOW LOADING fade ($gp-28936) is over and the launch pad is drawn, then hold the game there */
-	if (sel_active || !sel_pending[0] || !pausable() || EE_RAM(u32, 0x00338BE8u))
+	if (sel_active || !(sel_pending[0] || sel_pending[1]) || !pausable() || EE_RAM(u32, 0x00338BE8u))
 		return;
 	if (!art_present()) {
 		sel_pending[0] = sel_pending[1] = 0;
@@ -124,12 +124,22 @@ static void sel_begin(void)
 	}
 	if (!ktex_init() || !ktex_claim())
 		return;
-	sel_pending[0] = sel_pending[1] = 0;
-	side_start(0, EE_RAM(u32, SHIP_P1));
+	/* the side(s) that started (BL: either Start button; the other side shows its join panel, research/phase20
+	 * "Side select") */
+	sel_on[0] = sel_on[1] = 0;
 	slot_enter(0, SEL_HEAD);
-	slot_enter(1, sel_kind[0] ? SEL_SHIP_P : SEL_OPEN);
+	slot_enter(1, SEL_JOIN_P1);
 	slot_enter(2, SEL_JOIN_P2);
-	sel_on[1] = 0;
+	if (sel_pending[0]) {
+		side_start(0, EE_RAM(u32, SHIP_P1));
+		slot_enter(1, sel_kind[0] ? SEL_SHIP_P : SEL_OPEN);
+	}
+	if (sel_pending[1]) {
+		const u32 cfg = EE_RAM(u32, FIGHTER(1));
+		side_start(1, cfg < 8u ? cfg : 0u);
+		slot_enter(2, sel_kind[1] ? SEL_SHIP_P2 : SEL_OPEN2);
+	}
+	sel_pending[0] = sel_pending[1] = 0;
 	sel_timer = SELECT_FRAMES;
 	sel_active = 1;
 	out_c = 0;
@@ -214,25 +224,36 @@ static u32 side_state(u32 s)
 
 static void finish(void)
 {
-	const u32 v = sel_kind[0] * 4u + sel_type[0];
-	EE_RAM(u32, SHIP_P1) = v;    /* player 1: ship word = kind * 4 + type */
-	EE_RAM(u32, FIGHTER_P1) = v; /* and KURO's FIGHTER TYPE value (side 0: same number) */
-	if (sel_on[1] && !EE_RAM(u32, REC(1))) {
-		/* player 2 joined on the screen: what the retail join (0x0012C5E4) does for side 1 - FIGHTER TYPE, the
-		 * ship word (KURO's join stores the value XOR 4 for side 1, K38), then the player set-up */
-		const u32 v2 = sel_kind[1] * 4u + sel_type[1];
-		EE_RAM(u32, FIGHTER(1)) = v2;
-		EE_RAM(u32, REC(1) + 4u) = v2 ^ 4u;
-		PLAYER_JOIN(1);
+	u32 s;
+	for (s = 0; s < 2u; s++) {
+		const u32 v = sel_kind[s] * 4u + sel_type[s];
+		if (!sel_on[s])
+			continue;
+		/* FIGHTER TYPE and the ship word (side * 4 XOR value, K25 / K38); a side that joined on the screen then gets
+		 * what the retail join (0x0012C5E4) does: the player set-up */
+		EE_RAM(u32, FIGHTER(s)) = v;
+		if (EE_RAM(u32, REC(s))) {
+			EE_RAM(u32, REC(s) + 4u) = v ^ (4u * s);
+		} else {
+			EE_RAM(u32, REC(s) + 4u) = v ^ (4u * s);
+			PLAYER_JOIN(s);
+		}
 	}
 	sel_active = 0;
-	sel_on[1] = 0;
+	sel_on[0] = sel_on[1] = 0;
 	ktex_release();
 	EE_RAM(u8, PAUSE_BYTE) = 0;
-	if (sel_bgm_on) { /* hand the music back: the stage's current track, or silence until its script starts one */
+	if (sel_bgm_on) {
+		/* hand the music back: the stage's current track if it has one; otherwise fade the theme out as BL's opening
+		 * does (script FF26, sound command (0, 16); research/phase25) with the PS2's own fade 0x0010F570(0, 16), the
+		 * one its scene scripts use (0x001150C0): one volume step every 16 frames, then the stream stops; the stage's
+		 * music starts later from its script */
 		const u32 t = EE_RAM(u32, BGM_TRACK);
 		sel_bgm_on = 0;
-		BGM_TRACK_START(t >= 1u && t <= 16u ? t : 0u);
+		if (t >= 1u && t <= 16u)
+			BGM_TRACK_START(t);
+		else
+			GAME_CALL2(0x0010F570u, 0, 16);
 	}
 }
 
@@ -269,15 +290,17 @@ u32 sel_menu(void)
 	u32 done, secs, s, fade;
 	if (!sel_active)
 		return PAUSE_MENU();
-	if (!sel_on[1] && !EE_RAM(u32, REC(1)) && (EE_RAM(u16, REC(1) + REC_INPUT) & 0x200u)) {
-		const u32 cfg = EE_RAM(u32, FIGHTER(1));
-		side_start(1, cfg < 8u ? cfg : 0u); /* player 2 joins: starts on its CONFIG fighter type */
-		slot_enter(2, sel_kind[1] ? SEL_SHIP_P2 : SEL_OPEN2);
-	}
+	for (s = 0; s < 2u && !out_c; s++) /* the free side joins with Start: starts on its CONFIG fighter type */
+		if (!sel_on[s] && !EE_RAM(u32, REC(s)) && (EE_RAM(u16, REC(s) + REC_INPUT) & 0x200u)) {
+			const u32 cfg = EE_RAM(u32, FIGHTER(s));
+			side_start(s, cfg < 8u ? cfg : 0u);
+			slot_enter(1u + s, s ? (sel_kind[1] ? SEL_SHIP_P2 : SEL_OPEN2) : (sel_kind[0] ? SEL_SHIP_P : SEL_OPEN));
+		}
 	if (!out_c) {
-		done = side_input(0, first);
-		if (sel_on[1])
-			done &= side_input(1, first);
+		done = 1;
+		for (s = 0; s < 2u; s++)
+			if (sel_on[s])
+				done &= side_input(s, first);
 		if (sel_timer)
 			sel_timer--;
 		if (done || !sel_timer) { /* everyone confirmed, or the time is up: BL's confirm, then the game */
@@ -300,7 +323,7 @@ u32 sel_menu(void)
 	secs = (sel_timer + 59u) / 60u;
 	draw_digit(secs / 10u, 280 + ox, 192 + oy, fade);
 	draw_digit(secs % 10u, 280 + ox, 208 + oy, fade);
-	draw_slot(1, side_state(0), ox, oy, flash_c[0] ? flash_c[0] - 2u : 0, fade);
+	draw_slot(1, sel_on[0] ? side_state(0) : SEL_JOIN_P1, ox, oy, sel_on[0] && flash_c[0] ? flash_c[0] - 2u : 0, fade);
 	draw_slot(2, sel_on[1] ? side_state(1) : SEL_JOIN_P2, ox, oy, sel_on[1] && flash_c[1] ? flash_c[1] - 2u : 0, fade);
 	return 0;
 }

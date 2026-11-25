@@ -15,7 +15,7 @@ struct sel_rec {
 };
 enum { SEL_HEAD, SEL_JOIN_P2, SEL_SHIP_S, SEL_SHIP_P, SEL_TYPE_S, SEL_TYPE_P = SEL_TYPE_S + 4, SEL_SHIP_S2 = SEL_TYPE_P + 4,
        SEL_SHIP_P2, SEL_TYPE_S2, SEL_TYPE_P2 = SEL_TYPE_S2 + 4, SEL_OPEN = SEL_TYPE_P2 + 4, SEL_OPEN2,
-       SEL_STATES };
+       SEL_JOIN_P1, SEL_STATES };
 extern const struct sel_sprite sel_sprites[];
 extern const struct sel_track sel_tracks[];
 extern const u16 sel_state_refs[];
