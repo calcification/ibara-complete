@@ -261,7 +261,7 @@ __asm__(
  *   PLAYER STOCK  fixed 2 (0x0012D8E4 `li a0,2` in the player set-up 0x0012D840)
  *   BOMB STOCK    one full bomb (+40 fragments; 0x0012D5D4 sends Arrange to 0x0012D7CC) unless Arcade's BOMB STOCK
  *                 is 0 (0x0012D5BC)
- *   EXTEND        first at 10,000,000 (0x0012D8C0 -> 0x0012D930), later ones every $gp-28292 (from Arcade's EXTEND)
+ *   EXTEND        first at 10,000,000 (0x0012D8C0 -> 0x0012D930), then every 10,000,000 (0x0013ABD8 -> 0x0013AC54)
  *   CONTINUE      none: the three continue checks (0x0012C5B4, 0x0012C734, 0x0012C934) take the CONTINUE OFF path
  * arr_rules_apply() rewrites those words for Arrange games and restores the retail words for the others. It runs
  * at the start of the player set-up (0x0012D840, every game start and every join), only rewriting and flushing
@@ -272,11 +272,11 @@ __asm__(
 
 u8 arr_stock = 2u;  /* PLAYER STOCK value index (0x002A9290: "1".."6"); retail Arrange 2 */
 u8 arr_bomb = 2u;   /* BOMB STOCK value index (0x002A92B0: "0","1/2","1","2","3","4"); retail Arrange "1" */
-u8 arr_extend;      /* 0 ARRANGE (retail), 1-7 Arcade's EXTEND values 0-6 */
+u8 arr_extend;      /* 0 10M EVERY (retail Arrange), 1-7 Arcade's EXTEND values 0-6 */
 u8 arr_continue;    /* 0 OFF (retail), 1 ON */
 
 static const char *const arr_extend_names[8] = {
-	"ARRANGE", "NOT EXTEND", "1M EVERY", "2M EVERY", "3M EVERY", "2M ONLY", "4M ONLY", "6M ONLY",
+	"10M EVERY", "NOT EXTEND", "1M EVERY", "2M EVERY", "3M EVERY", "2M ONLY", "4M ONLY", "6M ONLY",
 }; /* one line of at most 12 characters (the value column ends at the screen edge) */
 
 const char *const arrcfg_label[8] = {
@@ -327,16 +327,16 @@ void arrcfg_cycle(u32 row)
 }
 
 /* (address, retail word); the Arrange words are built in arr_rules_apply */
-static const u32 rule_addr[11] = {
+static const u32 rule_addr[12] = {
 	0x0012D8E4u,                                     /* li a0,2 (Arrange's stock) */
 	0x0012D5A0u, 0x0012D5D4u, 0x0012D7D8u, 0x0012D7FCu, /* bomb stock */
-	0x0012D8C0u,                                     /* Arrange's fixed first extend */
+	0x0012D8C0u, 0x0013ABD8u,                        /* Arrange's fixed first extend and interval */
 	0x0012C594u, 0x0012C5B4u, 0x0012C714u, 0x0012C734u, 0x0012C924u, /* continue */
 };
-static const u32 rule_retail[11] = {
+static const u32 rule_retail[12] = {
 	0x24040002u,
 	0x93858F14u, 0x1460007Du, 0x10600008u, 0x93858F14u,
-	0x1460001Bu,
+	0x1460001Bu, 0x14600019u,
 	0x93838EFCu, 0x14800046u, 0x93878EFCu, 0x14C0009Bu, 0x93838EFCu,
 };
 #define RULE_CONT2 0x0012C934u /* bnez v1 (Arrange) after the game-over continue check */
@@ -347,10 +347,10 @@ void arr_rules_apply(void)
 	const u32 arrange = EE_RAM(u32, ARCADE_FLAG) != 0u;
 	const u32 key = arrange ? 0x80000000u | arr_stock | (u32)arr_bomb << 4 | (u32)arr_extend << 8 |
 	                          (u32)arr_continue << 12 : 0u;
-	u32 w[11];
+	u32 w[12];
 	if (key == rules_key)
 		return;
-	for (unsigned i = 0; i < 11u; i++)
+	for (unsigned i = 0; i < 12u; i++)
 		w[i] = rule_retail[i];
 	u32 cont2 = 0x14600089u;
 	if (arrange) {
@@ -359,23 +359,23 @@ void arr_rules_apply(void)
 		w[2] = 0u;                            /* half bomb (setting 1) as in Arcade */
 		w[3] = 0x10000008u;                   /* always add (setting - 2) bombs, as in Arcade */
 		if (arr_extend) {
-			w[5] = 0u; /* first extend from $gp-28296, as in Arcade */
+			w[5] = w[6] = 0u; /* first extend from $gp-28296, later ones every $gp-28292, as in Arcade */
 			const u32 i = arr_extend - 1u;
 			EE_RAM(u32, EXT_FIRST) = EE_RAM(u32, 0x00213540u + i * 4u);
 			EE_RAM(u32, EXT_EVERY) = EE_RAM(u32, 0x00213560u + i * 4u) ? EE_RAM(u32, EXT_FIRST) : 1000000000u;
 		}
 		if (arr_continue) {
-			w[6] = 0x24030001u; /* li v1,1 */
-			w[7] = 0u;
-			w[8] = 0x24070001u; /* li a3,1 */
-			w[9] = 0u;
-			w[10] = 0x24030001u;
+			w[7] = 0x24030001u; /* li v1,1 */
+			w[8] = 0u;
+			w[9] = 0x24070001u; /* li a3,1 */
+			w[10] = 0u;
+			w[11] = 0x24030001u;
 			cont2 = 0u;
 		}
 	}
 	if ((rules_key & 0x80000000u) && (rules_key >> 8 & 15u) && !(arrange && arr_extend))
 		GAME_CALL2(0x0013E290u, 0, 0); /* back to Arcade's EXTEND values */
-	for (unsigned i = 0; i < 11u; i++)
+	for (unsigned i = 0; i < 12u; i++)
 		EE_RAM(u32, rule_addr[i]) = w[i];
 	EE_RAM(u32, RULE_CONT2) = cont2;
 	rules_key = key;

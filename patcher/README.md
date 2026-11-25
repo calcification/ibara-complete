@@ -50,7 +50,7 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   CONFIG shows and edits that layout, and the change is shared with Arrange.
 * **Arrange CONFIG rows:** ARRANGE → CONFIG also has PLAYER STOCK, BOMB STOCK, EXTEND and CONTINUE (Circle changes
   the value; kept until power-off). The defaults play as the original Arrange: 3 ships, 1 bomb, first extend at
-  10,000,000 (EXTEND = ARRANGE), no continue.
+  10,000,000 and every 10,000,000 after (EXTEND = 10M EVERY), no continue.
 * **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game,
   pad settings and Practice selections so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択
