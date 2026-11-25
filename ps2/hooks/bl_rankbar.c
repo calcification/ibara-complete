@@ -150,10 +150,10 @@ static void bl_xtc_popup(s32 ox, s32 oy)
 /* The XTC rank glow (BL 0C0713F2, research/phase28): while the shot is held with pods out, in the harder half of the
  * rank range (2h >= 255, h = (0xFFFFFF - rank) >> 16), a ring of four quadrants around the sphere's centre + 1 px
  * along game x, additive, alpha = the glow strength (xtc_glow), tint R = 2h - 255, G = 510 - 2h. Level
- * min(15, held * (h >> 4) >> 3); levels 0-7 (only in the first frames of a press) are not drawn (their art is not
- * in the atlas). Quadrants: 0 = right / +y, 1 = right / -y (flip y), 2 = left / +y (flip x), 3 = both; 1 and 2 show
+ * min(15, held * (h >> 4) >> 3). BL draws from a held count of 4 on, so levels 4-7 show on frames 4-7 of a press:
+ * level 7 uses level 9's frames; levels 4-6 (their own art) are not drawn - no texture object is left for them. Quadrants: 0 = right / +y, 1 = right / -y (flip y), 2 = left / +y (flip x), 3 = both; 1 and 2 show
  * frame p = (~(frame >> 2)) & 7, 0 and 3 frame 7 - p (bl_glow_data.c, generated). */
-extern const u8 bl_glow_tiles[8][8][4];
+extern const u8 bl_glow_tiles[9][8][4];
 u32 xtc_glow(u32 side);
 
 static void bl_glow(u32 rec, u32 held, u32 a, s32 cx, s32 cy)
@@ -168,11 +168,11 @@ static void bl_glow(u32 rec, u32 held, u32 a, s32 cx, s32 cy)
 		return;
 	if (lv > 15u)
 		lv = 15u;
-	if (lv < 8u)
+	if (lv < 7u)
 		return;
 	p = ~(EE_RAM(u32, FRAMES) >> 2) & 7u;
 	for (q = 0; q < 4u; q++) {
-		const u8 *t = bl_glow_tiles[lv - 8u][q == 1u || q == 2u ? p : 7u - p];
+		const u8 *t = bl_glow_tiles[lv - 7u][q == 1u || q == 2u ? p : 7u - p];
 		const s32 sz = (s32)t[3];
 		ktex_draw(t[0], t[1], t[2], t[3], t[3],
 			  0x12070000u | (q & 2u ? 0x08000000u : 0) | (q & 1u ? 0x04000000u : 0) | a << 8 | a,

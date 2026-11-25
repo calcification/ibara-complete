@@ -58,6 +58,9 @@ three phases in the capture; their order follows the identity pattern of the cap
 * `xtc.c` keeps the strength per side (`xtc_glow`), `bl_rankbar.c` `bl_glow()` draws after the sphere, with PS2 pods
   (`+0x27B`) for BL's `+0x289`.
 
-Not ported: levels 0–7 (at most the first four frames of a press). PCSX2 (test defines `BL_TEST_XTC_POPUP`,
+**Levels below 8** (`glow_cap_low.lua`, held count forced): BL draws the glow only from a held count of 4, so levels
+4–7 appear on frames 4–7 of a press. Level 7 uses exactly level 9's frames (same order) and is now drawn; levels 4–5
+(24 × 24) and 6 (32 × 32) have art of their own (≈17,400 px) that would need a third extra texture page, and no
+texture object slot is left — not drawn (at most frames 4–6 of a press). PCSX2 (test defines `BL_TEST_XTC_POPUP`,
 `BL_TEST_GLOW_LEVELS`: rank stepped through levels 8–15, pod check off): the ring is drawn around the ship with the
 cross pattern, seamless quadrants, red at the top levels and green at level 8, as BL.

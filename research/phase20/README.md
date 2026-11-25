@@ -118,7 +118,17 @@ slightly. From frame 34 the panels dissolve — BL copies strips of the frame bu
 element's blend alpha (0xF7 down 0x10 every 2 frames; unblended elements go at half way), closing the screen at
 frame 64 after the last confirm (or the timer). The PS2's own pilot panel and takeoff follow.
 
-Not reproduced: the frame-buffer dissolve itself, the slight flicker during the flash, transitions that depend on the
+BL's "dissolve", snapshotted every 3 frames (`bl_select_capture_confirm.lua`), is a cross-fade of the whole composed
+screen into the stage over ~30 frames (the frame-buffer copies are how the blitter fades everything at once); Noir's
+per-element fade matches it, except that overlapping pieces can show through each other for a moment.
+
+**Water shimmer.** BL composes stage 1's water from 32 × 32 tiles off screen and copies it to the screen one row at a
+time with the 0–6 px wave in **normal play** too (344 row copies in a stage-1 gameplay frame), not only behind the select
+screen. Whether the PS2 port reproduces it is not settled: the wave profile is computed (no table in either program),
+and comparing PCSX2 screenshots was ambiguous (repeating texture, screenshot timing). Reproducing it would mean drawing
+the PS2's stage-1 water ourselves in strips; parked.
+
+Not reproduced: the slight flicker during the flash, transitions that depend on the
 direction a type was reached from (each state has the transition of one entry: type B from A, C from B, D from C).
 
 ## Side select and the opening's music (G2 / G3, K53, 2026-11-25)

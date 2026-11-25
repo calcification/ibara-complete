@@ -1,6 +1,56 @@
 {
- "note": "Black Label XTC rank glow (research/phase28): per level 8-15, the 8 quadrant frames in animation order (blitter source rects [x, y, w, h]); quadrants 1 and 2 show seq[p], quadrants 0 and 3 seq[7 - p], p = (~(frame >> 2)) & 7. Captured in MAME (glow_cap.lua). Coordinates only.",
+ "note": "Black Label XTC rank glow (research/phase28): per level 7-15 (level 7 uses level 9's frames, captured with the held count forced; levels 4-6 have art of their own, not included), the 8 quadrant frames in animation order (blitter source rects [x, y, w, h]); quadrants 1 and 2 show seq[p], quadrants 0 and 3 seq[7 - p], p = (~(frame >> 2)) & 7. Captured in MAME (glow_cap.lua). Coordinates only.",
  "levels": {
+  "7": [
+   [
+    5824,
+    1792,
+    32,
+    32
+   ],
+   [
+    5824,
+    1824,
+    32,
+    32
+   ],
+   [
+    5824,
+    1856,
+    32,
+    32
+   ],
+   [
+    5824,
+    1888,
+    32,
+    32
+   ],
+   [
+    5824,
+    1920,
+    32,
+    32
+   ],
+   [
+    5824,
+    1952,
+    32,
+    32
+   ],
+   [
+    5824,
+    1984,
+    32,
+    32
+   ],
+   [
+    5824,
+    2016,
+    32,
+    32
+   ]
+  ],
   "8": [
    [
     5792,
