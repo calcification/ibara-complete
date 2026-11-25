@@ -9,6 +9,27 @@
  */
 #include "ibara_ps2.h"
 
+/* Diagnostic bake only: compare the rose timer under the arcade rank input.
+ * The test definition supplies the recorded arcade difficulty byte.
+ */
+#ifdef BL_ROSE_TIMER_TEST
+_Static_assert(BL_ROSE_TIMER_TEST >= 0 && BL_ROSE_TIMER_TEST <= 3, "rose test difficulty must be 0..3");
+
+u32 bl_test_rose_timer(u32 part, u32 scale, u32 base)
+{
+	if (!(EE_RAM(u32, part) & 0x100u))
+		return 0;
+	const u32 stage = EE_RAM(u8, 0x00338E9Cu);
+	const u32 rank = EE_RAM(u32, PS2_RANK_INV);
+	const u32 bias = stage * (BL_ROSE_TIMER_TEST + 1u) * 0x40000u;
+	const u32 rank_byte = rank > bias ? (rank - bias) >> 16 : 0;
+	const u32 limit = base + (rank_byte * scale >> 8);
+	const u8 tick = EE_RAM(u8, part + 0x9Bu) + 1u;
+	EE_RAM(u8, part + 0x9Bu) = tick < limit ? tick : 0;
+	return tick >= limit;
+}
+#endif
+
 #ifdef BL_SPAWN_LOG
 #define EN_BASE 0x0045A840u
 #define EN_STRIDE 0xB4u

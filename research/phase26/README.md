@@ -70,7 +70,14 @@ core lifetime and the production burst distribution.
   using the pattern at 0x0C189C9C. Its type field writer at 0x0C0BAA42 appears in the type-14
   trace. The corresponding PS2 rose loops return to the next slot after the rose constructor.
   The type-14 trace also sees other attacks, so group by caller before measuring the extra
-  barrage. Rose and barrage gameplay changes are still pending.
+  barrage. The barrage port is still pending.
+
+For an A/B timer bake, pass --define BL_ROSE_TIMER_TEST=3 to the separate stage-6 logger builder.
+This replaces the rank input only at the three rose calls. Use the arcade difficulty byte from
+the target run in place of 3. The value 3 was seen in an early arcade RAM snapshot. Verify it
+again in the matched stage-6 runs. The bake verifies the three retail call words, and host tests
+cover the timer's enable flag, cadence, reset, and rank clamp. Full boss timing with the timer
+probe and a paired baseline is still pending. The production K45 build has no timer probe.
 
 Use the type-write tracer to resolve the constructor caller or investigate the barrage. Remove
 QUICK_S6 for natural entry and allow enough frames to reach the rose form.

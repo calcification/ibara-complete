@@ -57,7 +57,8 @@ emu.register_frame_done(function()
     quick = false
   end
   if st == STAGE and sf < 0 then
-    local p0 = sp:read_u32(0x0C2ABAA4); out:write(string.format("start script=%08X\n", p0))
+    local p0 = sp:read_u32(0x0C2ABAA4)
+    out:write(string.format("start script=%08X difficulty=%d\n", p0, sp:read_u8(0x0C234C04)))
     local d = io.open(os.getenv("OUT") .. ".script", "wb"); local base = (p0 & ~0xFFF) - 0x4000
     out:write(string.format("dump base=%08X\n", base))
     for a = base, base + 0x20000 - 1 do d:write(string.char(sp:read_u8(a))) end; d:close(); out:flush()
