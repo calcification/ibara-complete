@@ -41,7 +41,8 @@ extern u32 opt_gauge;
 void opt_set(u32 on);
 static u32 arcade_gauge, kuro_gauge = 1u;
 
-/* Keep the six Arcade CONFIG bytes and the mappings/fighter types out of retail saves after leaving KURO. */
+/* Keep the six Arcade CONFIG bytes, Arcade's key mappings and the fighter types out of retail saves after leaving
+ * KURO. Arrange's key mappings are shared with KURO (KURO plays with them and edits them in its KEY CONFIG). */
 #define ARCADE_CONTINUE 0x00338BECu
 #define ARCADE_CONFIG 0x00338BF4u /* DIFFICULTY 1/2, EXTEND, PLAYER STOCK, BOMB STOCK */
 #define PAD_CONFIG   0x004E4FD0u
@@ -104,8 +105,10 @@ static void isolate_config(u32 on)
 		volatile u32 *setting = (volatile u32 *)(PAD_CONFIG + 4u * i);
 		if (on)
 			retail_config[i] = *setting;
-		else
+		else if ((i & 8u) == 0)
 			*setting = retail_config[i];
+		/* Arrange's key tables (P1 +0x20, P2 +0x60: words with bit 3 set) are KURO's too: KURO's input mapper and
+		 * its KEY CONFIG use them (scripts/build_ee_hooks.py), so changes made in KURO stay, shared with Arrange. */
 	}
 	if (on)
 		for (i = 0; i < 2u; i++)

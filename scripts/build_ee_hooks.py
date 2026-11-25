@@ -257,7 +257,14 @@ HOOKS = {
         # confirm path stores as the choice (NORMAL), and the game start reads that frame's press to pick the side
         # (confirming a frame later started a player-2 game). 0x001CAAE8 `li v0,3` -> `b 0x001CACE4` (delay slot
         # `li a0,95` is the confirm path's own sound argument).
-        + [(0x001CAAE8, 0x24020003, 0x1000007E)],
+        + [(0x001CAAE8, 0x24020003, 0x1000007E)]
+        # KEY CONFIG edits the table the input mapper reads. KURO plays with Arrange's key tables (above), so its
+        # KEY CONFIG (reached from ARCADE MODE's CONFIG) shows and writes them too: the screen's table index
+        # (sp+544: 0 Arcade, 1 Arrange, chosen at 0x001C9A90 by the menu state) is always 1 (0x001C9A94 bne -> nop;
+        # the delay slot stores 0, the next two words 1), and leaving it still returns to KURO's CONFIG, KEY CONFIG
+        # row (0x001CA080 bnez -> nop: the index-0 exit, state 6, row 8). Both key tables index 0x004E4FD0 / 0x004E5010
+        # + index * 32 (players 1 / 2); the reset defaults come from 0x00213520 (Arrange's) for index 1.
+        + [(0x001C9A94, 0x14620003, 0x00000000), (0x001CA080, 0x14400006, 0x00000000)],
         "jumps": [(0x00122120, 0x8C820000, "bl_fire_timer")],
         "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + BL_SYM_PATCHES,
     },
