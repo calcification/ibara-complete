@@ -66,6 +66,30 @@ Per frame the P1 panel is ~40-50 ops; steady states have no single loop period (
 pulsing highlights, blinking text, bobbing arrows), so the PS2 version will animate elements individually rather than
 replay frame lists.
 
+## Stage two: what is behind BL's select screen (2026-11-25)
+
+The "girder background" is **not select-screen art**. MAME, select screen open from Start (`draws.txt` of the K29 capture,
+blitter VRAM read through the `*m_bitmaps` item):
+
+* BL composes 117 cells (13 × 9) of 16 32 × 32 tiles off screen (blitter x 987–1403, y 128–447). The tiles at VRAM
+  (0x0–0x5F, 0x800–0x8FF) are **stage 1's water layer** (the VRAM dump shows the water texture; the upload map's later
+  upload there is the same stage art). The composite is copied to the screen one 1-px row per op (320 ops a frame) with a
+  heat-shimmer x offset: a 64-row profile of 0–6 px (3,4,4,4,5,5,5,5,6×17,5,5,5,5,4,4,4,3,3,3,3,2,2,2,2,1×8,0,1×8,2,2,2,2,
+  3,3,3), moving one row every 4 frames; rows shifted 4 or more copy from 32 px further left to keep the edge covered.
+* The tint of that copy is 0 for the first ~44 frames after the screen opens, then rises 2 a frame to 0x80 (the stage's
+  own fade-in). The launch tower (the "girders") is drawn by the stage as usual, on top of the water.
+* So BL keeps **the live stage 1 opening** (launch pad) running behind its select screen: black, then the stage fading in.
+
+**PS2.** Showing the stage instead of hiding it (`sel_layers_stub` only for the first 44 frames) still gives black:
+the PS2 select screen opens on the first frame of scene 1, under NOW LOADING, and the game update is paused from then
+on (`sel_pause`), so the launch tower has not been spawned and the stage never fades in. After confirm, the stage
+appears within ~0.5 s (with the retail "Bond 01 Agent" pilot panel, the PS2 counterpart of BL's pilot illustration).
+Options: (a) let the update run until the launch pad is up (NOW LOADING fade done, `$gp-28936` = 0), then pause and open
+the screen — the stage would then sit behind the panels as in BL; needs a check that the takeoff and the pilot panel
+have not started by then; (b) keep the update running while the screen is up and hold the takeoff script — closest to
+BL, more invasive; (c) leave it black. The shimmer would only apply to the water layer, which the PS2 stage draws itself;
+it is not reproduced in any of these.
+
 ## Running on PS2 (stage one, 2026-11-22)
 
 `ps2/hooks/bl_select.c` with the art pages from `--bl-rom` (`bl_tex.c`: six PSMCT16 pages, each a texture object
