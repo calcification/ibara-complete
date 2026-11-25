@@ -18,15 +18,32 @@ def _speed(rows):
     return sum(v) / len(v) if v else 0.0
 
 
-def main(bl_sp, bl_b, ps_sp, ps_b, B=500, anchor=54):
+def main(bl_sp, bl_b, ps_sp, ps_b, B=500, anchor=54, *, retained_start=None):
     anchor = str(anchor)
     a_bl = next(int(r[0]) for r in (l.split() for l in open(bl_sp)) if r[3] == anchor)
     a_ps = next(int(r[0]) for r in (l.split() for l in open(ps_sp)) if r[2] == anchor)
     blb = [(int(r[0]) - a_bl, int(r[2]), float(r[5]), float(r[6])) for r in (l.split() for l in open(bl_b))]
     psb = [(int(r[0]) - a_ps, int(r[2]), float(r[5]), float(r[6])) for r in (l.split() for l in open(ps_b))]
+    if not blb or not psb:
+        print("No comparable bullet samples.")
+        return
+    start = 0
     span = max(f for f, *_ in blb)
+    if retained_start is not None:
+        # A wrap may split the first retained frame. Compare complete shared bins only.
+        start = max(0, ((retained_start - a_ps) // B + 1) * B)
+        span = min(span, max(f for f, *_ in psb))
+        stop = (span // B) * B
+        print(f"Wrapped capture: shared complete bins [{start}, {stop}).")
+        if start >= stop:
+            print("No complete shared bullet bins remain.")
+            return
+        blb = [x for x in blb if start <= x[0] < stop]
+        psb = [x for x in psb if start <= x[0] < stop]
+    else:
+        stop = span + B
     print("bin          BL n  spd  types                                | PS2 n  spd  types")
-    for b in range(0, span + B, B):
+    for b in range(start, stop, B):
         bb = [x for x in blb if b <= x[0] < b + B]
         pp = [x for x in psb if b <= x[0] < b + B]
         tb = collections.Counter(t for _, t, *_ in bb).most_common(3)

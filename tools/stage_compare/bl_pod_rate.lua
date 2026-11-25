@@ -3,9 +3,11 @@
 -- PS2 counterpart: run_stage.py --stage 1 --shot-level 2 --define BL_RATE_TEST --define BL_TEST_ALL_WEAPONS (0x01FE0000 / 0x01FE0200).
 -- BL pod fire rate per weapon: invincible, rank locked, shot held, all weapons owned; weapon change (Button 4)
 -- every 1200 frames; new shots counted per (weapon, pool, type) over frames 200..1199 of each segment.
+-- EXPOSURE=1 emits "F weapon stage_byte frames" for those windows. A weapon can appear in more than one window.
+-- The sampled counts miss shots that both activate and end between frame callbacks, or that re-use active slots.
 local m = manager.machine; local sp = m.devices[":maincpu"].spaces["program"]
 local ports = m.ioport.ports; local function fld(p, n) return ports[p].fields[n] end
-local P1 = 0x0C29D1D8; local frame = 0; local plan = {}
+local P1, STAGE = 0x0C29D1D8, 0x0C3C4170; local frame = 0; local plan = {}
 local function at(f, fn) plan[f] = plan[f] or {}; table.insert(plan[f], fn) end
 local function press(f, p, n, len) at(f, function() fld(p, n):set_value(1) end); at(f + (len or 6), function() fld(p, n):clear_value() end) end
 local t0 = 2400
@@ -14,6 +16,7 @@ for i = 0, 8 do press(t0 + 300 + i * 40, ":PORT_D", "P1 Button 1", 6) end
 at(t0 + 700, function() fld(":PORT_D", "P1 Button 1"):set_value(1) end)
 local out = io.open(os.getenv("OUT"), "w")
 local alive = {}; local cnt = {}
+local exposure = os.getenv("EXPOSURE") == "1"
 local START = 2400
 emu.register_frame_done(function()
   frame = frame + 1
@@ -27,6 +30,10 @@ emu.register_frame_done(function()
     if seg == 0 then fld(":PORT_D", "P1 Button 4"):set_value(1) end
     if seg == 8 then fld(":PORT_D", "P1 Button 4"):clear_value() end
     local w = sp:read_u8(P1 + 0x26F)
+    if exposure and seg >= 200 then
+      local id = string.format("F %d %d", w, sp:read_u8(STAGE))
+      cnt[id] = (cnt[id] or 0) + 1
+    end
     for pi, pool in ipairs({{0x0C2380D0, 160}, {0x0C2A6D9C, 64}}) do
       for k = 0, pool[2] - 1 do
         local a = pool[1] + 0x34 * k; local key = pi * 1000 + k

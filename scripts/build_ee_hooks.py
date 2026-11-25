@@ -591,6 +591,10 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
     for site, original_word, kind, target, *add in h.get("sym_patches", []):
         sites.append((site, original_word, sym_patch_word(syms, site, original_word, kind, target, *add)))
+    if key == "bl_mode" and any(define.split("=", 1)[0] == "BL_ROSE_TIMER_TEST" for define in EXTRA_DEFINES):
+        # These three calls are local to the rose-spawning loops. Keep the shared retail timer in place.
+        for site in (0x00178B1C, 0x00178CD8, 0x00178E24):
+            sites.append((site, 0x0C048848, jal(syms["bl_test_rose_timer"])))
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     dyn = h.get("dynamic")

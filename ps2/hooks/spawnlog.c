@@ -5,9 +5,30 @@
  * BL_CORE_STATE / BL_CORE_FLAGS / BL_CORE_TURRET (what the stage-1 boss sampler records).
  * Every logic frame (called from xtc_frame): keeps P1 invincible and records each newly alive enemy part of
  * the PS2 pool 0x0045A840 (192 x 0xB4; +00 flags bit 31 alive, +04 type, +08 subtype, +24/+28 x/y 16.16,
- * +3C hp, +40 score) into a log at SPAWN_LOG (count word, then 24-byte records). Read it from a savestate.
+ * +3C hp, +40 score) into a rolling log at SPAWN_LOG. Read the retained records from a savestate.
  */
 #include "ibara_ps2.h"
+
+/* Diagnostic bake only: compare the rose timer under the arcade rank input.
+ * The test definition supplies the recorded arcade difficulty byte.
+ */
+#ifdef BL_ROSE_TIMER_TEST
+_Static_assert(BL_ROSE_TIMER_TEST >= 0 && BL_ROSE_TIMER_TEST <= 3, "rose test difficulty must be 0..3");
+
+u32 bl_test_rose_timer(u32 part, u32 scale, u32 base)
+{
+	if (!(EE_RAM(u32, part) & 0x100u))
+		return 0;
+	const u32 stage = EE_RAM(u8, 0x00338E9Cu);
+	const u32 rank = EE_RAM(u32, PS2_RANK_INV);
+	const u32 bias = stage * (BL_ROSE_TIMER_TEST + 1u) * 0x40000u;
+	const u32 rank_byte = rank > bias ? (rank - bias) >> 16 : 0;
+	const u32 limit = base + (rank_byte * scale >> 8);
+	const u8 tick = EE_RAM(u8, part + 0x9Bu) + 1u;
+	EE_RAM(u8, part + 0x9Bu) = tick < limit ? tick : 0;
+	return tick >= limit;
+}
+#endif
 
 #ifdef BL_SPAWN_LOG
 #define EN_BASE 0x0045A840u
@@ -15,33 +36,51 @@
 #define EN_COUNT 192u
 #define SPAWN_LOG 0x01F20000u
 #define SPAWN_MAX 2600u
+#define LOG_STAGE 0x00338E9Cu
+#define LOG_STAGE_TICK 0x00338EA0u
+#define LOG_RING_MAGIC 0x31474E52u /* RNG1 */
+
+struct log_header {
+	volatile u32 total; /* monotonic sequence, including records overwritten */
+	u32 magic, capacity, reserved;
+};
+
+static void start_ring(struct log_header *ring, u32 capacity)
+{
+	ring->total = 0;
+	ring->magic = LOG_RING_MAGIC;
+	ring->capacity = capacity;
+	ring->reserved = 0;
+}
 
 struct spawn_rec {
 	u32 frame;
 	u16 slot, hp;
 	u32 type, subtype, score;
 	s16 x, y;
+	u32 stage_tick;
+	u8 stage;
 };
 
-#define BULLET_LOG 0x01F40000u
+#define BULLET_LOG 0x01F35000u
 #define BULLET_MAX 7000u
-/* BL_COUNTS: uncapped totals beside the capped logs (stage 6 overflows them): per enemy type (128) count, first and
- * last frame at COUNT_LOG; new enemy bullets per 500-frame bin (64) and type (& 15) as u16 at COUNT_LOG + 0x1000. */
-#define COUNT_LOG 0x01F5C000u /* free gap between the bullet log (ends 0x01F5B590) and CORE_LOG */
+/* BL_COUNTS retains per-type and per-bin totals alongside the rolling records. */
+#define COUNT_LOG 0x01F5C000u
 struct bullet_rec {
 	u32 frame;
 	u16 type;
-	u8 slot, pad;
+	u8 slot, stage;
 	s16 x, y;
 	s16 dx, dy; /* 8.8 pixels per frame, averaged over the bullet's first 6 frames (as the MAME logger) */
+	u32 stage_tick;
 };
 static u32 bl_alive_mask[8];
-static s16 bl_pending[256]; /* record index + 1 awaiting its velocity */
+static u32 bl_pending[256]; /* one-based record sequence awaiting its velocity */
 static u8 bl_age[256];
 static s32 bl_x0[256], bl_y0[256]; /* full 16.16 start position */
 
 /* Boss sampler: every 4 frames, each alive part of type BL_BOSS_TYPE (default 5 = stage-1 boss) with subtype < 3
- * or score >= 50000: HP, position, mode byte (+0x9A) and step byte (+0xA6). 20-byte records. */
+ * or score >= 50000: HP, position, mode byte (+0x9A) and step byte (+0xA6). */
 #ifndef BL_BOSS_TYPE
 #define BL_BOSS_TYPE 5u
 #endif
@@ -56,7 +95,8 @@ struct core_rec {
 	u16 slot, hp;
 	u32 subtype;
 	s16 x, y;
-	u8 mode, step, pad[2];
+	u8 mode, step, stage;
+	u32 stage_tick;
 };
 
 /* Part-record tables seen (+0x10 of each new part): count, then (type, table) pairs; read by
@@ -64,7 +104,16 @@ struct core_rec {
 #define TABLE_LOG 0x01FC0000u
 #define TABLE_MAX 512u
 
+_Static_assert(sizeof(struct log_header) == 16, "logger header layout");
+_Static_assert(sizeof(struct spawn_rec) == 32, "spawn record layout");
+_Static_assert(sizeof(struct bullet_rec) == 20, "bullet record layout");
+_Static_assert(sizeof(struct core_rec) == 24, "boss record layout");
+_Static_assert(SPAWN_LOG + 16 + SPAWN_MAX * sizeof(struct spawn_rec) <= BULLET_LOG, "spawn log bounds");
+_Static_assert(BULLET_LOG + 16 + BULLET_MAX * sizeof(struct bullet_rec) <= COUNT_LOG, "bullet log bounds");
+_Static_assert(CORE_LOG + 16 + CORE_MAX * sizeof(struct core_rec) <= TABLE_LOG, "boss log bounds");
+
 static u32 sl_frame, sl_first, sl_started;
+static u8 sl_stage;
 
 static void table_seen(u32 type, u32 table)
 {
@@ -291,8 +340,12 @@ static u8 sl_alive[EN_COUNT];
 
 void spawn_log_frame(void)
 {
-	volatile u32 *count = (volatile u32 *)SPAWN_LOG;
-	struct spawn_rec *log = (struct spawn_rec *)(SPAWN_LOG + 16);
+	struct log_header *spawns = (struct log_header *)SPAWN_LOG;
+	struct log_header *bullets = (struct log_header *)BULLET_LOG;
+	struct log_header *core = (struct log_header *)CORE_LOG;
+	struct spawn_rec *log = (struct spawn_rec *)(spawns + 1);
+	const u8 stage = EE_RAM(u8, LOG_STAGE);
+	const u32 stage_tick = EE_RAM(u32, LOG_STAGE_TICK);
 	unsigned i;
 
 	sl_frame++;
@@ -399,13 +452,25 @@ void spawn_log_frame(void)
 			table_seen(EE_RAM(u32, a + 4), EE_RAM(u32, a + 0x10));
 	}
 #endif
-#ifdef BL_LOG_STAGE /* log one stage only: BL stage byte value, 2 = stage 1 ... 7 = stage 6 (PS2 $gp-28244) */
-	if (EE_RAM(u8, 0x00338E9Cu) != BL_LOG_STAGE)
+	if (stage != sl_stage) {
+		sl_stage = stage;
+		for (i = 0; i < EN_COUNT; i++) {
+			sl_alive[i] = 0;
+			sl_hp0[i] = 0;
+		}
+		for (i = 0; i < 256; i++)
+			bl_pending[i] = 0;
+		for (i = 0; i < 8; i++)
+			bl_alive_mask[i] = 0;
+	}
+#ifdef BL_LOG_STAGE
+	if (stage != BL_LOG_STAGE)
 		return;
 #endif
 	if (!sl_started) {
-		*count = 0;
-		EE_RAM(u32, CORE_LOG) = 0;
+		start_ring(spawns, SPAWN_MAX);
+		start_ring(bullets, BULLET_MAX);
+		start_ring(core, CORE_MAX);
 #ifndef BL_ALL_TABLES
 		EE_RAM(u32, TABLE_LOG) = 0;
 #endif
@@ -416,12 +481,7 @@ void spawn_log_frame(void)
 #endif
 	}
 	{
-		volatile u32 *bcount = (volatile u32 *)BULLET_LOG;
-		struct bullet_rec *bl = (struct bullet_rec *)(BULLET_LOG + 16);
-		if (sl_started == 1) {
-			*bcount = 0;
-			sl_started = 2;
-		}
+		struct bullet_rec *bl = (struct bullet_rec *)(bullets + 1);
 		for (i = 0; i < 256; i++) {
 			const u32 a = PS2_BULLETS_BASE + i * PS2_BULLET_STRIDE;
 			const u32 fl = EE_RAM(u32, a);
@@ -429,10 +489,11 @@ void spawn_log_frame(void)
 			const u32 bit = 1u << (i & 31);
 			const s32 x = EE_RAM(s32, a + PS2_BULLET_X), y = EE_RAM(s32, a + PS2_BULLET_Y);
 			if (bl_pending[i]) {
-				struct bullet_rec *r = &bl[bl_pending[i] - 1];
-				if (!on)
+				const u32 sequence = bl_pending[i];
+				if (!on || bullets->total - sequence >= BULLET_MAX)
 					bl_pending[i] = 0;
 				else if (++bl_age[i] == 6) {
+					struct bullet_rec *r = &bl[(sequence - 1) % BULLET_MAX];
 					r->dx = (s16)(((x - bl_x0[i]) >> 8) / 6);
 					r->dy = (s16)(((y - bl_y0[i]) >> 8) / 6);
 					bl_pending[i] = 0;
@@ -445,8 +506,9 @@ void spawn_log_frame(void)
 					EE_RAM(u16, COUNT_LOG + 0x1000u + 2u * (bin * 16u + (EE_RAM(u32, a + 4) & 15u))) += 1;
 			}
 #endif
-			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first && *bcount < BULLET_MAX) {
-				struct bullet_rec *r = &bl[*bcount];
+			if (on && !(bl_alive_mask[i >> 5] & bit) && sl_first) {
+				const u32 serial = bullets->total;
+				struct bullet_rec *r = &bl[serial % BULLET_MAX];
 				r->frame = sl_frame - sl_first;
 				r->type = (u16)EE_RAM(u32, a + 4);
 				r->slot = (u8)i;
@@ -455,8 +517,10 @@ void spawn_log_frame(void)
 				r->dx = r->dy = 0;
 				bl_x0[i] = x;
 				bl_y0[i] = y;
-				(*bcount)++;
-				bl_pending[i] = (s16)*bcount;
+				r->stage = stage;
+				r->stage_tick = stage_tick;
+				bullets->total = serial + 1;
+				bl_pending[i] = serial + 1;
 				bl_age[i] = 0;
 			}
 			if (on)
@@ -480,8 +544,9 @@ void spawn_log_frame(void)
 			EE_RAM(u32, c + 8) = f;
 		}
 #endif
-		if (on && (!sl_alive[i] || sl_type[i] != t) && *count < SPAWN_MAX) {
-			struct spawn_rec *r = &log[*count];
+		if (on && (!sl_alive[i] || sl_type[i] != t)) {
+			const u32 serial = spawns->total;
+			struct spawn_rec *r = &log[serial % SPAWN_MAX];
 			if (!sl_first)
 				sl_first = sl_frame;
 			r->frame = sl_frame - sl_first;
@@ -494,7 +559,9 @@ void spawn_log_frame(void)
 			table_seen(t, EE_RAM(u32, a + 0x10));
 			r->x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
 			r->y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
-			(*count)++;
+			r->stage = stage;
+			r->stage_tick = stage_tick;
+			spawns->total = serial + 1;
 		}
 #ifdef BL_NOSHOT /* untouched-boss timelines: boss parts never lose HP while the stage is logged */
 		if (on && t == BL_BOSS_TYPE && !sl_hp0[i])
@@ -521,34 +588,35 @@ void spawn_log_frame(void)
 		    (EE_RAM(u32, a + 8) < 3u || EE_RAM(u32, a + 0x40) >= 50000u)) {
 #endif
 #endif
-			volatile u32 *ccount = (volatile u32 *)CORE_LOG;
-			struct core_rec *c = (struct core_rec *)(CORE_LOG + 16);
-			if (*ccount < CORE_MAX) {
-				c[*ccount].frame = sl_frame - sl_first;
-				c[*ccount].slot = (u16)(i | EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) << 8); /* + P1 shot level */
-				c[*ccount].hp = EE_RAM(u16, a + 0x3C);
-				c[*ccount].subtype = EE_RAM(u32, a + 8);
-				c[*ccount].mode = EE_RAM(u8, a + 0x9A);
+			const u32 serial = core->total;
+			struct core_rec *ring = (struct core_rec *)(core + 1);
+			struct core_rec *sample = &ring[serial % CORE_MAX];
+			sample->frame = sl_frame - sl_first;
+			sample->slot = (u16)(i | EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_LIVES + 1) << 8); /* + P1 shot level */
+			sample->hp = EE_RAM(u16, a + 0x3C);
+			sample->subtype = EE_RAM(u32, a + 8);
+			sample->mode = EE_RAM(u8, a + 0x9A);
 #ifdef BL_CORE_HIT /* hit-flash timer (+0x84) instead of the step byte */
-				c[*ccount].step = EE_RAM(u8, a + 0x84);
+			sample->step = EE_RAM(u8, a + 0x84);
 #else
-				c[*ccount].step = EE_RAM(u8, a + 0xA6);
+			sample->step = EE_RAM(u8, a + 0xA6);
 #endif
 #if defined(BL_CORE_TURRET) /* x = parent's step byte (+0xA6) | stage counter << 8, y = turret timer (+0x9B) */
-				c[*ccount].x = (s16)(EE_RAM(u8, EN_BASE + EN_STRIDE * (u32)EE_RAM(s16, a + 0x7C) + 0xA6) | EE_RAM(u8, 0x00338E9Cu) << 8);
-				c[*ccount].y = EE_RAM(u8, a + 0x9B);
+			sample->x = (s16)(EE_RAM(u8, EN_BASE + EN_STRIDE * (u32)EE_RAM(s16, a + 0x7C) + 0xA6) | EE_RAM(u8, 0x00338E9Cu) << 8);
+			sample->y = EE_RAM(u8, a + 0x9B);
 #elif defined(BL_CORE_FLAGS)
-				c[*ccount].x = (s16)fl;
-				c[*ccount].y = (s16)(fl >> 16);
+			sample->x = (s16)fl;
+			sample->y = (s16)(fl >> 16);
 #elif defined(BL_CORE_STATE) /* boss step (+0xA6) and mode (+0x9A) instead of the position */
-				c[*ccount].x = EE_RAM(u8, a + 0xA6);
-				c[*ccount].y = EE_RAM(u8, a + 0x9A);
+			sample->x = EE_RAM(u8, a + 0xA6);
+			sample->y = EE_RAM(u8, a + 0x9A);
 #else
-				c[*ccount].x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
-				c[*ccount].y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
+			sample->x = (s16)(EE_RAM(s32, a + 0x24) >> 16);
+			sample->y = (s16)(EE_RAM(s32, a + 0x28) >> 16);
 #endif
-				(*ccount)++;
-			}
+			sample->stage = stage;
+			sample->stage_tick = stage_tick;
+			core->total = serial + 1;
 		}
 	}
 }
