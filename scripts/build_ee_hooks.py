@@ -623,7 +623,7 @@ def video_profile(name: str) -> list:
 # user's own ROM by patcher/apply_kuro_patch.py --bl-rom (the tag then reads BLSELECT-ART-ON).
 SELECT_ART_ADDR = 0x01F1FFF0
 SELECT_ART_TAG = b"BLSELECT-ART-01\0"
-SELECT_ART_PAGES = 6
+SELECT_ART_PAGES = 8
 
 
 def select_art_segment() -> tuple[int, bytes]:

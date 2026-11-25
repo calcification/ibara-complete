@@ -95,7 +95,8 @@ the loop reads its registers. The HUD still draws (score line, RANK bar).
 `scripts/make_patch.py` allows 16 KiB per run (64 KiB total, unchanged). `ibara_kuro.patch` 9.8 KB; patch +
 `--bl-rom` gives the same disc as `build_black_label_iso.py --bl-rom` (byte-identical).
 
-Stage two (not done): per-element animation, the ship fly-in and confirm sequence, the girder background, player 2.
+Stage two (not done): per-element animation, the ship fly-in and confirm sequence, the girder background. Player 2: done
+(K46, below).
 
 ## Before takeoff (2026-11-22)
 
@@ -109,3 +110,37 @@ draw call at `0x0012E434` shows that bar outside ship select. The selector hides
 the XTC text cells. PCSX2 held P1 on the launchpad in Yoko and Tate R, then took off with Spread B (ship word 5).
 With MG and Rocket stocked via PINE, pressing Square changed the active weapon and the bright slot from MG
 to Rocket. After game over, the three patched call/branch words for pause and the stock bar were restored.
+
+## Player 2 (K46, 2026-11-25)
+
+**Black Label (MAME).** While the select screen is up, the free side shows the 参戦可能 join panel. Player 2's Start opens
+their own panel (blue pilot and ships, "Player2" plate). Both sides then choose ship and type independently on the
+shared 60-s timer. A player who joins later in the game gets **no** select screen.
+
+**Data.** `bl_select_capture_p2.lua` (VARIANT S / P) repeats the one-player captures' inputs with player 2, started
+at frame 120. MAME's player-2 controls are on `:PORT_L`. `make_select_data.py --p2` adds ten states from the
+`y >= 120` half: `ship_S2`, `ship_P2`, `type_S2A`–`D` and `type_P2A`–`D`. That makes 22 states, 231 sprites and
+216,592 px. It needs **eight** texture pages: `KT_PAGES` 8, art segment `0x01F20000`–`0x01F9FFFF`, page-table row 6
+cols 0–7, all free in the retail table. RAM `0x01F80000`–`0x01FBFFFF` was zero in every savestate checked (select
+screen, gameplay, stage 6). The rank bar's object moved to index 8, and the packer now also keeps page 5 rows 96–127
+(graze sphere, XTC digits) free.
+
+**Runtime** (`ps2/hooks/bl_select.c`):
+* Per-side state: on, phase (ship / type / confirmed), kind, type.
+* **Joining:** player 2 joins with Start, read from their mapped input word (`+0x24E` bit `0x200`, which honours
+  KEY CONFIG and is updated while paused), and starts on their CONFIG fighter type. The free side draws the join
+  panel.
+* **Finishing:** the screen closes when every joined player has confirmed, or when the timer runs out.
+* **Bringing player 2 in:** the retail join (`0x0012C5E4`): FIGHTER TYPE, ship word = value XOR 4 for side 1 (as
+  KURO's join, K38), then the player set-up `0x0012D840(1)`.
+
+**Check (PCSX2).**
+1. Player 2's side showed the join panel.
+2. P2 Start opened player 2's panel.
+3. Player 2 went to spread, type B, while player 1 picked spread, type B and confirmed first. Player 1's panel held
+   while player 2 chose.
+4. Player 2 confirmed, and both ships stood on the runway and took off together. P1 ship word 5 (FIGHTER 5); P2
+   FIGHTER 5, ship word 1; both active.
+
+The patch's longest literal run (our hook image) is now 16,720 bytes, so `make_patch.py` allows 24 KiB per run;
+the total stays capped at 64 KiB.

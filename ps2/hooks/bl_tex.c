@@ -11,10 +11,10 @@
  * swapped between sprites drew the wrong pixels).
  *  - KT_BAR (the rank bar, page 5's pixels): always registered, object index 1114 (the loader uses 0-1112; 1113-1115
  *    are zero) under the free entry row 1 / col 5.
- *  - pages 0-5 (the select screen): registered only while the select screen is up (ktex_claim / ktex_release:
- *    entries row 6 / cols 0-5, free in the retail table; object slots borrowed from the empty ones, the game update
+ *  - pages 0-7 (the select screen, players 1 and 2): registered only while the select screen is up (ktex_claim /
+ *    ktex_release: entries row 6 / cols 0-7, free in the retail table; object slots borrowed from the empty ones, the game update
  *    being stopped meanwhile, and given back).
- * Pixels at KT_PIXELS (0x01F20000-0x01F7FFFF: the select art segment loaded with the executable; page 5 rows 0-19 the
+ * Pixels at KT_PIXELS (0x01F20000-0x01F9FFFF: the select art segment loaded with the executable; page 5 rows 0-19 the
  * rank bar's, built at run time). Leaf code (no s-registers).
  */
 #include "ibara_ps2.h"
@@ -27,8 +27,8 @@
 #define BAR_INDEX  1114u
 #define SEL_ROW    6u
 #define KT_PIXELS  0x01F20000u
-#define KT_PAGES   6u
-#define KT_BAR     6u /* object slot of ours for the rank bar */
+#define KT_PAGES   8u
+#define KT_BAR     8u /* object slot of ours for the rank bar (after the select pages) */
 
 struct ktex_obj {
 	u32 obj[64];   /* clone of the HUD page object (0x100 bytes) */
@@ -153,7 +153,7 @@ static u32 refresh(void)
 	return 1;
 }
 
-/* Select screen: register pages 0-5 (row 6 entries, borrowed empty object slots). */
+/* Select screen: register pages 0-7 (row 6 entries, borrowed empty object slots). */
 u32 ktex_claim(void)
 {
 	u32 p, slot = TEX_SLOTS;
@@ -232,7 +232,7 @@ __asm__(
 /* Draw page rectangle (px, py, pw, ph) (screen orientation: page x = screen x, page y = screen y) at game x, y
  * (x = the rectangle's lowest game x, i.e. its screen bottom edge; y = its screen left edge), with 0x00110B70's
  * flags and tint. Game orientation: w = ph (along game x), h = pw (along game y); u = 256 - py - ph.
- * page 0-5: the select screen's (claimed); KT_BAR: the rank bar's object (page 5 pixels). */
+ * page 0-7: the select screen's (claimed); KT_BAR: the rank bar's object (page 5 pixels). */
 u32 ktex_draw(u32 page, u32 px, u32 py, u32 pw, u32 ph, u32 flags, u32 tint, s32 x, s32 y)
 {
 	u32 col, row;

@@ -8,7 +8,8 @@ struct sel_op {
 	u32 flags;     /* 0x00110B70 a0: 0x10000000 | blend / mode bits | flips | alpha */
 	u32 tint;      /* 0xRRGGBB, 0x80 = 1.0 */
 };
-enum { SEL_HEAD, SEL_JOIN_P2, SEL_SHIP_S, SEL_SHIP_P, SEL_TYPE_S, SEL_TYPE_P = SEL_TYPE_S + 4, SEL_STATES = SEL_TYPE_P + 4 };
+enum { SEL_HEAD, SEL_JOIN_P2, SEL_SHIP_S, SEL_SHIP_P, SEL_TYPE_S, SEL_TYPE_P = SEL_TYPE_S + 4, SEL_SHIP_S2 = SEL_TYPE_P + 4,
+       SEL_SHIP_P2, SEL_TYPE_S2, SEL_TYPE_P2 = SEL_TYPE_S2 + 4, SEL_STATES = SEL_TYPE_P2 + 4 };
 extern const struct sel_sprite sel_sprites[];
 extern const struct sel_op sel_ops[];
 extern const u16 sel_state_first[SEL_STATES + 1];

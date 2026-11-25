@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Phase 20: Black Label (KURO) select screen data from the MAME captures (bl_select_capture.lua).
 
-    python3 research/phase20/make_select_data.py CAP_S CAP_P CAP_FULL VRAM_MAP OUTDIR [--rom ibarablk_u2]
+    python3 research/phase20/make_select_data.py CAP_S CAP_P CAP_FULL VRAM_MAP OUTDIR [--p2 CAP_S2 CAP_P2]
+        [--emit ROOT] [--rom ibarablk_u2]
 
 CAP_S / CAP_P: one-player captures choosing straight / spread (types A-D); CAP_FULL: the long capture (timer);
+CAP_S2 / CAP_P2: two-player captures in which player 2 (started at frame 120) makes the same inputs at the same
+frames as player 1 does in CAP_S / CAP_P (research/phase20/bl_select_capture_p2.lua);
 VRAM_MAP: map_uploads.py output. Writes OUTDIR/select_scene.json (states -> draw ops, sprites -> blitter rects) and,
 with --rom, preview PNGs of every state (local checks only; never commit them).
 
@@ -55,6 +58,10 @@ def main(argv):
     cap_s, cap_p, cap_f, vmap, out = argv[:5]
     rom = argv[argv.index("--rom") + 1] if "--rom" in argv else None
     caps = {"S": load(cap_s), "P": load(cap_p), "F": load(cap_f)}
+    p2 = "--p2" in argv
+    if p2:
+        i = argv.index("--p2")
+        caps["S2"], caps["P2"] = load(argv[i + 1]), load(argv[i + 2])
     # header: the ops identical in every state (bar, 武機選択, timer box); the digits are drawn from the timer
     ref = [caps[c][f] for c, f in list(SHIP.values()) + list(TYPE.values())] + [caps[HEAD[0]][HEAD[1]]]
     common = set(map(tuple, ref[0]))
@@ -72,6 +79,11 @@ def main(argv):
     for (k, t), (c, f) in TYPE.items():
         states[f"type_{k}{'ABCD'[t]}"] = region(caps[c][f], "P1")
     states["join_P2"] = region(caps[JOIN[0]][JOIN[1]], "P2")
+    if p2:  # player 2's panel (screen half y >= 120) at the frames of player 1's states
+        for k, (c, f) in SHIP.items():
+            states[f"ship_{k}2"] = region(caps[c + "2"][f], "P2")
+        for (k, t), (c, f) in TYPE.items():
+            states[f"type_{k}2{'ABCD'[t]}"] = region(caps[c + "2"][f], "P2")
     states["head"] = head
     digit_op = [o for o in caps[HEAD[0]][HEAD[1]] if is_digit(o)][0]
     sprites = {}
@@ -99,10 +111,11 @@ def main(argv):
 
 
 # --- atlas and generated files ---------------------------------------------------------------------------------
-PAGES, PAGE_W, PAGE_H = 6, 256, 128
+PAGES, PAGE_W, PAGE_H = 8, 256, 128
 RESERVED = (5, 20)  # page 5 rows 0-19: the rank bar (bl_rankbar.c)
 SPHERE_PAGE, SPHERE_ROW, SPHERE_SX, SPHERE_SY = 5, 96, 0x1498, 0x700  # graze sphere frames (bl_rankbar.c)
-STATE_ORDER = ["head", "join_P2", "ship_S", "ship_P"] + [f"type_{k}{t}" for k in "SP" for t in "ABCD"]
+STATE_ORDER = ["head", "join_P2", "ship_S", "ship_P"] + [f"type_{k}{t}" for k in "SP" for t in "ABCD"] + \
+    ["ship_S2", "ship_P2"] + [f"type_{k}2{t}" for k in "SP" for t in "ABCD"]
 
 
 def pack(sprites):
@@ -117,7 +130,8 @@ def pack(sprites):
             col = sky[pg]
             for x in range(0, PAGE_W - pw + 1):
                 y = max(col[x:x + pw])
-                if y + ph <= PAGE_H and (best is None or (y, pg) < (best[0], best[2])):
+                limit = SPHERE_ROW if pg == SPHERE_PAGE else PAGE_H  # page 5 rows 96-127: sphere and XTC digits
+                if y + ph <= limit and (best is None or (y, pg) < (best[0], best[2])):
                     best = (y, x, pg)
             if best is not None and best[2] == pg:
                 break
@@ -148,6 +162,8 @@ def emit(scene, vmap, root):
     lines.append("};")
     ops, first = [], []
     for name in STATE_ORDER:
+        if name not in scene["states"]:
+            continue
         first.append(len(ops))
         ops += scene["states"][name]
     first.append(len(ops))

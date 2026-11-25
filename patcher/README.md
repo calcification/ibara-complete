@@ -52,8 +52,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   screen before takeoff. Left / right picks the straight
   (シスター・シミリス) or spread (ディオ・スピロッソ) ship, Circle or Cross opens TYPE A–D (up / down, with the
   SPEED / POWER / bomb panel), then Circle or Cross starts takeoff. A 60-second timer keeps the current choice. The choice is
-  also stored as FIGHTER TYPE. Player 2 presses Start once gameplay begins and joins with the ship chosen in
-  CONFIG → FIGHTER TYPE. The opening art is static and uses a black background. With the sound ROMs, Black
+  also stored as FIGHTER TYPE. Player 2 can join on the screen with Start and choose their own ship and type
+  (the free side shows Black Label's join panel); the screen closes when both have confirmed. A player who joins
+  later in the game uses CONFIG → FIGHTER TYPE, as on the arcade board (no screen). The opening art is static and uses a black background. With the sound ROMs, Black
   Label's ship-select theme plays on a loop while the screen is up and stops at takeoff; the stage music
   then starts as usual.
 * **KURO weapon bar.** Arrange's seven-slot stock bar appears at the bottom. It marks the weapons you have

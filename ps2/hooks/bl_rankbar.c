@@ -29,7 +29,7 @@ struct bl_bar_blob bl_bar_blob = {"BLRANKBAR-ART-01", {0}};
 /* our 16-bit page 5 (bl_tex.c), rows 0-19 (kept free by the select-screen atlas): the 80 x 14 art at (0, 0),
  * the 70 x 2 grey fill strip at (0, 16) */
 #define BAR_PAGE 5u /* pixels */
-#define BAR_TEX 6u  /* bl_tex.c KT_BAR: the rank bar's texture object */
+#define BAR_TEX 8u  /* bl_tex.c KT_BAR: the rank bar's texture object */
 #define FILL_PY 16u
 u16 *ktex_pixels(u32 page);
 u32 ktex_init(void);
