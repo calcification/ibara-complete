@@ -48,6 +48,9 @@ deleted if it doesn't match. Keep it to yourself: it contains the game.
   choice.
 * **KURO key config:** KURO plays with Arrange's button layout (the fourth button changes weapon). Its CONFIG → KEY
   CONFIG shows and edits that layout, and the change is shared with Arrange.
+* **Arrange CONFIG rows:** ARRANGE → CONFIG also has PLAYER STOCK, BOMB STOCK, EXTEND and CONTINUE (Circle changes
+  the value; kept until power-off). The defaults play as the original Arrange: 3 ships, 1 bomb, first extend at
+  10,000,000 (EXTEND = ARRANGE), no continue.
 * **KURO saves:** KURO skips the retail ranking and autosave flow. Leaving KURO restores the retail game,
   pad settings and Practice selections so changes made in KURO stay out of a later retail save.
 * **KURO ship select screen** (with `--bl-rom`): starting a KURO game (player 1) opens Black Label's 武機選択

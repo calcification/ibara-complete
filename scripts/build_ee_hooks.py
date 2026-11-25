@@ -143,6 +143,44 @@ PRACTICE_MODE_PATCHES = [
     # menu header (0x001C9570 `lw v1, -28056(gp)`, delay slot `li v0, 1`): ARRANGE MODE over its practice menu
     (0x001C9570, 0x8F839268, "jal", "hdr_state"),
 ]
+# ARRANGE CONFIG gets PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE rows with Arrange's own values (ps2/hooks/options.c,
+# research/phase26): FIGHTER TYPE, BULLET DESIGN, PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE, KEY CONFIG, EXIT.
+ARRANGE_CONFIG_PATCHES = [
+    # label table 0x002A9060 (4 rows) -> arrcfg_label (8 rows)
+    (0x001CCDCC, 0x3C15002B, "hi", "arrcfg_label"),
+    (0x001CCDDC, 0x26B59060, "lo", "arrcfg_label"),
+    # 8 rows: draw loop `slti v0,s1,4`, cursor down `slti at,v0,4`; the cursor-up wrap stores v0, set to the last
+    # row in the delay slot of the up-press branch 0x001CCFAC (the down path overwrites v0 straight after)
+    (0x001CCEBC, 0x2A220004, "raw", 0x2A220008),
+    (0x001CCFC8, 0x28410004, "raw", 0x28410008),
+    (0x001CCFB0, 0x00000000, "raw", 0x24020007),
+    # accept dispatcher: KEY CONFIG / EXIT answer rows 6 / 7; rows 2-5 go through the unreachable word 0x001CD9AC to
+    # arrcfg_accept_entry (cycle the value)
+    (0x001CD088, 0x24020002, "raw", 0x24020006),
+    (0x001CD098, 0x24020003, "raw", 0x24020007),
+    (0x001CD09C, 0x1462FF44, "raw", 0x14620243),
+    (0x001CD9AC, 0x00000000, "j", "arrcfg_accept_entry"),
+    # leaving KEY CONFIG returns to its new row 6 (0x001CA0A0 `li v0,2`, after `li v1,10`)
+    (0x001CA0A0, 0x24020002, "raw", 0x24020006),
+    # value column: the BULLET DESIGN lookup (0x001CCE64-0x001CCE84) becomes a0 = arrcfg_value(row)
+    (0x001CCE64, 0x24020001, "raw", 0x02202021),   # move a0, s1
+    (0x001CCE68, 0x16220007, "jal", "arrcfg_value"),
+    (0x001CCE6C, 0x0000202D, "raw", 0x00000000),
+    (0x001CCE70, 0x8F8392BC, "raw", 0x00402021),   # move a0, v0
+    (0x001CCE74, 0x3C02002B, "raw", 0x00000000),
+    (0x001CCE78, 0x24429408, "raw", 0x00000000),
+    (0x001CCE7C, 0x00031880, "raw", 0x00000000),
+    (0x001CCE80, 0x00431021, "raw", 0x00000000),
+    (0x001CCE84, 0x8C440000, "raw", 0x00000000),
+    # help text table 0x002A9420 (4 rows) -> arrcfg_desc (8 rows)
+    (0x001CCED4, 0x3C02002B, "hi", "arrcfg_desc"),
+    (0x001CCEDC, 0x24429420, "lo", "arrcfg_desc"),
+    (0x001CCEF8, 0x3C02002B, "hi", "arrcfg_desc", 4),
+    (0x001CCEFC, 0x24429424, "lo", "arrcfg_desc", 4),
+    # player set-up 0x0012D840 (every game start and join): `addiu sp,sp,-32` -> j arr_rules_entry (Arrange's rules)
+    (0x0012D840, 0x27BDFFE0, "j", "arr_rules_entry"),
+]
+PRACTICE_MODE_PATCHES += ARRANGE_CONFIG_PATCHES
 PRACTICE_MODE_SITES = {a for a, *_ in PRACTICE_MODE_PATCHES}
 RANK_OPTION_SITES = {a for a, *_ in RANK_OPTION_PATCHES}
 BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry"),

@@ -251,3 +251,160 @@ __asm__(
 	"	nop\n"
 	".size hdr_state, . - hdr_state\n"
 	".set pop\n");
+
+/* ARRANGE CONFIG gets Arcade's PLAYER STOCK, BOMB STOCK, EXTEND and CONTINUE rows, with Arrange's own values (no
+ * DIFFICULTY rows: Arrange has its own rank). Rows: FIGHTER TYPE, BULLET DESIGN, PLAYER STOCK, BOMB STOCK, EXTEND,
+ * CONTINUE, KEY CONFIG, EXIT. A Circle press on a new row cycles its value. The defaults play as retail Arrange,
+ * and the values last for the session (like RANK GAUGE; not saved).
+ *
+ * Retail Arrange's rules (research/phase26):
+ *   PLAYER STOCK  fixed 2 (0x0012D8E4 `li a0,2` in the player set-up 0x0012D840)
+ *   BOMB STOCK    one full bomb (+40 fragments; 0x0012D5D4 sends Arrange to 0x0012D7CC) unless Arcade's BOMB STOCK
+ *                 is 0 (0x0012D5BC)
+ *   EXTEND        first at 10,000,000 (0x0012D8C0 -> 0x0012D930), later ones every $gp-28292 (from Arcade's EXTEND)
+ *   CONTINUE      none: the three continue checks (0x0012C5B4, 0x0012C734, 0x0012C934) take the CONTINUE OFF path
+ * arr_rules_apply() rewrites those words for Arrange games and restores the retail words for the others. It runs
+ * at the start of the player set-up (0x0012D840, every game start and every join), only rewriting and flushing
+ * when the wanted words change. */
+#define ARCADE_FLAG   0x00338F44u /* $gp-28076: 1 Arrange */
+#define EXT_FIRST     0x00338E68u /* $gp-28296: first extend score */
+#define EXT_EVERY     0x00338E6Cu /* $gp-28292: later extends every (1e9 = none) */
+
+u8 arr_stock = 2u;  /* PLAYER STOCK value index (0x002A9290: "1".."6"); retail Arrange 2 */
+u8 arr_bomb = 2u;   /* BOMB STOCK value index (0x002A92B0: "0","1/2","1","2","3","4"); retail Arrange "1" */
+u8 arr_extend;      /* 0 ARRANGE (retail), 1-7 Arcade's EXTEND values 0-6 */
+u8 arr_continue;    /* 0 OFF (retail), 1 ON */
+
+static const char *const arr_extend_names[8] = {
+	"ARRANGE", "NOT EXTEND", "1M EVERY", "2M EVERY", "3M EVERY", "2M ONLY", "4M ONLY", "6M ONLY",
+}; /* one line of at most 12 characters (the value column ends at the screen edge) */
+
+const char *const arrcfg_label[8] = {
+	(const char *)0x00301CC0u, (const char *)0x00301CD0u, /* FIGHTER TYPE, BULLET DESIGN */
+	(const char *)0x00302110u, (const char *)0x00302120u, /* PLAYER STOCK, BOMB STOCK */
+	(const char *)0x00302130u, (const char *)0x00302138u, /* EXTEND, CONTINUE */
+	(const char *)0x00301CE0u, (const char *)0x00301C50u, /* KEY CONFIG, EXIT */
+};
+
+/* Two help lines per row: Arrange's own for its retail rows, Arcade CONFIG's for the new ones. */
+const char *const arrcfg_desc[16] = {
+	(const char *)0x00302690u, (const char *)0x00302300u, /* FIGHTER TYPE */
+	(const char *)0x003026B0u, (const char *)0x003026C8u, /* BULLET DESIGN */
+	(const char *)0x00302330u, (const char *)0x00302300u, /* PLAYER STOCK */
+	(const char *)0x00302350u, (const char *)0x00302370u, /* BOMB STOCK */
+	(const char *)0x00302390u, (const char *)0x003023B0u, /* EXTEND */
+	(const char *)0x003023C0u, (const char *)0x00301FD8u, /* CONTINUE */
+	(const char *)0x003026E0u, (const char *)0x00302300u, /* KEY CONFIG */
+	(const char *)0x00302700u, (const char *)0x00301F10u, /* EXIT */
+};
+
+/* Value text of an ARRANGE CONFIG row (0 = none); replaces the retail BULLET DESIGN lookup at 0x001CCE64. */
+const char *arrcfg_value(u32 row)
+{
+	switch (row) {
+	case 1u: return (const char *)EE_RAM(u32, 0x002A9408u + EE_RAM(u32, 0x00338FACu) * 4u); /* $gp-27972 */
+	case 2u: return (const char *)EE_RAM(u32, 0x002A9290u + arr_stock * 4u);
+	case 3u: return (const char *)EE_RAM(u32, 0x002A92B0u + arr_bomb * 4u);
+	case 4u: return arr_extend_names[arr_extend];
+	case 5u: return ((const char *const *)ON_OFF_NAMES)[arr_continue];
+	}
+	return 0;
+}
+
+void arrcfg_cycle(u32 row)
+{
+	if (row == 2u)
+		arr_stock = arr_stock < 5u ? arr_stock + 1u : 0u;
+	else if (row == 3u)
+		arr_bomb = arr_bomb < 5u ? arr_bomb + 1u : 0u;
+	else if (row == 4u)
+		arr_extend = (arr_extend + 1u) & 7u;
+	else if (row == 5u)
+		arr_continue ^= 1u;
+	else
+		return;
+	GAME_SOUND(95, 36);
+}
+
+/* (address, retail word); the Arrange words are built in arr_rules_apply */
+static const u32 rule_addr[11] = {
+	0x0012D8E4u,                                     /* li a0,2 (Arrange's stock) */
+	0x0012D5A0u, 0x0012D5D4u, 0x0012D7D8u, 0x0012D7FCu, /* bomb stock */
+	0x0012D8C0u,                                     /* Arrange's fixed first extend */
+	0x0012C594u, 0x0012C5B4u, 0x0012C714u, 0x0012C734u, 0x0012C924u, /* continue */
+};
+static const u32 rule_retail[11] = {
+	0x24040002u,
+	0x93858F14u, 0x1460007Du, 0x10600008u, 0x93858F14u,
+	0x1460001Bu,
+	0x93838EFCu, 0x14800046u, 0x93878EFCu, 0x14C0009Bu, 0x93838EFCu,
+};
+#define RULE_CONT2 0x0012C934u /* bnez v1 (Arrange) after the game-over continue check */
+static u32 rules_key = 0xFFFFFFFFu; /* words currently in place (0 = retail) */
+
+void arr_rules_apply(void)
+{
+	const u32 arrange = EE_RAM(u32, ARCADE_FLAG) != 0u;
+	const u32 key = arrange ? 0x80000000u | arr_stock | (u32)arr_bomb << 4 | (u32)arr_extend << 8 |
+	                          (u32)arr_continue << 12 : 0u;
+	u32 w[11];
+	if (key == rules_key)
+		return;
+	for (unsigned i = 0; i < 11u; i++)
+		w[i] = rule_retail[i];
+	u32 cont2 = 0x14600089u;
+	if (arrange) {
+		w[0] = 0x24040000u | arr_stock;
+		w[1] = w[4] = 0x24050000u | arr_bomb; /* li a1, value */
+		w[2] = 0u;                            /* half bomb (setting 1) as in Arcade */
+		w[3] = 0x10000008u;                   /* always add (setting - 2) bombs, as in Arcade */
+		if (arr_extend) {
+			w[5] = 0u; /* first extend from $gp-28296, as in Arcade */
+			const u32 i = arr_extend - 1u;
+			EE_RAM(u32, EXT_FIRST) = EE_RAM(u32, 0x00213540u + i * 4u);
+			EE_RAM(u32, EXT_EVERY) = EE_RAM(u32, 0x00213560u + i * 4u) ? EE_RAM(u32, EXT_FIRST) : 1000000000u;
+		}
+		if (arr_continue) {
+			w[6] = 0x24030001u; /* li v1,1 */
+			w[7] = 0u;
+			w[8] = 0x24070001u; /* li a3,1 */
+			w[9] = 0u;
+			w[10] = 0x24030001u;
+			cont2 = 0u;
+		}
+	}
+	if ((rules_key & 0x80000000u) && (rules_key >> 8 & 15u) && !(arrange && arr_extend))
+		GAME_CALL2(0x0013E290u, 0, 0); /* back to Arcade's EXTEND values */
+	for (unsigned i = 0; i < 11u; i++)
+		EE_RAM(u32, rule_addr[i]) = w[i];
+	EE_RAM(u32, RULE_CONT2) = cont2;
+	rules_key = key;
+	flush_option_edits();
+}
+
+__asm__(
+	".set push\n.set noreorder\n"
+	/* reached from the accept dispatcher for a row without a retail handler (v1 = cursor row) */
+	".globl arrcfg_accept_entry\n"
+	".type arrcfg_accept_entry, @function\n"
+	"arrcfg_accept_entry:\n"
+	"	jal	arrcfg_cycle\n"
+	"	move	$4, $3\n"
+	"	j	0x001CCDB0\n"
+	"	nop\n"
+	".size arrcfg_accept_entry, . - arrcfg_accept_entry\n"
+	/* replaces the player set-up's first word `addiu sp,sp,-32` (0x0012D840; a0 = side) */
+	".globl arr_rules_entry\n"
+	".type arr_rules_entry, @function\n"
+	"arr_rules_entry:\n"
+	"	addiu	$29, $29, -16\n"
+	"	sd	$31, 0($29)\n"
+	"	jal	arr_rules_apply\n"
+	"	sd	$4, 8($29)\n"
+	"	ld	$31, 0($29)\n"
+	"	ld	$4, 8($29)\n"
+	"	addiu	$29, $29, -16\n" /* our -16 and this -16: the displaced `addiu sp,sp,-32` */
+	"	j	0x0012D844\n"
+	"	nop\n"
+	".size arr_rules_entry, . - arr_rules_entry\n"
+	".set pop\n");

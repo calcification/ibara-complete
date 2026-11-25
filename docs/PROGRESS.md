@@ -1,8 +1,9 @@
 # Progress report — 25 November 2026
 
 Where Ibara Complete stands: the retail PS2 Ibara (SLPM-66301) plus **KURO**, the Black Label rules switched on
-from Mode Select. Arrange stays as on the original disc, with one addition: a PRACTICE row. Delivered as
-`patcher/` (a 9.8 KB patch; no game data in the repository). Black Label art comes from the user's own `ibarablk`
+from Mode Select. Arrange stays as on the original disc, with two additions: a PRACTICE row and the
+CONFIG rows PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE (K48; defaults play as retail). Delivered as `patcher/` (an
+18 KB patch; no game data in the repository). Black Label art comes from the user's own `ibarablk`
 ROM (`--bl-rom`).
 
 ## How far along
