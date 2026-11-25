@@ -68,6 +68,20 @@ u32 sel_active, sel_timer;
 u32 sel_on[2], sel_phase[2], sel_kind[2], sel_type[2];
 static u32 last_dirs[2];
 
+/* Three slots are drawn (header, player 1, player 2 / join panel), each in a state it entered at some frame; every
+ * track picks its sample from the frames since that entry (research/phase20 "Animation"). */
+static u32 slot_state[3], slot_time[3];
+/* BL's confirm (research/phase20 "Confirm"): per side the frames since it confirmed + 1 (the ship flash), and the
+ * frames since every side confirmed + 1 (the panels fade out from frame 34; the screen closes at 64) */
+static u32 flash_c[2], out_c;
+
+static void slot_enter(u32 slot, u32 state)
+{
+	slot_state[slot] = state;
+	slot_time[slot] = 0;
+}
+
+
 #define REC(s)       (PS2_PLAYER_BASE + (s) * PS2_PLAYER_STRIDE)
 #define REC_INPUT    0x24Eu  /* mapped input, newly pressed (u16): 0x200 = Start */
 #define FIGHTER(s)   (FIGHTER_P1 + 4u * (s))
@@ -92,6 +106,7 @@ static void side_start(u32 s, u32 value)
 {
 	sel_on[s] = 1;
 	sel_phase[s] = 0;
+	flash_c[s] = 0;
 	sel_kind[s] = (value >> 2) & 1u;
 	sel_type[s] = value & 3u;
 	last_dirs[s] = EE_RAM(u32, PAD(s) + 0x0Cu);
@@ -111,9 +126,13 @@ static void sel_begin(void)
 		return;
 	sel_pending[0] = sel_pending[1] = 0;
 	side_start(0, EE_RAM(u32, SHIP_P1));
+	slot_enter(0, SEL_HEAD);
+	slot_enter(1, sel_kind[0] ? SEL_SHIP_P : SEL_OPEN);
+	slot_enter(2, SEL_JOIN_P2);
 	sel_on[1] = 0;
 	sel_timer = SELECT_FRAMES;
 	sel_active = 1;
+	out_c = 0;
 	EE_RAM(u8, PAUSE_BYTE) = 1;
 	sel_bgm_on = 0;
 	if (sel_music.entry < 0x8000u) {
@@ -134,20 +153,57 @@ u32 sel_pause(void)
 	return sel_active ? 1u : (u32)GAME_CALL0(0x0012C220u);
 }
 
-static void draw_state(u32 state, s32 ox, s32 oy)
+static void draw_slot(u32 slot, u32 state, s32 ox, s32 oy, u32 flash, u32 fade)
 {
-	u32 i;
+	u32 i, k, ship;
+	/* the screen's opening / player 2's joining run into the straight ship's state: keep their own tracks */
+	if (!(slot_state[slot] == SEL_OPEN && state == SEL_SHIP_S) && !(slot_state[slot] == SEL_OPEN2 && state == SEL_SHIP_S2) &&
+	    slot_state[slot] != state)
+		slot_enter(slot, state);
+	k = slot_time[slot]++ >> 1;
+	state = slot_state[slot];
+	ship = sel_state_first[state] + sel_state_ship[state];
 	for (i = sel_state_first[state]; i < sel_state_first[state + 1]; i++) {
-		const struct sel_op *o = &sel_ops[i];
-		const struct sel_sprite *s = &sel_sprites[o->sprite];
-		ktex_draw(s->page, s->px, s->py, s->pw, s->ph, o->flags, o->tint, o->x + ox, o->y + oy);
+		const struct sel_track *t = &sel_tracks[sel_state_refs[i]];
+		const struct sel_sprite *s = &sel_sprites[t->sprite];
+		const struct sel_rec *r;
+		u32 n = k;
+		if (n >= t->intro) {
+			if (!t->loop)
+				continue;
+			n = t->intro + (n - t->intro) % t->loop;
+		}
+		r = &sel_recs[sel_samples[t->seq + n]];
+		if (r->flags == 255u)
+			continue;
+		{
+			u32 fl = sel_flags[r->flags], tint = sel_tints[r->tint];
+			const s32 x = t->x + r->dx + ox, y = t->y + r->dy + oy;
+			if (fade < 255u) { /* both blend alphas scaled; unblended elements go at half way */
+				if (!(fl & 0xFFFFu) && fade < 0x80u)
+					continue;
+				fl = (fl & 0xFFFF0000u) | ((fl >> 8 & 0xFFu) * fade / 255u) << 8 | (fl & 0xFFu) * fade / 255u;
+			}
+			if (i == ship && flash >= 2u) { /* the ship lights up, tint 252 down to 132 */
+				const u32 b = flash >= 32u ? 132u : 252u - 8u * ((flash - 2u) >> 1);
+				tint = b << 16 | b << 8 | b;
+			}
+			ktex_draw(s->page, s->px, s->py, s->pw, s->ph, fl, tint, x, y);
+			if (i == ship && flash >= 3u && flash <= 32u) { /* and a white additive copy fades from alpha 0xE8 */
+				const u32 a = 0xE8u - 0x10u * ((flash - 3u) >> 1);
+				ktex_draw(s->page, s->px, s->py, s->pw, s->ph, 0x12070000u | a << 8 | a, 0xFFFFFFu, x, y);
+			}
+		}
 	}
 }
 
-static void draw_digit(u32 d, s32 x, s32 y)
+static void draw_digit(u32 d, s32 x, s32 y, u32 fade)
 {
 	const struct sel_sprite *s = &sel_sprites[sel_digit_sprite[d]];
-	ktex_draw(s->page, s->px, s->py, s->pw, s->ph, sel_digit_flags, sel_digit_tint, x, y);
+	u32 fl = sel_digit_flags;
+	if (fade < 255u)
+		fl = (fl & 0xFFFF0000u) | ((fl >> 8 & 0xFFu) * fade / 255u) << 8 | (fl & 0xFFu) * fade / 255u;
+	ktex_draw(s->page, s->px, s->py, s->pw, s->ph, fl, sel_digit_tint, x, y);
 }
 
 static u32 side_state(u32 s)
@@ -197,8 +253,10 @@ static u32 side_input(u32 s, u32 first)
 			sel_type[s] = (sel_type[s] + 3u) & 3u;
 		if (edge & BTN_DOWN)
 			sel_type[s] = (sel_type[s] + 1u) & 3u;
-		if (btn & BTN_OK)
+		if (btn & BTN_OK) {
 			sel_phase[s] = 2;
+			flash_c[s] = 1;
+		}
 	}
 	return sel_phase[s] == 2;
 }
@@ -208,28 +266,42 @@ u32 sel_menu(void)
 {
 	const s32 ox = EE_RAM(s32, OFF_X), oy = EE_RAM(s32, OFF_Y);
 	const u32 first = sel_timer == SELECT_FRAMES;
-	u32 done, secs;
+	u32 done, secs, s, fade;
 	if (!sel_active)
 		return PAUSE_MENU();
 	if (!sel_on[1] && !EE_RAM(u32, REC(1)) && (EE_RAM(u16, REC(1) + REC_INPUT) & 0x200u)) {
 		const u32 cfg = EE_RAM(u32, FIGHTER(1));
 		side_start(1, cfg < 8u ? cfg : 0u); /* player 2 joins: starts on its CONFIG fighter type */
+		slot_enter(2, sel_kind[1] ? SEL_SHIP_P2 : SEL_OPEN2);
 	}
-	done = side_input(0, first);
-	if (sel_on[1])
-		done &= side_input(1, first);
-	if (sel_timer)
-		sel_timer--;
-	if (done || !sel_timer) {
+	if (!out_c) {
+		done = side_input(0, first);
+		if (sel_on[1])
+			done &= side_input(1, first);
+		if (sel_timer)
+			sel_timer--;
+		if (done || !sel_timer) { /* everyone confirmed, or the time is up: BL's confirm, then the game */
+			for (s = 0; s < 2u; s++)
+				if (sel_on[s] && sel_phase[s] != 2u) {
+					sel_phase[s] = 2;
+					flash_c[s] = 1;
+				}
+			out_c = 1;
+		}
+	} else if (++out_c > 64u) {
 		finish();
 		return 0;
 	}
-	draw_state(SEL_HEAD, ox, oy);
+	for (s = 0; s < 2u; s++)
+		if (flash_c[s])
+			flash_c[s]++;
+	fade = out_c > 35u ? (0xF7u > 0x10u * ((out_c - 35u) >> 1) ? 0xF7u - 0x10u * ((out_c - 35u) >> 1) : 0) : 255u;
+	draw_slot(0, SEL_HEAD, ox, oy, 0, fade);
 	secs = (sel_timer + 59u) / 60u;
-	draw_digit(secs / 10u, 280 + ox, 192 + oy);
-	draw_digit(secs % 10u, 280 + ox, 208 + oy);
-	draw_state(side_state(0), ox, oy);
-	draw_state(sel_on[1] ? side_state(1) : SEL_JOIN_P2, ox, oy);
+	draw_digit(secs / 10u, 280 + ox, 192 + oy, fade);
+	draw_digit(secs % 10u, 280 + ox, 208 + oy, fade);
+	draw_slot(1, side_state(0), ox, oy, flash_c[0] ? flash_c[0] - 2u : 0, fade);
+	draw_slot(2, sel_on[1] ? side_state(1) : SEL_JOIN_P2, ox, oy, sel_on[1] && flash_c[1] ? flash_c[1] - 2u : 0, fade);
 	return 0;
 }
 

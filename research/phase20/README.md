@@ -92,6 +92,35 @@ frames); the takeoff and the "Bond 01 Agent" pilot panel still follow the confir
 players (P2 joining, ship and type changes) ran without texture-cache trouble and started a two-player game. Not
 reproduced: BL's water shimmer and its fade-in of the stage behind the screen.
 
+## Animation and confirm (stage two, K52, 2026-11-25)
+
+**Captures.** `bl_select_capture_long.lua` (player 1, KIND S / P) and `bl_select_capture_long_p2.lua` (player 2) hold
+every state for 240 frames: ship, other ship, back, type A–D, Down past D, Up. Every element of a state settles within
+34 frames of the state's entry (the transition: the screen's opening slide, the ship fly-in and dissolve, the type
+panel sliding out) and then loops with a period of 32 or 64 frames; values change every 2 frames.
+
+**Data** (`make_select_anim.py`, `make_select_data.py --long`): 24 states (the 22 before, plus the screen opening for
+player 1 and player 2's joining). A state is a list of tracks in BL's draw order (the order matters: the type panel
+sits behind the bottom plates until it slides out). A track is a sprite, its first position, an intro and a 64-frame
+loop of samples (every 2 frames); a sample is a record: position delta, 0x00110B70 flags (blend, flips, alpha), tint,
+or not drawn. 875 tracks (1,532 references), 764 records, 4,095 samples, 202 flag and 85 tint values: about 25 KB,
+replacing the 15 KB of single-frame ops. Sprites inside another sprite are drawn from that sprite's page area (237
+sprites, 230 packed).
+
+**Runtime** (`bl_select.c`): three slots (header, player 1, player 2 / join panel) each remember their state and the
+frames since they entered it; the screen's opening and player 2's joining keep their own tracks while the straight
+ship stays selected.
+
+**Confirm** (`bl_select_capture_confirm.lua`): BL lights the ship render up (tint 252, down 8 every 2 frames to 132)
+and draws a white additive copy over it (alpha 0xE8, down 0x10 every 2 frames, frames 3–32); a few elements flicker
+slightly. From frame 34 the panels dissolve — BL copies strips of the frame buffer — and the stage shows from frame
+~64. Noir reproduces the flash per side (from that side's confirm) and replaces the dissolve with a fade of every
+element's blend alpha (0xF7 down 0x10 every 2 frames; unblended elements go at half way), closing the screen at
+frame 64 after the last confirm (or the timer). The PS2's own pilot panel and takeoff follow.
+
+Not reproduced: the frame-buffer dissolve itself, the slight flicker during the flash, transitions that depend on the
+direction a type was reached from (each state has the transition of one entry: type B from A, C from B, D from C).
+
 ## Running on PS2 (stage one, 2026-11-22)
 
 `ps2/hooks/bl_select.c` with the art pages from `--bl-rom` (`bl_tex.c`: six PSMCT16 pages, each a texture object
@@ -121,7 +150,7 @@ the loop reads its registers. The HUD still draws (score line, RANK bar).
 `scripts/make_patch.py` allows 16 KiB per run (64 KiB total, unchanged). `ibara_kuro.patch` 9.8 KB; patch +
 `--bl-rom` gives the same disc as `build_black_label_iso.py --bl-rom` (byte-identical).
 
-Stage two (not done): per-element animation, the ship fly-in and confirm sequence, the girder background. Player 2: done
+Stage two: done (K51 stage behind the screen, K52 animation and confirm, sections above). Player 2: done
 (K46, below).
 
 ## Before takeoff (2026-11-22)
