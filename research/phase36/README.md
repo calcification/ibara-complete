@@ -130,3 +130,6 @@ The center pod used 256, 0, 128 and 384 for up, down, left and right.
 This identifies the center pod's directional behavior for a follow-up
 implementation. The K60 and diagnostic branch default builds produced
 identical cave words and hook sites for both bl_mode and kuro.
+A fresh diagnostic disc built from the published source booted to
+Stage 2 through Practice and reproduced all nine PS2 baseline result
+files byte for byte against the instrumented checkpoint run.
