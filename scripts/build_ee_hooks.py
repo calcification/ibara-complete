@@ -41,7 +41,12 @@ CAVE_END = 0x00100000
 # 2026-11-20), so they live in high RAM that stayed zero in ~160 savestates (title, menus, demos,
 # Arcade stages 1-2): 0x01EFE100-0x01FFDA00, below the stack. Runtime-observed only.
 BAKE_BASE = 0x01F00000
-BAKE_END = 0x01F10000
+# 124 KB: up to 4 KB below the select-screen art tag (SELECT_ART_ADDR 0x01F1FFF0). Was 0x01F10000 (64 KB, 92 % used
+# by K60); 0x01F10000-0x01F1FFEF stayed zero in release-build savestates (menus, select screen, stage 6) as the rest of
+# the range above. The disc has room: the executable sits in the 2.6 GB free extent (research/phase04).
+BAKE_END = 0x01F1F000
+assert BAKE_END <= 0x01F1FFF0 - 0x800, "baked block must stay below the select-art tag"
+BAKE_WARN = 0.90  # build_hook prints a warning past this share of the baked block
 
 # Facts a hook may depend on. Only "verified" facts allow a PNACH group to be emitted.
 FACTS = {
@@ -665,6 +670,9 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         built_tmp = {"words": words, "syms": syms}
         set_sym_word(built_tmp, "kuro_tab", table)
         set_sym_word(built_tmp, "kuro_tab_n", len(rows))
+    if base == BAKE_BASE and end - base > BAKE_WARN * (end_limit - base):
+        print(f"WARNING {key}: baked image uses {end - base} of {end_limit - base} bytes "
+              f"({100 * (end - base) / (end_limit - base):.0f} %)", file=sys.stderr)
     listing = run([CROSS + "objdump", "-d", "-m", "mips:5900", str(elf)])
     return {"key": key, "words": words, "sites": sites, "syms": syms, "size": end - base, "base": base, "listing": listing}
 
