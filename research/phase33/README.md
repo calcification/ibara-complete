@@ -44,6 +44,11 @@ bimodal shape (shot within ~20–30 frames, or ~80–100 frames on screen).
 * New, larger gap: the **first core** (same 359 HP) lasts ~5,660 frames in BL against ~3,620 on the PS2 (≈ 55 %
   longer in BL). Not investigated yet.
 
+## Shipped (K58)
+
+The combination ships in Noir as runtime words (`BL_ROSE_PATCHES` in `scripts/build_ee_hooks.py`, code in
+`ps2/hooks/bl_enemy.c`). The phase-30 probe still builds: in its measurement builds it takes the same six sites.
+
 ## Tools
 
 * `tools/stage_compare/bl_stage_log.lua`: `ROSES=1` (roses.txt, one line per rose), `CORESTATE=1` (phase machine

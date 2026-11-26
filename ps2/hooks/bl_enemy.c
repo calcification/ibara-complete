@@ -120,3 +120,48 @@ void bl_scripts_build(void)
 		bl_s5_script[k++] = src[i];
 	bl_s5_ready = 1;
 }
+
+/* Stage-6 rose form as Black Label (research/phase30, phase33). Two differences in the rose core's three rose loops
+ * (PS2 0x00178B10 / 0x00178CC4 / 0x00178E10; BL 0C0A2900):
+ *  1. BL fires one type-14 bullet with each rose: after the rose constructor (BL 0C0A8090) it calls its emitter
+ *     (0C0BA970, pattern 0C189C9C) at the rose's position and angle, one shot at 2.75 px/frame. bl_rose_create
+ *     replaces the three `jal 0x00163140` and does the same with the PS2 emitter 0x00123950, when the stage's bullet
+ *     palette maps to type 14 (the PS2 palette for stage 6 does; otherwise only the rose is made).
+ *  2. BL sizes each rose burst from rank minus the stage / difficulty bias (as bl_fire_timer: stage * 0x100000 at
+ *     difficulty 3); retail shifts the raw rank. bl_rose_burst_1..3 replace the `li` before each size shift
+ *     (0x00178DE4 / 0x00178EB0 / 0x00179054): rank in the named register minus the bias, floored at 0.
+ * Repeat trials (research/phase33): rose form 3,663 frames on average with both (5 runs), BL 4,053 (17 runs),
+ * retail PS2 3,103. Behaviour written from those measurements and the traces, not translated code. */
+typedef u32 (*rose_create_fn)(u32, u32, u32, u32, u32, u32, u32);
+typedef u32 (*bullet_emit_fn)(u32, u32, u32, u32, u32, const s16 *);
+static const s16 bl_rose_shot[] = {1, 0};
+
+u32 bl_rose_create(u32 part, u32 kind, u32 x, u32 y, u32 visual, u32 angle, u32 tilt)
+{
+	const u32 made = ((rose_create_fn)0x00163140u)(part, kind, x, y, visual, angle, tilt);
+	const u32 index = EE_RAM(u8, 0x00338E94u); /* stage bullet palette index */
+	if (index <= 4u && EE_RAM(u32, 0x00201474u + index * 4u) == 14u)
+		((bullet_emit_fn)0x00123950u)(5, x, y, angle, 0x2C000u, bl_rose_shot);
+	return made;
+}
+
+__asm__(
+	".set push\n.set noreorder\n.set noat\n"
+	".macro rose_burst name, rank, constant, resume\n"
+	".globl \\name\n"
+	"\\name:\n"
+	"	li \\constant,16\n"         /* the replaced retail word */
+	"	lbu $1,-28244($28)\n"       /* stage byte */
+	"	sll $1,$1,20\n"
+	"	subu \\rank,\\rank,$1\n"
+	"	bgez \\rank,1f\n"
+	"	nop\n"
+	"	move \\rank,$0\n"
+	"1:	j \\resume\n"
+	"	nop\n"
+	".endm\n"
+	"rose_burst bl_rose_burst_1,$3,$4,0x00178DEC\n"
+	"rose_burst bl_rose_burst_2,$2,$3,0x00178EB8\n"
+	"rose_burst bl_rose_burst_3,$2,$3,0x0017905C\n"
+	".purgem rose_burst\n"
+	".set pop\n");

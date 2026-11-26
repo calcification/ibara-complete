@@ -188,6 +188,16 @@ BL_SYM_PATCHES = [(0x001342D8, 0x9064026A, "jal", "pod_mode_entry"),
                   (0x0012F6F4, 0x3C020021, "hi", "bl_rose_rank"), (0x0012F6F8, 0x2442BFD0, "lo", "bl_rose_rank"),
                   # BL stage-5 script with its six extra type-52 waves (ps2/hooks/bl_enemy.c; research/phase25)
                   (0x001F1850, 0x001ECF80, "word", "bl_s5_script")]
+# BL stage-6 rose form (ps2/hooks/bl_enemy.c bl_rose_create / bl_rose_burst_*; research/phase30, phase33): one type-14
+# bullet with every rose, and the rose burst size from the stage-adjusted rank.
+BL_ROSE_PATCHES = [(0x00178F44, 0x0C058C50, "jal", "bl_rose_create"),
+                   (0x001790DC, 0x0C058C50, "jal", "bl_rose_create"),
+                   (0x00179190, 0x0C058C50, "jal", "bl_rose_create"),
+                   (0x00178DE4, 0x24040010, "j", "bl_rose_burst_1"),
+                   (0x00178EB0, 0x24030010, "j", "bl_rose_burst_2"),
+                   (0x00179054, 0x24030010, "j", "bl_rose_burst_3")]
+BL_ROSE_SITES = {a for a, *_ in BL_ROSE_PATCHES}
+BL_SYM_PATCHES += BL_ROSE_PATCHES
 
 HOOKS = {
     "h00_smoke": {
@@ -604,6 +614,8 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         assert syms[entry] % 4 == 0 and syms[entry] >> 28 == site >> 28
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
     for site, original_word, kind, target, *add in h.get("sym_patches", []):
+        if rose_probe and site in BL_ROSE_SITES:
+            continue  # the phase-30 probe below takes these sites in its measurement builds
         sites.append((site, original_word, sym_patch_word(syms, site, original_word, kind, target, *add)))
     if key == "bl_mode" and any(define.split("=", 1)[0] == "BL_ROSE_TIMER_TEST" for define in EXTRA_DEFINES):
         # These three calls are local to the rose-spawning loops. Keep the shared retail timer in place.
