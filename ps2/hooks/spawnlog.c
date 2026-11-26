@@ -334,6 +334,60 @@ static void bomblog_frame(void)
 	(*n)++;
 }
 #endif
+#ifdef BL_ROSE_LIFE
+/* TEST BUILDS ONLY (research/phase33): one 24-byte record per stage-6 rose (type 79) when it goes away, as
+ * bl_stage_log.lua ROSES=1: u32 first / last stage tick, u8 slot, subtype, HP at spawn, last HP, minimum HP, pad,
+ * s16 spawn x, y, last x, y. Header at 0x01FD0000: magic "RLF1", count, dropped; records from 0x01FD0010 (5,000). */
+#define RL_BASE 0x01FD0000u
+#define RL_MAX 5000u
+struct rl_rec { u32 f0, f1; u8 slot, sub, hp0, hp, min, pad; s16 x0, y0, x, y; };
+static struct rl_rec rl_cur[EN_COUNT];
+static u8 rl_on[EN_COUNT];
+
+static void rose_life_frame(u32 tick)
+{
+	volatile u32 *h = (volatile u32 *)RL_BASE;
+	struct rl_rec *log = (struct rl_rec *)(RL_BASE + 16u);
+	u32 i;
+	if (h[0] != 0x31464C52u) {
+		h[0] = 0x31464C52u;
+		h[1] = h[2] = 0;
+		for (i = 0; i < EN_COUNT; i++)
+			rl_on[i] = 0;
+	}
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		const u32 on = (EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == 79u;
+		struct rl_rec *r = &rl_cur[i];
+		if (rl_on[i] && (!on || (u8)EE_RAM(u32, a + 8) != r->sub)) {
+			if (h[1] < RL_MAX)
+				log[h[1]++] = *r;
+			else
+				h[2]++;
+			rl_on[i] = 0;
+		}
+		if (on) {
+			const u8 hp = (u8)EE_RAM(u16, a + 0x3C);
+			const s16 x = (s16)(EE_RAM(u32, a + 0x24) >> 16), y = (s16)(EE_RAM(u32, a + 0x28) >> 16);
+			if (!rl_on[i]) {
+				rl_on[i] = 1;
+				r->f0 = tick;
+				r->slot = (u8)i;
+				r->sub = (u8)EE_RAM(u32, a + 8);
+				r->hp0 = r->min = hp;
+				r->x0 = x;
+				r->y0 = y;
+			}
+			r->f1 = tick;
+			r->hp = hp;
+			if (hp < r->min)
+				r->min = hp;
+			r->x = x;
+			r->y = y;
+		}
+	}
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -349,6 +403,10 @@ void spawn_log_frame(void)
 	unsigned i;
 
 	sl_frame++;
+#ifdef BL_ROSE_LIFE
+	if (stage == 7u)
+		rose_life_frame(stage_tick);
+#endif
 #ifdef BL_RATE_TEST
 	rate_test_frame();
 #endif

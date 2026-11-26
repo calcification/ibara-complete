@@ -51,6 +51,9 @@ void bl_rose_probe_players(void)
 	const u8 shooting = EE_RAM(u8, STAGE_COUNT) == ROSE_STAGE && EE_RAM(u32, p1) != 0;
 	if (test->magic != ROSE_TEST_MAGIC) {
 		test->mode = test->rose_attempts = test->barrage_calls = test->palette_misses = 0;
+#ifdef BL_ROSE_MODE /* trial mode built in, for runs without the PINE runner */
+		test->mode = BL_ROSE_MODE;
+#endif
 		test->magic = ROSE_TEST_MAGIC;
 	}
 	if (shooting) {

@@ -14,6 +14,8 @@
 --   CONTACT_TAP Lua damage trace module (requires -nodrc)
 --   SAVE_STATE absolute MAME checkpoint to save at stage frame 10500, then exit
 --   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
+--   ROSES=1   roses.txt: one line per type-79 rose when it goes away: spawn frame, last frame, slot, subtype, HP at
+--             spawn, last HP, spawn x y, last x y, minimum HP seen (research/phase33)
 --   SHOTOFF   release the shot button from this frame of STAGE on (timer-driven or damage-driven phase?)
 -- The player is kept invincible (BL +0x288). Output formats (frames count from the first spawn of STAGE):
 --   spawns.txt  frame stage slot type subtype hp score x y segment
@@ -35,6 +37,7 @@ local tout = io.open(dir .. "/tables.txt", "w"); local tseen = {}
 local frame, first, shooting, left = 0, nil, false, false
 local alive, typ, balive, bpend, hp0 = {}, {}, {}, {}, {}
 local NOSHOT = os.getenv("NOSHOT")
+local rout = os.getenv("ROSES") and io.open(dir .. "/roses.txt", "w"); local rose = {}
 local contact_source = os.getenv("CONTACT_TAP")
 local close_contacts
 local resume_state = os.getenv("RESUME_STATE")
@@ -77,7 +80,7 @@ local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34
     salive[k] = on
   end
 end
-local function finish() if close_contacts then close_contacts() end; if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
+local function finish() if rout then rout:close() end; if close_contacts then close_contacts() end; if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
 emu.register_frame_done(function()
   frame = frame + 1
   if resume_state then
@@ -144,6 +147,18 @@ emu.register_frame_done(function()
     if on and (not alive[i] or typ[i] ~= t) then hp0[i] = sp:read_u16(a + 0x3C) end
     if on and hp0[i] == 0 then hp0[i] = sp:read_u16(a + 0x3C) end  -- parts that get their HP after the spawn frame
     if NOSHOT and on and t == BOSST and hp0[i] and hp0[i] > 0 then sp:write_u16(a + 0x3C, hp0[i]) end
+    if rout and first then
+      local r = rose[i]
+      if r and (not on or t ~= 79 or sp:read_u32(a + 8) ~= r.sub) then
+        rout:write(string.format("%d %d %d %d %d %d %d %d %d %d %d\n", r.f0, r.f1, i, r.sub, r.hp0, r.hp, r.x0, r.y0, r.x, r.y, r.min))
+        rose[i] = nil; r = nil
+      end
+      if on and t == 79 then
+        local hp = sp:read_u16(a + 0x3C); local x = sp:read_u32(a + 0x24) >> 16; local y = sp:read_u32(a + 0x28) >> 16
+        if not r then r = {f0 = frame - first, sub = sp:read_u32(a + 8), hp0 = hp, x0 = x, y0 = y, min = hp}; rose[i] = r end
+        r.f1 = frame - first; r.hp = hp; r.x = x; r.y = y; if hp < r.min then r.min = hp end
+      end
+    end
     alive[i] = on; typ[i] = t
     if on and t == BOSST and first and (frame - first) % (os.getenv("EVERY") and 1 or 4) == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
       cout:write(string.format("%d %d %d %08X %d %d %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8),
