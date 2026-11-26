@@ -1,7 +1,7 @@
 -- research/phase33: rose constructor calls (BL 0C0A8090), for tools/stage_compare/bl_stage_log.lua CONTACT_TAP
 -- (run with -nodrc). On the primary part's type write (PC 0C0A8108) logs: stage frame, caller return address
 -- (the constructor's saved PR at R14+32), kind (first stack word, R14+0; the linked part gets subtype kind&3 + 1),
-Output: rosekind.txt "frame caller kind slot".
+-- Output: rosekind.txt "frame caller kind slot".
 return function(cpu, directory, stage_frame)
   local space = cpu.spaces["program"]
   local first, stride, count = 0x0C286578, 0xB4, 192

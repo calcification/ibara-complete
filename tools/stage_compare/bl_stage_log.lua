@@ -14,6 +14,7 @@
 --   CONTACT_TAP Lua damage trace module (requires -nodrc)
 --   SAVE_STATE absolute MAME checkpoint to save at stage frame 10500, then exit
 --   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
+--   CORESTATE=1 core.txt also gets "S frame slot +0x50 +0x9F +0xA0 +0x98" lines (rose core phase machine)
 --   ROSES=1   roses.txt: one line per type-79 rose when it goes away: spawn frame, last frame, slot, subtype, HP at
 --             spawn, last HP, spawn x y, last x y, minimum HP seen (research/phase33)
 --   SHOTOFF   release the shot button from this frame of STAGE on (timer-driven or damage-driven phase?)
@@ -163,6 +164,9 @@ emu.register_frame_done(function()
     if on and t == BOSST and first and (frame - first) % (os.getenv("EVERY") and 1 or 4) == 0 and (sp:read_u32(a + 8) < 3 or sp:read_u32(a + 0x40) >= 50000) then
       cout:write(string.format("%d %d %d %08X %d %d %d %d\n", frame - first, i, sp:read_u16(a + 0x3C), sp:read_u32(a + 8),
         sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, sp:read_u8(a + 0x9A), sp:read_u8(a + (os.getenv("HIT") and 0x84 or 0xA6))))
+      if os.getenv("CORESTATE") then  -- phase machine (research/phase33): timer +0x50, phase +0x9F, sub-state +0xA0, kind +0x98
+        cout:write(string.format("S %d %d %d %d %d %d\n", frame - first, i, sp:read_u32(a + 0x50), sp:read_u8(a + 0x9F), sp:read_u8(a + 0xA0), sp:read_u8(a + 0x98)))
+      end
     end
   end
   if not first then return end

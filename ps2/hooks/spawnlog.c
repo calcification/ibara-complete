@@ -343,6 +343,7 @@ static void bomblog_frame(void)
 struct rl_rec { u32 f0, f1; u8 slot, sub, hp0, hp, min, pad; s16 x0, y0, x, y; };
 static struct rl_rec rl_cur[EN_COUNT];
 static u8 rl_on[EN_COUNT];
+static u32 rl_state[EN_COUNT];
 
 static void rose_life_frame(u32 tick)
 {
@@ -352,8 +353,26 @@ static void rose_life_frame(u32 tick)
 	if (h[0] != 0x31464C52u) {
 		h[0] = 0x31464C52u;
 		h[1] = h[2] = 0;
+		EE_RAM(u32, 0x01FEE000u) = 0;
 		for (i = 0; i < EN_COUNT; i++)
-			rl_on[i] = 0;
+			rl_on[i] = 0, rl_state[i] = 0xFFFFFFFFu;
+	}
+	/* type-74 phase machine changes (timer +0x50, phase +0x9F, sub-state +0xA0, kind +0x98): 16-byte records
+	 * (tick, slot, +0x50, 9F | A0 << 8 | 98 << 16) at 0x01FEE010, count at 0x01FEE000, 500 records */
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		volatile u32 *ch = (volatile u32 *)0x01FEE000u;
+		if ((EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == 74u) {
+			const u32 st = EE_RAM(u8, a + 0x9F) | EE_RAM(u8, a + 0xA0) << 8 | EE_RAM(u8, a + 0x98) << 16;
+			if (st != rl_state[i] && ch[0] < 500u) {
+				volatile u32 *r = (volatile u32 *)(0x01FEE010u + 16u * ch[0]++);
+				r[0] = tick;
+				r[1] = i;
+				r[2] = EE_RAM(u32, a + 0x50);
+				r[3] = st;
+			}
+			rl_state[i] = st;
+		}
 	}
 	for (i = 0; i < EN_COUNT; i++) {
 		const u32 a = EN_BASE + i * EN_STRIDE;
