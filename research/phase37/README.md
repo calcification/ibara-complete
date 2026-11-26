@@ -1,4 +1,4 @@
-# Phase 34 — Stage-6 first core (Claude, 26 November 2026)
+# Phase 37 — Stage-6 first core (Claude, 26 November 2026)
 
 Same 359 HP in both games, but the first core lasts ~5,660 frames in BL (17 seeded runs, 4,964–6,552) against
 ~3,620 ticks on the PS2 (6 runs, 3,004–3,936). Rank 0x800000, shot level 2, stationary player, as phase 33.

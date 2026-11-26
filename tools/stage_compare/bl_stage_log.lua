@@ -16,7 +16,7 @@
 --   SEED      with RESUME_STATE: random seed written after the restore (repeat trials, research/phase33)
 --   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
 --   CORESTATE=1 core.txt also gets "S frame slot +0x50 +0x9F +0xA0 +0x98" lines (rose core phase machine)
---   DUMPAT=n  dump.txt: every alive BOSSTYPE record at logged-stage frame n (research/phase34)
+--   DUMPAT=n  dump.txt: every alive BOSSTYPE record at logged-stage frame n (research/phase37)
 --   PARTS=1   parts.txt: every alive enemy part every 8 frames (frame slot type subtype hp x y flags)
 --   ROSES=1   roses.txt: one line per type-79 rose when it goes away: spawn frame, last frame, slot, subtype, HP at
 --             spawn, last HP, spawn x y, last x y, minimum HP seen (research/phase33)
@@ -198,7 +198,7 @@ emu.register_frame_done(function()
     end
     dout:close()
   end
-  -- PARTS=1: parts.txt every 8 frames, every alive enemy part: frame slot type subtype hp x y flags (research/phase34)
+  -- PARTS=1: parts.txt every 8 frames, every alive enemy part: frame slot type subtype hp x y flags (research/phase37)
   if os.getenv("PARTS") and (frame - first) % 8 == 0 then
     if not pout then pout = io.open(dir .. "/parts.txt", "w") end
     for i = 0, 191 do

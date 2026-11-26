@@ -408,7 +408,7 @@ static void rose_life_frame(u32 tick)
 }
 #endif
 #ifdef BL_PART_STATS
-/* TEST BUILDS ONLY (research/phase34): stage 6, ticks 12,000-16,000 (the first core), type-74 parts per subtype
+/* TEST BUILDS ONLY (research/phase37): stage 6, ticks 12,000-16,000 (the first core), type-74 parts per subtype
  * (0..255): u16 spawns, u16 HP lost, u16 HP at first sight, s16 x, s16 y, u16 pad, u32 first tick: 16-byte rows at
  * 0x01FD0010, magic "PST1" at 0x01FD0000. Not with BL_ROSE_LIFE (same buffer). */
 struct ps_row { u16 spawns, lost, hp0; s16 x, y; u16 pad; u32 tick; };
@@ -453,7 +453,7 @@ static void part_stats_frame(u32 tick)
 }
 #endif
 #ifdef BL_PART_TRACE
-/* TEST BUILDS ONLY (research/phase34): stage 6 ticks 12,000-13,600, every 8 ticks, type-74 parts:
+/* TEST BUILDS ONLY (research/phase37): stage 6 ticks 12,000-13,600, every 8 ticks, type-74 parts:
  * 8-byte rows (u16 tick - 12000, u8 slot, u8 subtype, s16 x, s16 y) at 0x01FD0010, count at 0x01FD0004
  * (magic "PTR1" at 0x01FD0000), up to 15,000 rows. Not with BL_ROSE_LIFE / BL_PART_STATS. */
 static void part_trace_frame(u32 tick)

@@ -56,7 +56,7 @@ void bl_rose_probe_players(void)
 #endif
 		test->magic = ROSE_TEST_MAGIC;
 	}
-#ifdef BL_FORCE_POD_WEAPON /* research/phase34: the BL reference run's pods (weapon 6, three pods of shot kind 12), once */
+#ifdef BL_FORCE_POD_WEAPON /* research/phase37: the BL reference run's pods (weapon 6, three pods of shot kind 12), once */
 	{
 		static u8 armed;
 		const u32 rec = PS2_PLAYER_BASE;

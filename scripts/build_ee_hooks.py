@@ -280,7 +280,7 @@ HOOKS = {
         # 0x0012AE70 `beqz a0,0x0012AF20` (type 0: no item) -> `b 0x0012AF38` (every other type: Arcade's rose call).
         (0x0012AE50, 0x8F839254, 0x24030001),
         (0x0012AE70, 0x1080002B, 0x10000031),
-        # BL piercing shots stop at the first part they hit (research/phase34): BL's shot-vs-enemy loop (0C06E3FA)
+        # BL piercing shots stop at the first part they hit (research/phase37): BL's shot-vs-enemy loop (0C06E3FA)
         # takes the next shot after any damage call. The PS2's main-shot loop does too, except for shots with flag
         # 0x00800000, which go on to the next enemy after scoring (0x0012B5B8), so they damaged a stage-6 shield and the
         # core ring behind it in the same frame. 0x0012B5B4 `nop` -> `b 0x0012B370` (next shot; the delay slot only
