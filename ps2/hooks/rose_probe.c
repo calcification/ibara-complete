@@ -116,7 +116,7 @@ void bl_rose_probe_players(void)
 	}
 #endif
 #ifdef BL_HOMING_DIRTEST
-	/* research/phase38: from stage-6 tick 10,000, no enemies; the stick cycles none, up, down, left, right, up-left,
+	/* research/phase40: from stage-6 tick 10,000, no enemies; the stick cycles none, up, down, left, right, up-left,
 	 * up-right, down-left, down-right (60 ticks each); at tick 40 of each, the three pods' heading words (+38) go to
 	 * u16 [9][3] at 0x01FD0010 (magic "HOM1" at 0x01FD0000). */
 	{

@@ -166,7 +166,7 @@ __asm__(
 	".purgem rose_burst\n"
 	".set pop\n");
 
-/* BL homing pods with no target (research/phase36, phase38). When the target query finds nothing, BL's homing pods
+/* BL homing pods with no target (research/phase36, phase40). When the target query finds nothing, BL's homing pods
  * take formation headings: the outer pods 288 and 224 (of 512) always, the centre pod opposite the stick (none 0, up
  * 256, down 0, left 128, right 384, up-left 192, up-right 320, down-left 64, down-right 448; MAME, enemy pool cleared,
  * heading word +38 of each pod record). The PS2's branch (0x00134364) gives all three heading 0. bl_homing_idle

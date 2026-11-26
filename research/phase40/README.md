@@ -1,4 +1,4 @@
-# Phase 38 — Homing pods with no target (Claude, 26 November 2026; K61)
+# Phase 40 — Homing pods with no target (Claude, 26 November 2026; K61)
 
 Follows Codex's phase 36: with no target, BL's homing pods use formation headings; the PS2 points all three at 0.
 

@@ -202,7 +202,7 @@ BL_ROSE_PATCHES = [(0x00178F44, 0x0C058C50, "jal", "bl_rose_create"),
                    (0x00178EB0, 0x24030010, "j", "bl_rose_burst_2"),
                    (0x00179054, 0x24030010, "j", "bl_rose_burst_3")]
 BL_ROSE_SITES = {a for a, *_ in BL_ROSE_PATCHES}
-# BL homing pods' formation headings when no target is found (ps2/hooks/bl_enemy.c bl_homing_idle; research/phase36, 38)
+# BL homing pods' formation headings when no target is found (ps2/hooks/bl_enemy.c bl_homing_idle; research/phase36, phase40)
 BL_ROSE_PATCHES.append((0x00134368, 0x10000012, "j", "bl_homing_idle"))
 BL_SYM_PATCHES += BL_ROSE_PATCHES
 

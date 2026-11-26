@@ -1,4 +1,4 @@
--- research/phase38: BL homing pods with no target. mame ibarablk -autoboot_script bl_homing_headings.lua (env ST = a stage savestate, OUT, PODBASE=0x0C2974C8): switches to homing (weapon 3), clears the enemy pool, holds each stick state 60 frames, logs the three pods' heading words (+38).
+-- research/phase40: BL homing pods with no target. mame ibarablk -autoboot_script bl_homing_headings.lua (env ST = a stage savestate, OUT, PODBASE=0x0C2974C8): switches to homing (weapon 3), clears the enemy pool, holds each stick state 60 frames, logs the three pods' heading words (+38).
 local machine = manager.machine
 local space = machine.devices[":maincpu"].spaces.program
 local ports = machine.ioport.ports
