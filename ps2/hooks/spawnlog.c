@@ -452,6 +452,32 @@ static void part_stats_frame(u32 tick)
 	}
 }
 #endif
+#ifdef BL_PART_TRACE
+/* TEST BUILDS ONLY (research/phase34): stage 6 ticks 12,000-13,600, every 8 ticks, type-74 parts:
+ * 8-byte rows (u16 tick - 12000, u8 slot, u8 subtype, s16 x, s16 y) at 0x01FD0010, count at 0x01FD0004
+ * (magic "PTR1" at 0x01FD0000), up to 15,000 rows. Not with BL_ROSE_LIFE / BL_PART_STATS. */
+static void part_trace_frame(u32 tick)
+{
+	volatile u32 *h = (volatile u32 *)0x01FD0000u;
+	u32 i;
+	if (h[0] != 0x31525450u) {
+		h[0] = 0x31525450u;
+		h[1] = 0;
+	}
+	if (tick < 12000u || tick > 13600u || (tick & 7u))
+		return;
+	for (i = 0; i < EN_COUNT && h[1] < 15000u; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		if ((EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == 74u) {
+			volatile u16 *row = (volatile u16 *)(0x01FD0010u + 8u * h[1]++);
+			row[0] = (u16)(tick - 12000u);
+			row[1] = (u16)(i | (EE_RAM(u32, a + 8) & 0xFFu) << 8);
+			row[2] = (u16)(EE_RAM(u32, a + 0x24) >> 16);
+			row[3] = (u16)(EE_RAM(u32, a + 0x28) >> 16);
+		}
+	}
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -474,6 +500,10 @@ void spawn_log_frame(void)
 #ifdef BL_PART_STATS
 	if (stage == 7u)
 		part_stats_frame(stage_tick);
+#endif
+#ifdef BL_PART_TRACE
+	if (stage == 7u)
+		part_trace_frame(stage_tick);
 #endif
 #ifdef BL_RATE_TEST
 	rate_test_frame();

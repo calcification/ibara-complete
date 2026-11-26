@@ -46,6 +46,10 @@ rose_contact_begin:
 	addiu $9,$0,74
 	bne $8,$9,1f
 	addiu $9,$0,79
+#ifdef BL_CONTACT_ALL74 /* research/phase34: every type-74 part, not only the cores */
+	b 2f
+	nop
+#endif
 	lw $8,8($5)
 	beq $8,$0,2f
 	addiu $9,$0,2
