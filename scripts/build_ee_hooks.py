@@ -202,6 +202,8 @@ BL_ROSE_PATCHES = [(0x00178F44, 0x0C058C50, "jal", "bl_rose_create"),
                    (0x00178EB0, 0x24030010, "j", "bl_rose_burst_2"),
                    (0x00179054, 0x24030010, "j", "bl_rose_burst_3")]
 BL_ROSE_SITES = {a for a, *_ in BL_ROSE_PATCHES}
+# BL homing pods' formation headings when no target is found (ps2/hooks/bl_enemy.c bl_homing_idle; research/phase36, 38)
+BL_ROSE_PATCHES.append((0x00134368, 0x10000012, "j", "bl_homing_idle"))
 BL_SYM_PATCHES += BL_ROSE_PATCHES
 
 HOOKS = {
@@ -636,7 +638,9 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         sites.append((site, original_word, 0x08000000 | (syms[entry] >> 2) & 0x03FFFFFF))
     for site, original_word, kind, target, *add in h.get("sym_patches", []):
         if rose_probe and site in BL_ROSE_SITES:
-            continue  # the phase-30 probe below takes these sites in its measurement builds
+            continue
+        if site == 0x00134368 and "BL_POD_AUDIT_FALLBACK" in EXTRA_DEFINES:
+            continue  # the phase-36 probe's fallback takes this site in its builds  # the phase-30 probe below takes these sites in its measurement builds
         sites.append((site, original_word, sym_patch_word(syms, site, original_word, kind, target, *add)))
     if key == "bl_mode" and any(define.split("=", 1)[0] == "BL_ROSE_TIMER_TEST" for define in EXTRA_DEFINES):
         # These three calls are local to the rose-spawning loops. Keep the shared retail timer in place.

@@ -165,3 +165,36 @@ __asm__(
 	"rose_burst bl_rose_burst_3,$2,$3,0x0017905C\n"
 	".purgem rose_burst\n"
 	".set pop\n");
+
+/* BL homing pods with no target (research/phase36, phase38). When the target query finds nothing, BL's homing pods
+ * take formation headings: the outer pods 288 and 224 (of 512) always, the centre pod opposite the stick (none 0, up
+ * 256, down 0, left 128, right 384, up-left 192, up-right 320, down-left 64, down-right 448; MAME, enemy pool cleared,
+ * heading word +38 of each pod record). The PS2's branch (0x00134364) gives all three heading 0. bl_homing_idle
+ * replaces its `b 0x001343B4` at 0x00134368; the original delay slot still stores 0, then the heading is rewritten for
+ * the homing weapon (player byte +0x270 = 3) and the branch continues. s0 = pod record, s1 = pod index, s3 = player
+ * record (held stick bits +0x24C: up 1, down 2, left 4, right 8). Written from those measurements. */
+const s16 bl_homing_centre[16] = {0, 256, 0, 0, 128, 192, 64, 0, 384, 320, 448, 0, 0, 0, 0, 0};
+__asm__(
+	".set push\n.set noreorder\n.set noat\n"
+	".globl bl_homing_idle\n"
+	"bl_homing_idle:\n"
+	"	lbu $1,0x270($19)\n"         /* weapon */
+	"	li $3,3\n"
+	"	bne $1,$3,9f\n"
+	"	sltiu $1,$17,2\n"            /* outer pods 0 and 1 */
+	"	beq $1,$0,1f\n"
+	"	sll $1,$17,6\n"
+	"	li $3,288\n"
+	"	subu $3,$3,$1\n"             /* 288, 224 */
+	"	b 8f\n"
+	"	nop\n"
+	"1:	lhu $1,0x24C($19)\n"         /* centre pod: by stick */
+	"	andi $1,$1,15\n"
+	"	sll $1,$1,1\n"
+	"	lui $3,%hi(bl_homing_centre)\n"
+	"	addu $3,$3,$1\n"
+	"	lh $3,%lo(bl_homing_centre)($3)\n"
+	"8:	sh $3,38($16)\n"
+	"9:	j 0x001343B4\n"
+	"	nop\n"
+	".set pop\n");

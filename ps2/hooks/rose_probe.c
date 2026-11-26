@@ -28,6 +28,10 @@ typedef u32 (*rose_create_fn)(u32, u32, u32, u32, u32, u32, u32);
 typedef u32 (*bullet_emit_fn)(u32, u32, u32, u32, u32, const s16 *);
 static const s16 single_bullet[] = {1, 0};
 
+#ifdef BL_HOMING_DIRTEST
+static u16 hom_stick;
+#endif
+
 u32 bl_rose_probe_create(u32 part, u32 kind, u32 x, u32 y, u32 visual, u32 angle, u32 tilt)
 {
 	const u32 result = ((rose_create_fn)0x00163140u)(part, kind, x, y, visual, angle, tilt);
@@ -111,9 +115,36 @@ void bl_rose_probe_players(void)
 		}
 	}
 #endif
+#ifdef BL_HOMING_DIRTEST
+	/* research/phase38: from stage-6 tick 10,000, no enemies; the stick cycles none, up, down, left, right, up-left,
+	 * up-right, down-left, down-right (60 ticks each); at tick 40 of each, the three pods' heading words (+38) go to
+	 * u16 [9][3] at 0x01FD0010 (magic "HOM1" at 0x01FD0000). */
+	{
+		static const u16 stick[9] = {0, 1, 2, 4, 8, 5, 9, 6, 10};
+		const u32 tick = EE_RAM(u32, 0x00338EA0u);
+		if (EE_RAM(u8, STAGE_COUNT) == ROSE_STAGE && tick >= 10000u && tick < 10000u + 60u * 9u) {
+			const u32 k = (tick - 10000u) / 60u, ph = (tick - 10000u) % 60u;
+			u32 i;
+			for (i = 0; i < 192u; i++)
+				EE_RAM(u32, 0x0045A840u + 0xB4u * i) = 0;
+			if (shooting)
+				hom_stick = stick[k];
+			if (ph == 40u) {
+				EE_RAM(u32, 0x01FD0000u) = 0x314D4F48u;
+				for (i = 0; i < 3u; i++)
+					EE_RAM(u16, 0x01FD0010u + 6u * k + 2u * i) = EE_RAM(u16, 0x0044C8A0u + 0x30u * i + 38u);
+			}
+		} else
+			hom_stick = 0;
+	}
+#endif
 	if (shooting) {
 		/* Supply the processed inputs immediately before the native player update. */
-		EE_RAM(u16, p1 + PS2_PLAYER_HELD) = PS2_PAD_SHOT;
+		EE_RAM(u16, p1 + PS2_PLAYER_HELD) = PS2_PAD_SHOT
+#ifdef BL_HOMING_DIRTEST
+						   | hom_stick
+#endif
+		    ;
 		EE_RAM(u16, p1 + PS2_PLAYER_PRESSED) = was_shooting ? 0 : PS2_PAD_SHOT;
 		EE_RAM(u16, p1 + 0x250u) = was_shooting ? PS2_PAD_SHOT : 0;
 		EE_RAM(u16, p1 + 0x252u) = 0;
