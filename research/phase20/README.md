@@ -247,3 +247,8 @@ after the takeoff. Takeoff savestate: starter +0x0C = 2, y 544, speed words 0x24
 0x2C000; same x (66). Copying the starter's takeoff fields put the joined ship behind the other one, not beside it.
 Matching BL needs the PS2's own two-player takeoff positions (the K53-era runs, when both records existed before the
 takeoff began, did take off together).
+
+**Fixed (K59).** In the retail two-player takeoff both records carry their own side's position (+0x14: 480 / 544,
+the screen's horizontal axis in tate) and speed words; the retail join already sets those. The joined side only
+lacked the takeoff step (+0x0C) and the invincibility counter (+0x278). Copying just those two from the other
+player puts both ships on the pad together (the earlier attempt also copied the position, which stacked the ships).

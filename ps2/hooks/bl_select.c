@@ -116,7 +116,11 @@ static void sel_begin(void)
 {
 	/* BL's select screen sits over the running stage 1 opening (research/phase20 "Stage two"): wait until the PS2's
 	 * NOW LOADING fade ($gp-28936) is over and the launch pad is drawn, then hold the game there */
-	if (sel_active || !(sel_pending[0] || sel_pending[1]) || !pausable() || EE_RAM(u32, 0x00338BE8u))
+	if (sel_active || !(sel_pending[0] || sel_pending[1]) || !pausable()
+#ifndef SEL_EARLY_TEST
+	    || EE_RAM(u32, 0x00338BE8u)
+#endif
+	    )
 		return;
 	if (!art_present()) {
 		sel_pending[0] = sel_pending[1] = 0;
@@ -265,6 +269,15 @@ static void finish(void)
 		} else {
 			EE_RAM(u32, REC(s) + 4u) = v ^ (4u * s);
 			PLAYER_JOIN(s);
+			/* BL's two-player takeoff: both ships leave the launch pad together. The retail join starts the player
+			 * in its entry (state +0x0C = 1, invincibility counter +0x27A = 0xA7: it flies in after the takeoff).
+			 * With the other player already in the takeoff, take its takeoff step and counter; the side's own
+			 * position and speed words stay (they place the ship on its side of the pad). research/phase20
+			 * "Two-player takeoff". */
+			if (EE_RAM(u32, REC(s ^ 1u))) {
+				EE_RAM(u32, REC(s) + 0x0Cu) = EE_RAM(u32, REC(s ^ 1u) + 0x0Cu);
+				EE_RAM(u32, REC(s) + 0x278u) = EE_RAM(u32, REC(s ^ 1u) + 0x278u);
+			}
 		}
 	}
 	sel_active = 0;
