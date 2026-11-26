@@ -122,3 +122,11 @@ To repeat the A/B run, add --define BL_POD_AUDIT_FALLBACK to the
 diagnostic build, then use --weapon 3 for the PS2 runner and report.
 Repeat with and without BL_POD_AUDIT_EMPTY. The opt-in code is limited
 to stationary input pending direction and target-transition testing.
+
+With the arcade enemy pool cleared, a second trace read each pod's
+desired heading (offset 38 in its 48-byte record) five updates into
+a cardinal input. The outside pods held 288 and 224 in all four cases.
+The center pod used 256, 0, 128 and 384 for up, down, left and right.
+This identifies the center pod's directional behavior for a follow-up
+implementation. The K60 and diagnostic branch default builds produced
+identical cave words and hook sites for both bl_mode and kuro.
