@@ -237,3 +237,13 @@ ship screen and B–D's first samples still show the type above (cursor and info
 content on a type change (the same captures' wrap D → A and Up A → D: one sample of the old content, then the new).
 `draw_slot` now starts a type state after its transition when it comes from another type, or from the ship screen
 into B–D. PCSX2: bursts of screenshots on C → B, B → A, A → D, D → A each show a single clean swap.
+
+## Two-player takeoff (26 November 2026)
+
+BL (MAME, both players confirm on the select screen): both ships stand on the launch pad and take off together.
+Noir since K51: the select screen opens after NOW LOADING, when the takeoff already runs for the starting player;
+the side that joined on the screen gets the retail join (player state +0x0C = 1, entering from below) and appears
+after the takeoff. Takeoff savestate: starter +0x0C = 2, y 544, speed words 0x24000; joined side +0x0C = 1, y 480,
+0x2C000; same x (66). Copying the starter's takeoff fields put the joined ship behind the other one, not beside it.
+Matching BL needs the PS2's own two-player takeoff positions (the K53-era runs, when both records existed before the
+takeoff began, did take off together).
