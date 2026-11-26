@@ -170,14 +170,19 @@ __asm__(
  * take formation headings: the outer pods 288 and 224 (of 512) always, the centre pod opposite the stick (none 0, up
  * 256, down 0, left 128, right 384, up-left 192, up-right 320, down-left 64, down-right 448; MAME, enemy pool cleared,
  * heading word +38 of each pod record). The PS2's branch (0x00134364) gives all three heading 0. bl_homing_idle
- * replaces its `b 0x001343B4` at 0x00134368; the original delay slot still stores 0, then the heading is rewritten for
- * the homing weapon (player byte +0x270 = 3) and the branch continues. s0 = pod record, s1 = pod index, s3 = player
+ * replaces the shared branch at 0x00134368. The native delay slot stores the heading calculated by either path.
+ * Valid targets also come here via 0x00134474, so use the same signed target-index test as the native lookup
+ * before writing the fallback. s0 = pod record, s1 = pod index, s3 = player
  * record (held stick bits +0x24C: up 1, down 2, left 4, right 8). Written from those measurements. */
 const s16 bl_homing_centre[16] = {0, 256, 0, 0, 128, 192, 64, 0, 384, 320, 448, 0, 0, 0, 0, 0};
 __asm__(
 	".set push\n.set noreorder\n.set noat\n"
 	".globl bl_homing_idle\n"
 	"bl_homing_idle:\n"
+	"\tlh $1,40($16)\n"             /* same signed target index as the native branch */
+	"\tslti $1,$1,192\n"
+	"\tbne $1,$0,9f\n"
+	"\tnop\n"
 	"	lbu $1,0x270($19)\n"         /* weapon */
 	"	li $3,3\n"
 	"	bne $1,$3,9f\n"
