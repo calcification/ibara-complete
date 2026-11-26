@@ -52,6 +52,10 @@ HP source for its boss. The historical results remain in [Phase 15](../phase15/R
 
 ## Stage 6 rose form
 
+[Phase 30](../phase30/README.md) revisits this comparison with scripted input.
+The retail timer uses raw rank, and the Noir build already redirects it to its
+stage-adjusted implementation. The remaining rank difference is in burst size.
+
 Phase 25 measured 6,876 frames for the Black Label rose core and 4,956 for the Noir core.
 The first form and rose defense need their own timing measurements.
 
