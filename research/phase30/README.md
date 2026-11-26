@@ -99,9 +99,9 @@ The same ship word (0), shot level (2), and player position (66, 480) were obser
 in the PS2 pre-boss checkpoint and at both core starts in a separate arcade Stage 6
 shortcut. Every sampled HP decrease in the two natural MAME logs and in the
 compared PS2 logs was one point. The earlier core already falls at different rates,
-and the timing difference comes from the spacing of sampled HP decreases. The next
-comparison should log shot-to-core contacts and rose interceptions with the MAME
-natural entry and fixed PS2 input before tuning burst size further.
+and the timing difference comes from the spacing of sampled HP decreases. The [Phase 31
+trace](../phase31/README.md) follows shot-to-core contacts and rose interceptions
+with the MAME natural entry and fixed PS2 input.
 
 The normal bl_mode ELF was byte-identical before and after the probe on the same
 compiler, as was the exported kuro hook image. A direct retail-ELF kuro bake hit

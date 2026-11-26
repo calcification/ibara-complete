@@ -62,10 +62,10 @@ def read_ps2(path):
     return cores, events
 
 
-def summarize(label, cores, events):
+def summarize(label, cores, events, subtypes=CORE_SUBTYPES):
     print(f"\n{label}")
     print("Target            Elapsed   Calls  Flash active   HP lost   Median HP-step gap")
-    for subtype in CORE_SUBTYPES:
+    for subtype in subtypes:
         start, stop, elapsed = core_timing(cores, subtype)
         if stop is None:
             raise ValueError(f"{label}: core subtype {subtype} did not reach zero")
@@ -90,21 +90,25 @@ def summarize(label, cores, events):
                     print(f"  First HP step: tick {hits[0].tick} (sample starts at {start})")
 
 
-def report_mame_core_writers(log, cores):
+def report_mame_core_writers(log, cores, subtypes):
     """Count core HP stores whether or not they came from an ordinary shot."""
-    windows = {subtype: core_timing(cores, subtype)[:2] for subtype in CORE_SUBTYPES}
+    windows = {subtype: core_timing(cores, subtype)[:2] for subtype in subtypes}
     writers = {subtype: Counter() for subtype in windows}
     initial_hp = {}
     for row in log:
         tick, _, subtype, before, after, pc, caller = row.split()
         tick, subtype, before, after = map(int, (tick, subtype, before, after))
+        if subtype not in windows:
+            continue
         start, stop = windows[subtype]
         if stop is not None and start - 3 <= tick <= stop and before > after:
             writers[subtype][pc, caller] += before - after
             initial_hp.setdefault(subtype, before)
     print("MAME direct core stores, including other damage paths")
     for subtype, counts in writers.items():
-        print(f"  Core {subtype}: {sum(counts.values())}/{initial_hp.get(subtype, 0)} HP traced")
+        start, _ = windows[subtype]
+        sampled_hp = next(row[2] for row in cores if row[3] == subtype and row[-1] == start)
+        print(f"  Core {subtype}: {sum(counts.values())}/{initial_hp.get(subtype, sampled_hp)} HP traced")
         for (pc, caller), hp in counts.most_common():
             print(f"    {hp:3} HP at {pc}, return PC {caller}")
 
@@ -112,19 +116,21 @@ def report_mame_core_writers(log, cores):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mame-run", type=Path)
+    parser.add_argument("--rose-only", action="store_true", help="read a capture started between the cores")
     parser.add_argument("saves", type=Path, nargs="*")
     args = parser.parse_args()
     if not (args.mame_run or args.saves):
         parser.error("provide a MAME run directory or a PCSX2 state")
+    subtypes = (2,) if args.rose_only else CORE_SUBTYPES
     if args.mame_run:
         cores, events = read_mame(args.mame_run)
-        summarize(args.mame_run, cores, events)
+        summarize(args.mame_run, cores, events, subtypes)
         core_writes = args.mame_run / "core-writes.txt"
         if core_writes.exists():
             with core_writes.open() as log:
-                report_mame_core_writers(log, cores)
+                report_mame_core_writers(log, cores, subtypes)
     for path in args.saves:
-        summarize(path.name, *read_ps2(path))
+        summarize(path.name, *read_ps2(path), subtypes)
 
 
 if __name__ == "__main__":

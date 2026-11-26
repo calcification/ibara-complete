@@ -15,6 +15,17 @@ return function(cpu, directory, stage_frame)
     return space:read_u32(pointer + 4) & 0xFF
   end
 
+  local function lane(value, shift, bits)
+    local full = (1 << bits) - 1
+    -- The Lua binding represents unsigned masks above INT64_MAX as floats.
+    -- A selected lane in the high half has enough precision after shifting.
+    if math.type(value) == "float" then
+      if value >= 2.0 ^ 64 then return full end
+      return math.floor(value / 2.0 ^ shift) % (full + 1)
+    end
+    return (value >> shift) & full
+  end
+
   local function event(action, offset, data, mask, field, bits)
     if busy or closed then return end
     local pc = cpu.state["PC"].value
@@ -22,9 +33,9 @@ return function(cpu, directory, stage_frame)
       if pc < 0x0C0A8F0A or pc > 0x0C0A8F0C then return end
     end
     local raw_caller = cpu.state["PR"].value
-    local native_hp_write = pc >= 0x0C0A8E90 and pc <= 0x0C0A9020
+    local native_damage_path = pc >= 0x0C0A8E90 and pc <= 0x0C0A9020
     local caller = raw_caller
-    if native_hp_write then
+    if native_damage_path then
       -- Resolving a parent link calls a helper. PR now points inside damage,
       -- while its own frame still has the original caller at R14+8.
       caller = space:read_u32(cpu.state["R14"].value + 8)
@@ -39,18 +50,18 @@ return function(cpu, directory, stage_frame)
     local shift = (8 - (a - offset) - (bits // 8)) * 8
     if shift < 0 then return end
     local bitmask = (1 << bits) - 1
-    if ((mask >> shift) & bitmask) ~= bitmask then return end
+    if lane(mask, shift, bits) ~= bitmask then return end
     busy = true
     local kind = space:read_u32(part + 4)
     if kind == 74 or kind == 79 then
       local hp = space:read_u16(part + 0x3C)
-      local value = (data >> shift) & bitmask
+      local value = lane(data, shift, bits)
       local subtype = space:read_u32(part + 8)
       if action == "H" and kind == 74 and (subtype == 0 or subtype == 2) and value < hp then
         core_writes:write(string.format("%d %d %d %d %d %08X %08X\n",
           stage_frame(), (part - first) // stride, subtype, hp, value, pc, raw_caller))
       end
-      if hp > 0 and (action == "C" or (shot_caller and native_hp_write and value < hp)) then
+      if hp > 0 and (action == "C" or (shot_caller and native_damage_path and value < hp)) then
         out:write(string.format("%s %d %d %d %d %d %d %08X %d\n",
           action, stage_frame(), (part - first) // stride, kind,
           subtype, hp, value, caller, shot(caller)))

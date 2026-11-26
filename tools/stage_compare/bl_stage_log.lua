@@ -81,13 +81,18 @@ local function finish() if close_contacts then close_contacts() end; if sout the
 emu.register_frame_done(function()
   frame = frame + 1
   if resume_state then
-    if frame == 1 then m:load(resume_state); return end
+    if frame == 1 then
+      -- Lua overrides are external to the save. Hold shot through the restore
+      -- so the first resumed update sees the same input as continuous play.
+      fld(":PORT_D", "P1 Button 1"):set_value(1)
+      m:load(resume_state)
+      return
+    end
     if not resume_ready then
       if sp:read_u8(STAGEB) ~= STAGE then
         if frame > 120 then error("could not restore the requested stage") end
         return
       end
-      fld(":PORT_D", "P1 Button 1"):set_value(1)
       resume_ready = true
     end
   else

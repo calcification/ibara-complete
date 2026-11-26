@@ -11,14 +11,16 @@ can produce several calls. HP lost is counted separately.
 Use the same rank lock (0x800000), shot level (2), stationary P1, and held shot
 as Phase 30. Use a fresh MAME profile and the natural route through stages 1–5.
 
-    mkdir -p runs/bl-stage6
+    mkdir -p runs/bl-stage6 runs/bl-cfg runs/bl-nvram
     OUTDIR=runs/bl-stage6 CONTACT_TAP="$PWD/research/phase31/bl_contacts.lua" \
       STAGE=7 BOSSTYPE=74 MAXFRAMES=130000 RANKLOCK=8388608 SHOTLOCK=2 \
       mame ibarablk -rompath ROMS -video none -sound none -nothrottle -nodrc \
-      -skip_gameinfo -autoboot_delay 0 -autoboot_script tools/stage_compare/bl_stage_log.lua
+      -cfg_directory runs/bl-cfg -nvram_directory runs/bl-nvram -nonvram_save \
+      -noreadconfig -noplugins -skip_gameinfo -autoboot_delay 0 \
+      -autoboot_script tools/stage_compare/bl_stage_log.lua
 
-The MAME tap starts at stage frame 10,000. To shorten the run, first use the same command with -drc, no CONTACT_TAP,
-and SAVE_STATE set to a new absolute path. The logger saves at stage frame
+The MAME tap starts at stage frame 10,000. To shorten the run, first use the
+same command with -drc, no CONTACT_TAP, and SAVE_STATE set to a new absolute path. The logger saves at stage frame
 10,500. Start a second copy with -nodrc, CONTACT_TAP, RESUME_STATE set to that
 path, and CONTACT_START=0. Its logged clock is relative to the restored state.
 Use the interpreter for the trace because the SH-3 recompiler can bypass
@@ -27,8 +29,8 @@ memory taps.
 Follow the [Phase 30 PCSX2 instructions](../phase30/README.md) and add
 --define BL_ROSE_CONTACT_TEST at bake time. Keep other optional RAM probes
 off. The hook runs only in Stage 6 and records type-74 core and type-79 rose
-contacts. The buffer holds 24,000 rows below the native stack, with a dropped-record counter. Replay
-modes 0 and 3 from the same pre-boss Practice checkpoint and repeat mode 3.
+contacts. The buffer holds 24,000 rows below the native stack, with a dropped-record
+counter. Replay modes 0 and 3 from the same pre-boss Practice checkpoint and repeat mode 3.
 
     python3 research/phase31/report_contacts.py --mame-run runs/bl-stage6 \
       baseline.p2s combined.p2s repeat.p2s
@@ -76,3 +78,46 @@ R8 or R10. The first capture filtered on the live return address and missed
 opening-core contacts from linked parts. A separate core-writes log records
 HP changes with the native writer and live return address so missing damage
 paths can be identified.
+
+MAME's Lua binding may represent a high 64-bit access mask as a floating-point
+number. Applying a bitwise operator to that value caused the tap to miss
+high-lane accesses, including the rose core in slot 85. The trace extracts the
+selected lane after a numeric shift when the binding supplies a float. This
+also covers writes to odd slots that the first pass missed.
+
+## Arcade replay timing
+
+The pre-boss checkpoint came from a continuous Black Label run through
+Stages 1–5. Applying held shot after the restore changed the subsequent
+fight. Both the interpreter and recompiler measured 5,276 opening-core
+frames and 4,264 rose-core frames in that control. Asserting held shot
+before the restore reproduced all four Phase 30 reference values in the
+recompiler: 5,492 opening-core frames, 3,272 rose-core frames, 4,149 type-79
+activations and 1,986 type-14 activations in the rose interval. The logger
+uses this input order when it resumes a checkpoint.
+
+## Matched rose-phase contact comparison
+
+A second checkpoint just before the rose form retained the reference input
+history. The interpreter reproduced the 3,272-frame rose phase and recorded
+all 431 core HP steps. The first four-frame sample sees 430 HP because the
+first shot has already removed one point.
+
+| Run | Rose core length | Core contacts | Contacts with roses | Mean HP-step gap | HP-step gaps over 12 |
+|---|---:|---:|---:|---:|---:|
+| MAME Black Label reference | 3,272 | 2,894 | 4,439 | 7.61 | 21 |
+| PCSX2 baseline | 3,296 | 3,784 | 4,945 | 7.67 | 26 |
+| PCSX2 combined | 3,712 | 2,750 | 7,557 | 8.64 | 51 |
+
+All three traces recorded 431 one-HP losses. The median gap stayed at six.
+The PCSX2 combined run had more gaps after the core was ready for another
+hit. It also had 70% more contacts with roses than the arcade reference.
+This accounts for the extra duration in this fixed-input test. It leaves
+open how much of the change comes from rose placement, shot trajectories,
+and the different shot types reaching the core. The benchmark logged type 0
+for all arcade core hits. PCSX2 also landed 114 baseline and 115 combined
+core hits from the type-3 rocket. This comparison made no gameplay changes
+to the release patch.
+
+Use --rose-only with the contact report for a capture started between the two
+cores.
