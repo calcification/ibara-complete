@@ -596,6 +596,11 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         if rose_probe or "BL_SPAWN_LOG" in EXTRA_DEFINES:
             raise ValueError("BL_DAMAGE_AUDIT uses the player-update hook and the core logger's RAM")
         sources.append("damage_audit.c")
+    pod_audit = key == "bl_mode" and "BL_POD_AUDIT" in EXTRA_DEFINES
+    if pod_audit:
+        if rose_probe or damage_audit:
+            raise ValueError("BL_POD_AUDIT shares the rose probe's / damage audit's player hook and RAM")
+        sources.append("pod_rate_probe.c")
     objs = []
     stub_src = work / f"{key}_stubs.S"
     lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
@@ -639,6 +644,13 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
             sites.append((site, 0x0C048848, jal(syms["bl_test_rose_timer"])))
     if damage_audit:
         sites.append((0x0012E5D4, 0x0C04EACC, jal(syms["bl_damage_audit_players"])))
+    if pod_audit:
+        sites.append((0x0012E5D4, 0x0C04EACC, jal(syms["bl_pod_audit_players"])))
+        for site in (0x001337B8, 0x00132EE4, 0x00133FD4):
+            sites.append((site, 0x0C04B414, jal(syms["bl_pod_audit_allocation"])))
+        if "BL_POD_AUDIT_FALLBACK" in EXTRA_DEFINES:
+            site, word = 0x00134368, 0x10000012
+            sites.append((site, word, sym_patch_word(syms, site, word, "j", "bl_pod_audit_fallback")))
     if rose_probe:
         for site in (0x00178F44, 0x001790DC, 0x00179190):
             sites.append((site, 0x0C058C50, jal(syms["bl_rose_probe_create"])))
