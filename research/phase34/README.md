@@ -98,3 +98,22 @@ The first two PCSX2 Stage 1 trials reached zero from 168 HP in 2,548 and
 type-42 subtype-0 record in both emulators. Seed 1 took 3,692 MAME frames
 and 3,568 PCSX2 ticks in these early-stage seeded pilots. The full audit
 uses the repeat cohorts rather than judging parity from those pilots.
+
+## Stage 1 seed timing control
+
+The first arcade cohort seeded at stage callback 1,000. A second natural
+checkpoint seeded at callback 3,520, about 640 callbacks before the boss.
+The PS2 cohort used its common checkpoint at native tick 3,901, also about
+640 ticks before the first positive boss HP. The arcade means were 2,475.5
+(early) and 2,482.0 (pre-boss). On the PS2, the pre-boss cohort averaged
+2,596.5. Six of its eight kills exceeded both observed arcade ranges. This
+result survived the Stage 1 change in seed point.
+
+Use CHECKPOINT_TICKS=3520 LAST_STAGE=1 with the MAME checkpoint command
+to recreate the control. Choose a fresh output directory.
+
+| Stage 1 cohort | Kills / trials | Mean | Sample SD | Range |
+|---|---:|---:|---:|---:|
+| MAME, early | 8/8 | 2,475.5 | 82.0 | 2,352–2,560 |
+| MAME, pre-boss | 8/8 | 2,482.0 | 80.5 | 2,368–2,568 |
+| PCSX2, pre-boss | 8/8 | 2,596.5 | 166.4 | 2,340–2,796 |

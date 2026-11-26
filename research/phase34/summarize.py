@@ -59,6 +59,8 @@ def main():
     parser.add_argument("--csv", type=Path)
     parser.add_argument("--min-seeds", type=int, default=8)
     args = parser.parse_args()
+    if args.min_seeds < 1:
+        parser.error("--min-seeds must be positive")
     stages = defaultdict(list)
     trials = sorted([*collect(args.bl, "BL"), *collect(args.ps2, "Noir")])
     for stage, system, seed, status, _, elapsed in trials:
