@@ -56,6 +56,15 @@ void bl_rose_probe_players(void)
 #endif
 		test->magic = ROSE_TEST_MAGIC;
 	}
+#ifdef BL_ROSE_SEED /* repeat trials (research/phase33): the game's random seed ($gp-32744), once, before the first core */
+	{
+		static u8 seeded;
+		if (!seeded && EE_RAM(u8, STAGE_COUNT) == ROSE_STAGE && EE_RAM(u32, 0x00338EA0u) >= 10000u) {
+			EE_RAM(u32, 0x00337D08u) = BL_ROSE_SEED;
+			seeded = 1;
+		}
+	}
+#endif
 	if (shooting) {
 		/* Supply the processed inputs immediately before the native player update. */
 		EE_RAM(u16, p1 + PS2_PLAYER_HELD) = PS2_PAD_SHOT;

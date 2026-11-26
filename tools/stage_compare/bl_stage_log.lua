@@ -13,6 +13,7 @@
 --   MAXFRAMES frames after the game starts before exiting (default 60000); also exits when STAGE ends
 --   CONTACT_TAP Lua damage trace module (requires -nodrc)
 --   SAVE_STATE absolute MAME checkpoint to save at stage frame 10500, then exit
+--   SEED      with RESUME_STATE: random seed written after the restore (repeat trials, research/phase33)
 --   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
 --   CORESTATE=1 core.txt also gets "S frame slot +0x50 +0x9F +0xA0 +0x98" lines (rose core phase machine)
 --   ROSES=1   roses.txt: one line per type-79 rose when it goes away: spawn frame, last frame, slot, subtype, HP at
@@ -98,6 +99,8 @@ emu.register_frame_done(function()
         return
       end
       resume_ready = true
+      -- SEED=n: replace the game's random seed (LCG at 0C207578) once after the restore, for repeat trials
+      if os.getenv("SEED") then sp:write_u32(0x0C207578, tonumber(os.getenv("SEED"))) end
     end
   else
     if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
