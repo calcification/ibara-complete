@@ -1,4 +1,4 @@
-# Phase 34 — Stage-6 first core (Claude, 26 November 2026, in progress)
+# Phase 34 — Stage-6 first core (Claude, 26 November 2026)
 
 Same 359 HP in both games, but the first core lasts ~5,660 frames in BL (17 seeded runs, 4,964–6,552) against
 ~3,620 ticks on the PS2 (6 runs, 3,004–3,936). Rank 0x800000, shot level 2, stationary player, as phase 33.
@@ -77,7 +77,16 @@ PS2 mode 3 (K58 roses) + the piercing patch, seeds 1–4:
 
 With the same pods, both phases are inside BL's range: most of the earlier first-core gap was the set-up.
 
-## Next
+PS2 mode 0 (retail roses) with BL's pods, seeds 1–4: rose core 3,696 / 3,304 / 3,104 / 3,508, mean **3,403**; first core
+6,444 / 5,476 / 5,924 / 5,520 (mean 5,841). So the K58 rose changes are still needed with matched pods (3,403 → 4,171
+against BL's 4,053); the first core needs no change.
+
+## Conclusion
+
+* No first-core gameplay difference beyond the piercing rule: with the same pods the PS2 first core matches BL.
+* The piercing rule ships as **K60** (BL's shot loop; affects weapons whose shots carry 0x00800000, e.g. the kind-10
+  pods' type-3 shots).
+* Lesson for all comparisons (handoff): match the pods (weapon and pod kinds), not only ship and shot level.
 
 Compare the core's own hit area / collision settings, then trace which part each player hit lands on (Codex's
 `research/phase31/bl_contacts.lua`).
