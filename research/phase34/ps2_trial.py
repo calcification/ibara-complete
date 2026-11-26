@@ -64,7 +64,7 @@ def wait_for_save(path, previous):
     wait_for(ready, 30, f"PCSX2 did not write a complete save to {path}")
 
 
-def seed_checkpoint(source, destination, stage, seed, boss):
+def seed_checkpoint(source, destination, stage, seed, boss, loadout=None):
     """Materialize a copy that sets the LCG at this exact, pre-boss checkpoint."""
     if source.resolve() == destination.resolve():
         raise ValueError("use a separate seeded savestate slot")
@@ -76,6 +76,10 @@ def seed_checkpoint(source, destination, stage, seed, boss):
         if magic != MAGIC or recorded_stage != stage or count or dropped or ee[STAGE] != stage:
             raise ValueError("checkpoint must be in the intended stage before any boss samples")
         HEADER.pack_into(ee, BASE, MAGIC, seed, seed, tick, 0, 0, stage, boss)
+        if loadout is not None:
+            if ee[0x0044C380 + 0x27B] != 3:
+                raise ValueError("late checkpoint must already have three active Practice pods")
+            LOADOUT_STATE.pack_into(ee, LOADOUT, loadout, 0, 0, 0)
         struct.pack_into("<I", ee, 0x00337D08, seed)
         try:
             with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED, compresslevel=2) as seeded:
@@ -98,7 +102,8 @@ def capture(pine, stage, seed, boss, check_slot, save_slot, max_tick, gauge=Fals
                  20, "the pre-seed checkpoint did not restore")
         pine.write(BASE + 28, boss)
         if loadout is not None:
-            wait_for(lambda: pine.read(TICK) >= 1200, 30, "takeoff hold did not finish")
+            wait_for(lambda: pine.read(0x0044C380 + 0x27B, 8) == 3,
+                     30, "Practice did not deploy three pods before the seed window")
             arm_loadout(pine, loadout)
         pine.write(BASE + 4, seed)
         seeded_tick = SEED_TICK
@@ -179,13 +184,8 @@ def main():
         parser.error("seeded checkpoint and output paths must differ")
     seeded_tick = None
     if args.source_checkpoint:
-        if args.loadout is not None:
-            requested, equipped, checked, mismatches = LOADOUT_STATE.unpack_from(
-                load_ee(args.source_checkpoint), LOADOUT)
-            if requested != args.loadout or equipped != args.loadout or not checked or mismatches:
-                parser.error("equip the requested loadout before saving a late source checkpoint")
         seeded_tick = seed_checkpoint(args.source_checkpoint, args.seeded_file, args.stage + 1,
-                                      args.seed, args.boss_type)
+                                      args.seed, args.boss_type, args.loadout)
     old = save_version(args.save_file)
     pine = Pine(args.pine_slot)
     try:

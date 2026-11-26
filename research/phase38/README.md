@@ -27,13 +27,13 @@ Build the PS2 payload with both defines.
       --define BL_DAMAGE_AUDIT --define BL_DAMAGE_AUDIT_MATCH_PODS \
       --bake-elf bl_mode AUDIT.ELF
 
-To equip after takeoff (native tick 1,200 or later), import
-arm_loadout from research/phase34/ps2_trial.py and pass the little-endian
-packed pod-kind and weapon bytes over PINE. For three kind-12 pods and
-weapon 6, the value is 0x060C0C0C. After saving the warmed stage, use
-the existing --source-checkpoint and --seeded-file flags on ps2_trial.py
-alongside --loadout 12,12,12,6. An early checkpoint uses --loadout with
-the normal pre-seed runner, which equips on restore.
+For late PS2 checkpoints, save while three Practice pods are already
+deployed and before the target has positive HP. Use --source-checkpoint
+and --seeded-file alongside --loadout 12,12,12,6. The trial sets the RNG
+in the temporary state and equips the requested pods at the first
+native player update on restore. The early checkpoint runner waits for
+three active pods before equipping; it needs that to happen before the
+fixed seed tick.
 
     python3 research/phase34/summarize.py --bl runs/bl --ps2 runs/ps2 \
       --match-loadout --csv runs/boss-trials.csv
