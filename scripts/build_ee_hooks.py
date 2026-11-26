@@ -565,6 +565,11 @@ def sym_patch_word(syms: dict, site: int, original_word: int, kind: str, target,
 
 def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAVE_END) -> dict:
     h = HOOKS[key]
+    rose_probe = key == "bl_mode" and "BL_ROSE_BARRAGE_TEST" in EXTRA_DEFINES
+    sources = h["sources"] + (["rose_probe.c"] if rose_probe else [])
+    contact_probe = rose_probe and "BL_ROSE_CONTACT_TEST" in EXTRA_DEFINES
+    if contact_probe:
+        sources.append("rose_contacts.S")
     objs = []
     stub_src = work / f"{key}_stubs.S"
     lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
@@ -575,7 +580,7 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         defsyms += ["--defsym", f"{sym}=0x{original:08X}"]
     stub_src.write_text("\n".join(lines) + "\n")
     defines = [f"-D{d}" for d in [*h.get("defines", []), *EXTRA_DEFINES]]
-    for src in [stub_src] + [PS2 / "hooks" / s for s in h["sources"]]:
+    for src in [stub_src] + [PS2 / "hooks" / s for s in sources]:
         obj = work / (src.stem + ".o")
         extra = LEAF_CFLAGS if src.name in LEAF_SOURCES else []
         run([CROSS + "gcc", *CFLAGS, *extra, *defines, "-c", str(src), "-o", str(obj)])
@@ -604,6 +609,22 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         # These three calls are local to the rose-spawning loops. Keep the shared retail timer in place.
         for site in (0x00178B1C, 0x00178CD8, 0x00178E24):
             sites.append((site, 0x0C048848, jal(syms["bl_test_rose_timer"])))
+    if rose_probe:
+        for site in (0x00178F44, 0x001790DC, 0x00179190):
+            sites.append((site, 0x0C058C50, jal(syms["bl_rose_probe_create"])))
+        sites.append((0x0012E5D4, 0x0C04EACC, jal(syms["bl_rose_probe_players"])))
+        for site, word, stub in (
+            (0x00178DE4, 0x24040010, "bl_rose_group_1"),
+            (0x00178EB0, 0x24030010, "bl_rose_group_2"),
+            (0x00179054, 0x24030010, "bl_rose_group_3"),
+        ):
+            sites.append((site, word, sym_patch_word(syms, site, word, "j", stub)))
+    if contact_probe:
+        sites += [
+            (0x00127AF0, 0x1440FFA8, sym_patch_word(syms, 0x00127AF0, 0x1440FFA8, "j", "rose_contact_begin")),
+            (0x00127B70, 0xDFBF0000, sym_patch_word(syms, 0x00127B70, 0xDFBF0000, "j", "rose_contact_end")),
+            (0x00127B74, 0x03E00008, 0),  # keep the jump delay free of the native return
+        ]
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     dyn = h.get("dynamic")
