@@ -33,6 +33,35 @@ static void equip(u32 weapon)
 	audit->applied_weapon = weapon;
 }
 
+#ifdef BL_POD_AUDIT_LIFETIME
+#define POD_TRACE 0x01F80000u
+
+struct pod_trace_row {
+	u8 slot[48]; /* zero is free, active kind plus one, 255 for other occupied flags */
+	u16 target[3], desired[3], angle[3];
+};
+_Static_assert(sizeof(struct pod_trace_row) == 66, "pod trace row layout");
+
+static void trace_slots(u32 tick)
+{
+	volatile struct pod_trace_row *row = (volatile struct pod_trace_row *)POD_TRACE + tick - 2500u;
+	unsigned i;
+
+	for (i = 0; i < 48; i++) {
+		const u32 shot = SHOT_BASE + 0x34u * i;
+		const u32 flags = EE_RAM(u32, shot);
+		const u32 kind = EE_RAM(u32, shot + 4);
+		row->slot[i] = flags == 0 ? 0 : flags >> 30 == 3 && kind < 254 ? kind + 1 : 255;
+	}
+	for (i = 0; i < 3; i++) {
+		const u32 pod = POD_BASE + 48u * i;
+		row->target[i] = EE_RAM(u16, pod + 40);
+		row->desired[i] = EE_RAM(u16, pod + 38) & 511u;
+		row->angle[i] = EE_RAM(u16, pod + 36) & 511u;
+	}
+}
+#endif
+
 static void sample(u32 tick)
 {
 	static u8 alive[48];
@@ -41,6 +70,9 @@ static void sample(u32 tick)
 	unsigned i;
 
 	if (tick >= 2500u) {
+#ifdef BL_POD_AUDIT_LIFETIME
+		trace_slots(tick);
+#endif
 		audit->exposure++;
 		if (EE_RAM(u8, p1 + PS2_PLAYER_POD_COUNT) != 3 ||
 		    EE_RAM(u8, p1 + 0x270) != audit->applied_weapon)
