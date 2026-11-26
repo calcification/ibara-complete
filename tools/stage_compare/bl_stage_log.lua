@@ -11,6 +11,9 @@
 --             (same rule as the PS2 logger's BL_NOSHOT; the player keeps shooting)
 --   ALLTABLES=1 tables.txt lists the part-record tables of every stage (not only STAGE)
 --   MAXFRAMES frames after the game starts before exiting (default 60000); also exits when STAGE ends
+--   CONTACT_TAP Lua damage trace module (requires -nodrc)
+--   SAVE_STATE absolute MAME checkpoint to save at stage frame 10500, then exit
+--   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
 --   SHOTOFF   release the shot button from this frame of STAGE on (timer-driven or damage-driven phase?)
 -- The player is kept invincible (BL +0x288). Output formats (frames count from the first spawn of STAGE):
 --   spawns.txt  frame stage slot type subtype hp score x y segment
@@ -32,6 +35,19 @@ local tout = io.open(dir .. "/tables.txt", "w"); local tseen = {}
 local frame, first, shooting, left = 0, nil, false, false
 local alive, typ, balive, bpend, hp0 = {}, {}, {}, {}, {}
 local NOSHOT = os.getenv("NOSHOT")
+local contact_source = os.getenv("CONTACT_TAP")
+local close_contacts
+local resume_state = os.getenv("RESUME_STATE")
+local resume_ready = false
+local save_state = os.getenv("SAVE_STATE")
+assert(not (resume_state and save_state), "choose SAVE_STATE or RESUME_STATE")
+if save_state then
+  local existing = io.open(save_state, "rb")
+  if existing then
+    existing:close()
+    error("choose a new SAVE_STATE path")
+  end
+end
 local plan = {}
 local function at(f, fn) plan[f] = plan[f] or {}; table.insert(plan[f], fn) end
 local function press(f, p, n, len) at(f, function() fld(p, n):set_value(1) end); at(f + (len or 6), function() fld(p, n):clear_value() end) end
@@ -61,11 +77,23 @@ local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34
     salive[k] = on
   end
 end
-local function finish() if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
+local function finish() if close_contacts then close_contacts() end; if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
 emu.register_frame_done(function()
   frame = frame + 1
-  if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
-  if frame <= t0 + 700 then return end
+  if resume_state then
+    if frame == 1 then m:load(resume_state); return end
+    if not resume_ready then
+      if sp:read_u8(STAGEB) ~= STAGE then
+        if frame > 120 then error("could not restore the requested stage") end
+        return
+      end
+      fld(":PORT_D", "P1 Button 1"):set_value(1)
+      resume_ready = true
+    end
+  else
+    if plan[frame] then for _, fn in ipairs(plan[frame]) do fn() end end
+    if frame <= t0 + 700 then return end
+  end
   if sout and sframe < 30000 then shot_frame() end
   sp:write_u8(P1 + 0x288, 240)
   if os.getenv("RANKLOCK") then sp:write_u32(RANK, tonumber(os.getenv("RANKLOCK"))) end
@@ -118,6 +146,15 @@ emu.register_frame_done(function()
     end
   end
   if not first then return end
+  if save_state and frame - first == 10500 then
+    m:save(save_state)
+  elseif save_state and frame - first > 10500 then
+    local saved = io.open(save_state, "rb")
+    if saved then saved:close(); finish(); return end
+  end
+  if contact_source and not close_contacts then
+    close_contacts = dofile(contact_source)(m.devices[":maincpu"], dir, function() return frame + 1 - first end)
+  end
   for i = 0, 255 do
     local a = BUL + i * 0x54
     local on = (sp:read_u32(a) & 0x10004000) == 0x10000000

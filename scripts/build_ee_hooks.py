@@ -560,6 +560,9 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     h = HOOKS[key]
     rose_probe = key == "bl_mode" and "BL_ROSE_BARRAGE_TEST" in EXTRA_DEFINES
     sources = h["sources"] + (["rose_probe.c"] if rose_probe else [])
+    contact_probe = rose_probe and "BL_ROSE_CONTACT_TEST" in EXTRA_DEFINES
+    if contact_probe:
+        sources.append("rose_contacts.S")
     objs = []
     stub_src = work / f"{key}_stubs.S"
     lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
@@ -609,6 +612,12 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
             (0x00179054, 0x24030010, "bl_rose_group_3"),
         ):
             sites.append((site, word, sym_patch_word(syms, site, word, "j", stub)))
+    if contact_probe:
+        sites += [
+            (0x00127AF0, 0x1440FFA8, sym_patch_word(syms, 0x00127AF0, 0x1440FFA8, "j", "rose_contact_begin")),
+            (0x00127B70, 0xDFBF0000, sym_patch_word(syms, 0x00127B70, 0xDFBF0000, "j", "rose_contact_end")),
+            (0x00127B74, 0x03E00008, 0),  # keep the jump delay free of the native return
+        ]
     sites.extend(h.get("patches", []))
     sites.extend(h.get("patches_extra", []))  # plain word patches: same preimage check and application
     dyn = h.get("dynamic")
