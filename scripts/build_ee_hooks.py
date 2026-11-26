@@ -580,6 +580,11 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
     contact_probe = rose_probe and "BL_ROSE_CONTACT_TEST" in EXTRA_DEFINES
     if contact_probe:
         sources.append("rose_contacts.S")
+    damage_audit = key == "bl_mode" and "BL_DAMAGE_AUDIT" in EXTRA_DEFINES
+    if damage_audit:
+        if rose_probe or "BL_SPAWN_LOG" in EXTRA_DEFINES:
+            raise ValueError("BL_DAMAGE_AUDIT uses the player-update hook and the core logger's RAM")
+        sources.append("damage_audit.c")
     objs = []
     stub_src = work / f"{key}_stubs.S"
     lines = [f'#include "{PS2 / "hooks" / "stub.S"}"']
@@ -621,6 +626,8 @@ def build_hook(key: str, work: Path, base: int = CAVE_BASE, end_limit: int = CAV
         # These three calls are local to the rose-spawning loops. Keep the shared retail timer in place.
         for site in (0x00178B1C, 0x00178CD8, 0x00178E24):
             sites.append((site, 0x0C048848, jal(syms["bl_test_rose_timer"])))
+    if damage_audit:
+        sites.append((0x0012E5D4, 0x0C04EACC, jal(syms["bl_damage_audit_players"])))
     if rose_probe:
         for site in (0x00178F44, 0x001790DC, 0x00179190):
             sites.append((site, 0x0C058C50, jal(syms["bl_rose_probe_create"])))
