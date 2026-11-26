@@ -31,6 +31,21 @@ def wait_for(predicate, timeout, why):
     raise RuntimeError(why)
 
 
+def save_version(path):
+    try:
+        return path.stat().st_mtime_ns
+    except FileNotFoundError:
+        return None
+
+
+def wait_for_save(path, previous):
+    def ready():
+        current = save_version(path)
+        return current is not None and current != previous and zipfile.is_zipfile(path)
+
+    wait_for(ready, 30, f"PCSX2 did not write a complete save to {path}")
+
+
 def seed_checkpoint(source, destination, stage, seed, boss):
     """Materialize a copy that sets the LCG at this exact, pre-boss checkpoint."""
     if source.resolve() == destination.resolve():
@@ -135,13 +150,12 @@ def main():
     if args.source_checkpoint:
         seeded_tick = seed_checkpoint(args.source_checkpoint, args.seeded_file, args.stage + 1,
                                       args.seed, args.boss_type)
-    old = args.save_file.stat().st_mtime_ns if args.save_file.exists() else None
+    old = save_version(args.save_file)
     pine = Pine(args.pine_slot)
     try:
         capture(pine, args.stage + 1, args.seed, args.boss_type, args.checkpoint_slot,
                 args.save_slot, args.max_tick, args.gauge, seeded_tick)
-        wait_for(lambda: args.save_file.exists() and args.save_file.stat().st_mtime_ns != old,
-                 30, "PCSX2 did not write the output save")
+        wait_for_save(args.save_file, old)
     finally:
         pine.close()
     export_samples(args.save_file, args.stage + 1, args.seed, args.out, args.gauge, seeded_tick if seeded_tick is not None else SEED_TICK)

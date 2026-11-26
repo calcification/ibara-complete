@@ -16,7 +16,7 @@ def trial(path):
             if not fields:
                 continue
             if fields[0] == "#":
-                if fields[1:2] == ["stage"]:
+                if len(fields) >= 5 and fields[1] == "stage" and fields[3] == "seed":
                     stage, seed = int(fields[2]), int(fields[4])
                 continue
             tick, slot, hp = map(int, fields[:3])

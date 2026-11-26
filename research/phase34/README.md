@@ -117,3 +117,41 @@ to recreate the control. Choose a fresh output directory.
 | MAME, early | 8/8 | 2,475.5 | 82.0 | 2,352–2,560 |
 | MAME, pre-boss | 8/8 | 2,482.0 | 80.5 | 2,368–2,568 |
 | PCSX2, pre-boss | 8/8 | 2,596.5 | 166.4 | 2,340–2,796 |
+
+## Completed Stage 1–5 comparison
+
+Each row has eight observed zero-HP finishes per side. Stage 1 uses the
+arcade pre-boss control above. Stages 2–5 use the arcade checkpoints at
+stage callback 1,000. PCSX2's stage-specific seed ticks were 3,901, 4,900,
+7,607, 9,008, and 6,709. Starting HP agreed across both captures at all
+five bosses: 168, 95, 250, 525, and 412.
+
+| Stage | MAME mean ± SD | MAME range | Noir mean ± SD | Noir range | Noir outside arcade range |
+|---:|---:|---:|---:|---:|---|
+| 1 | 2,482.0 ± 80.5 | 2,368–2,568 | 2,596.5 ± 166.4 | 2,340–2,796 | 2 below, 6 above |
+| 2 | 3,460.5 ± 79.4 | 3,364–3,576 | 3,624.0 ± 129.0 | 3,424–3,840 | 6 above |
+| 3 | 3,083.5 ± 209.8 | 2,840–3,520 | 3,008.0 ± 161.0 | 2,728–3,268 | 1 below |
+| 4 | 3,763.5 ± 171.9 | 3,624–4,164 | 3,588.0 ± 184.4 | 3,460–3,972 | 5 below |
+| 5 | 3,562.0 ± 9.1 | 3,548–3,572 | 3,508.5 ± 1.4 | 3,508–3,512 | 8 below |
+
+Stage 2 had the largest increase in mean lifetime (+163.5 ticks, 4.7%).
+Stage 4 had the largest decrease (−175.5 ticks, 4.7%). Stage 5's ranges
+were separated in this setup, with a much smaller mean gap (−53.5 ticks,
+about 0.9 seconds). Stage 3 had the most overlap, with seven of eight PS2
+kills inside the arcade range. These comparisons describe the recorded
+stationary-shot trials. They leave weapon, movement, stage-entry, and
+seed-point effects open.
+
+The full Stage 4 type-58 diagnostic captured 46 samples, all zero HP.
+The eight Stage 4 kills on each platform came from the type-42 core.
+The isolated Stage 3 retry used the same validated checkpoint after a
+savestate file disappeared briefly during replacement. The runner now
+waits for a new readable ZIP archive before exporting. The report also
+recognizes stage-end footer lines when a core never reached zero.
+
+The default hook words and patch sites for bl_mode and kuro matched K58
+when built with the same toolchain. The full repository test run matched
+the K58 baseline in this environment (62 passed, two generated-snapshot
+failures, three Phase 12 extractor setup errors). The audit build, repo
+safety check, and targeted save-replacement and unobserved-kill checks
+passed.
