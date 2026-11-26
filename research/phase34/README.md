@@ -66,6 +66,17 @@ its 98 HP. BL's collision pool (0C2A6D9C) holds only type-0 shots in this window
   now patches 0x0012B5B4 `nop` → `b 0x0012B370` (candidate, committed). Alone, with the mismatched pods, it moved the
   first core from 3,566 to 4,054 ticks on average (seeds 1–4) and the rose core from 3,651 to 3,558.
 
+## Matched pods (BL_FORCE_POD_WEAPON=6: weapon 6, three pods of kind 12, as the BL run)
+
+PS2 mode 3 (K58 roses) + the piercing patch, seeds 1–4:
+
+| | First core | Rose core |
+|---|---|---|
+| BL, 17 runs | 4,964–6,552, mean ≈ 5,660 | 3,272–4,716, mean 4,053 |
+| PS2, BL's pods | 4,864 / 5,884 / 6,044 / 6,032, mean **5,706** | 3,932 / 4,464 / 4,068 / 4,220, mean **4,171** |
+
+With the same pods, both phases are inside BL's range: most of the earlier first-core gap was the set-up.
+
 ## Next
 
 Compare the core's own hit area / collision settings, then trace which part each player hit lands on (Codex's
