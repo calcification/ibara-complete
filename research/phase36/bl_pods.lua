@@ -15,6 +15,8 @@ local attempts, x, y, ship = 0, 0, 0, 0
 local caller = ({[3]=0x0C07893C, [4]=0x0C077D9C, [6]=0x0C078338})[weapon]
 local last, writers = {}, {}
 local empty = os.getenv("POD_EMPTY") == "1"
+local trace_path = os.getenv("POD_TRACE")
+local trace_rows, events = {}, {}
 local start, stop = 1500, 2500 -- elapsed from the loaded state
 
 local function lane(value, shift)
@@ -32,12 +34,20 @@ local function track(offset, data, mask)
   local delta = address - pool
   local shift = (4 - (address - offset)) * 8
   if delta < 0 or delta >= 48 * 52 or delta % 52 ~= 0 or shift < 0
-     or lane(mask, shift) ~= 0xFFFFFFFF or lane(data, shift) >> 30 ~= 3 then return end
+     or lane(mask, shift) ~= 0xFFFFFFFF then return end
+  local flags = lane(data, shift)
+  if flags >> 30 ~= 3 and (not trace_path or flags ~= 0) then return end
   busy = true
-  if space:read_u32(address) == 0 then
+  local previous = space:read_u32(address)
+  if previous == 0 and flags >> 30 == 3 then
     exact = exact + 1
     local pc = cpu.state.PC.value
     writers[pc] = (writers[pc] or 0) + 1
+    if trace_path then
+      events[#events + 1] = string.pack("<I2BB", tick - start, delta // 52, 1)
+    end
+  elseif trace_path and previous ~= 0 and flags == 0 then
+    events[#events + 1] = string.pack("<I2BB", tick - start, delta // 52, 0)
   end
   busy = false
 end
@@ -85,15 +95,31 @@ emu.register_frame_done(function()
       x, y = space:read_i32(p1 + 0x10) // 65536, space:read_i32(p1 + 0x14) // 65536
       ship = space:read_u32(p1 + 4)
     end
+    local row = trace_path and tick >= start and {} or nil
     busy = true
     for index = 0, 47 do
       local address = pool + 52 * index
-      local on = space:read_u32(address) >> 30 == 3 and (space:read_u32(address + 4) & 0xFF) == kind
+      local flags = space:read_u32(address)
+      local active_kind = space:read_u32(address + 4) & 0xFF
+      local on = flags >> 30 == 3 and active_kind == kind
+      if row then
+        row[index + 1] = string.char(flags == 0 and 0 or flags >> 30 == 3 and active_kind < 254 and active_kind + 1 or 255)
+      end
       if on and tick >= start then
         occupied = occupied + 1
         if not last[index] then sampled = sampled + 1 end
       end
       last[index] = on
+    end
+    if row then
+      local pods = space:read_u32(0x0C077B9C)
+      for i = 0, 2 do
+        local pod = pods + 48 * i
+        row[49 + i] = string.pack("<I2", space:read_u16(pod + 40))
+        row[52 + i] = string.pack("<I2", space:read_u16(pod + 38) & 511)
+        row[55 + i] = string.pack("<I2", space:read_u16(pod + 36) & 511)
+      end
+      trace_rows[#trace_rows + 1] = table.concat(row)
     end
     busy = false
     if tick >= start then exposure = exposure + 1 end
@@ -110,6 +136,14 @@ emu.register_frame_done(function()
     out:write(string.format("%d %d %d %d %d %d %d %d %d %d\n",
       weapon, seed, exposure, exact, sampled, occupied, attempts, x, y, ship))
     for pc, count in pairs(writers) do out:write(string.format("%08X %d\n", pc, count)) end
+    if trace_path then
+      local trace = assert(io.open(trace_path, "wb"))
+      trace:write(table.concat(trace_rows))
+      trace:close()
+      local log = assert(io.open(trace_path .. ".events", "wb"))
+      log:write(table.concat(events))
+      log:close()
+    end
     out:close()
     machine:exit()
   end
