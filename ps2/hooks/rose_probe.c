@@ -13,6 +13,13 @@ struct rose_test {
 	u32 rose_attempts;
 	u32 barrage_calls;
 	u32 palette_misses;
+#ifdef BL_ROSE_BATCH
+	u32 requested_seed;
+	u32 applied_seed;
+	u32 seed_tick;
+	u32 burst_frames;
+	u32 last_burst_tick;
+#endif
 };
 
 static volatile struct rose_test *const test = (volatile struct rose_test *)ROSE_TEST_BASE;
@@ -28,6 +35,13 @@ u32 bl_rose_probe_create(u32 part, u32 kind, u32 x, u32 y, u32 visual, u32 angle
 	if (EE_RAM(u8, STAGE_COUNT) != ROSE_STAGE)
 		return result;
 	test->rose_attempts++;
+#ifdef BL_ROSE_BATCH
+	const u32 tick = EE_RAM(u32, 0x00338EA0u);
+	if (tick != test->last_burst_tick) {
+		test->burst_frames++;
+		test->last_burst_tick = tick;
+	}
+#endif
 	if (!(test->mode & 1u))
 		return result;
 
@@ -54,6 +68,10 @@ void bl_rose_probe_players(void)
 #ifdef BL_ROSE_MODE /* trial mode built in, for runs without the PINE runner */
 		test->mode = BL_ROSE_MODE;
 #endif
+#ifdef BL_ROSE_BATCH
+		test->requested_seed = test->applied_seed = test->seed_tick = 0;
+		test->burst_frames = test->last_burst_tick = 0;
+#endif
 		test->magic = ROSE_TEST_MAGIC;
 	}
 #ifdef BL_FORCE_POD_WEAPON /* research/phase37: the BL reference run's pods (weapon 6, three pods of shot kind 12), once */
@@ -77,7 +95,14 @@ void bl_rose_probe_players(void)
 		}
 	}
 #endif
-#ifdef BL_ROSE_SEED /* repeat trials (research/phase33): the game's random seed ($gp-32744), once, before the first core */
+#ifdef BL_ROSE_BATCH
+	if (shooting && !test->seed_tick && test->requested_seed != 0
+	    && EE_RAM(u32, 0x00338EA0u) == 10000u) {
+		test->applied_seed = test->requested_seed;
+		test->seed_tick = 10000u;
+		EE_RAM(u32, 0x00337D08u) = test->applied_seed;
+	}
+#elif defined(BL_ROSE_SEED) /* repeat trials (research/phase33): the game's random seed ($gp-32744), once, before the first core */
 	{
 		static u8 seeded;
 		if (!seeded && EE_RAM(u8, STAGE_COUNT) == ROSE_STAGE && EE_RAM(u32, 0x00338EA0u) >= 10000u) {
