@@ -18,6 +18,8 @@ local temporary = output .. ".partial"
 local out = assert(io.open(temporary, "w"))
 local frame, resumed, started = 0, 0, false
 local seen = {}
+local trace_loadout = os.getenv("TRACE_LOADOUT") == "1"
+local last_loadout
 
 local function finish(why)
   out:write("# ", why, "\n")
@@ -48,6 +50,15 @@ emu.register_frame_done(function()
   space:write_u8(0x0C29D460, 240)
   space:write_u32(0x0C297A3C, 0x800000)
   space:write_u8(0x0C29D433, 2)
+  if trace_loadout then
+    local p1 = 0x0C29D1D8
+    local loadout = string.format("%d %d %d %d", space:read_u8(p1 + 0x26C), space:read_u8(p1 + 0x26D),
+                                  space:read_u8(p1 + 0x26E), space:read_u8(p1 + 0x26F))
+    if loadout ~= last_loadout then
+      out:write(string.format("# loadout %d %s\n", resumed, loadout))
+      last_loadout = loadout
+    end
+  end
   if resumed % 4 == 0 then
     for slot = 0, 191 do
       local part = 0x0C286578 + 0xB4 * slot

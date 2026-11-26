@@ -20,6 +20,8 @@ SEED_TICK = 2000
 HEADER = struct.Struct("<8I")
 SAMPLE = struct.Struct("<IIHHBBBB")
 RESTORING = 0xFFFFFFFF
+LOADOUT = BASE - 16
+LOADOUT_STATE = struct.Struct("<4I")
 
 
 def wait_for(predicate, timeout, why):
@@ -29,6 +31,22 @@ def wait_for(predicate, timeout, why):
             return
         time.sleep(0.025)
     raise RuntimeError(why)
+
+
+def parse_loadout(value):
+    try:
+        fields = bytes(int(field) for field in value.split(","))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("expected four comma-separated byte values") from exc
+    if len(fields) != 4 or not all(fields):
+        raise argparse.ArgumentTypeError("expected three equipped pod kinds and the selected weapon")
+    return int.from_bytes(fields, "little")
+
+
+def arm_loadout(pine, packed):
+    pine.write(LOADOUT, packed)
+    wait_for(lambda: pine.read(LOADOUT + 4) == packed and pine.read(LOADOUT + 8) >= 1,
+             10, "the matched-pod diagnostic did not equip the requested loadout")
 
 
 def save_version(path):
@@ -46,7 +64,7 @@ def wait_for_save(path, previous):
     wait_for(ready, 30, f"PCSX2 did not write a complete save to {path}")
 
 
-def seed_checkpoint(source, destination, stage, seed, boss):
+def seed_checkpoint(source, destination, stage, seed, boss, loadout=None):
     """Materialize a copy that sets the LCG at this exact, pre-boss checkpoint."""
     if source.resolve() == destination.resolve():
         raise ValueError("use a separate seeded savestate slot")
@@ -58,6 +76,10 @@ def seed_checkpoint(source, destination, stage, seed, boss):
         if magic != MAGIC or recorded_stage != stage or count or dropped or ee[STAGE] != stage:
             raise ValueError("checkpoint must be in the intended stage before any boss samples")
         HEADER.pack_into(ee, BASE, MAGIC, seed, seed, tick, 0, 0, stage, boss)
+        if loadout is not None:
+            if ee[0x0044C380 + 0x27B] != 3:
+                raise ValueError("late checkpoint must already have three active Practice pods")
+            LOADOUT_STATE.pack_into(ee, LOADOUT, loadout, 0, 0, 0)
         struct.pack_into("<I", ee, 0x00337D08, seed)
         try:
             with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED, compresslevel=2) as seeded:
@@ -70,7 +92,8 @@ def seed_checkpoint(source, destination, stage, seed, boss):
     return tick
 
 
-def capture(pine, stage, seed, boss, check_slot, save_slot, max_tick, gauge=False, seeded_tick=None):
+def capture(pine, stage, seed, boss, check_slot, save_slot, max_tick, gauge=False, seeded_tick=None,
+            loadout=None):
     pine.write(BASE + 4, RESTORING)
     pine.load_state(check_slot)
     if seeded_tick is None:
@@ -78,6 +101,10 @@ def capture(pine, stage, seed, boss, check_slot, save_slot, max_tick, gauge=Fals
                  and pine.read(BASE + 24) == stage and pine.read(TICK) < SEED_TICK,
                  20, "the pre-seed checkpoint did not restore")
         pine.write(BASE + 28, boss)
+        if loadout is not None:
+            wait_for(lambda: pine.read(0x0044C380 + 0x27B, 8) == 3,
+                     30, "Practice did not deploy three pods before the seed window")
+            arm_loadout(pine, loadout)
         pine.write(BASE + 4, seed)
         seeded_tick = SEED_TICK
     wait_for(lambda: pine.read(BASE) == MAGIC and pine.read(BASE + 4) == seed
@@ -102,7 +129,7 @@ def capture(pine, stage, seed, boss, check_slot, save_slot, max_tick, gauge=Fals
     pine.save_state(save_slot)
 
 
-def export_samples(path, stage, seed, out, gauge=False, seed_tick=SEED_TICK):
+def export_samples(path, stage, seed, out, gauge=False, seed_tick=SEED_TICK, loadout=None):
     ram = load_ee(path)
     magic, requested, applied, tick, count, dropped, recorded_stage, boss = HEADER.unpack_from(ram, BASE)
     if (magic, requested, applied, tick, recorded_stage) != (MAGIC, seed, seed, seed_tick, stage):
@@ -110,6 +137,13 @@ def export_samples(path, stage, seed, out, gauge=False, seed_tick=SEED_TICK):
     if dropped or count > 8000:
         raise ValueError(f"{path}: incomplete capture ({count} records, {dropped} dropped)")
     rows = [f"# stage {stage - 1} seed {seed} boss {boss} seed_tick {tick}"]
+    if loadout is not None:
+        requested_loadout, equipped, checked, mismatches = LOADOUT_STATE.unpack_from(ram, LOADOUT)
+        if requested_loadout != loadout or equipped != loadout or not checked or mismatches:
+            raise ValueError(f"{path}: pod audit failed ({equipped:08x}, {checked} checked, "
+                             f"{mismatches} mismatched frames)")
+        fields = " ".join(str(field) for field in loadout.to_bytes(4, "little"))
+        rows.append(f"# loadout {fields} verified_frames {checked}")
     for index in range(count):
         frame, gauge_hp, part_hp, gauge_state, slot, kind, subtype, scene = SAMPLE.unpack_from(
             ram, BASE + HEADER.size + SAMPLE.size * index
@@ -132,6 +166,8 @@ def main():
     parser.add_argument("--source-checkpoint", type=Path, help="optional late pre-boss .p2s file")
     parser.add_argument("--seeded-file", type=Path, help="slot file to write when using --source-checkpoint")
     parser.add_argument("--save-file", type=Path, required=True, help="autosaved .p2s path for --save-slot")
+    parser.add_argument("--loadout", type=parse_loadout, metavar="POD1,POD2,POD3,WEAPON",
+                        help="require this loadout from the matched-pod diagnostic")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--checkpoint-slot", type=int, default=7, choices=range(1, 11))
     parser.add_argument("--save-slot", type=int, default=8, choices=range(1, 11))
@@ -149,16 +185,17 @@ def main():
     seeded_tick = None
     if args.source_checkpoint:
         seeded_tick = seed_checkpoint(args.source_checkpoint, args.seeded_file, args.stage + 1,
-                                      args.seed, args.boss_type)
+                                      args.seed, args.boss_type, args.loadout)
     old = save_version(args.save_file)
     pine = Pine(args.pine_slot)
     try:
         capture(pine, args.stage + 1, args.seed, args.boss_type, args.checkpoint_slot,
-                args.save_slot, args.max_tick, args.gauge, seeded_tick)
+                args.save_slot, args.max_tick, args.gauge, seeded_tick, args.loadout)
         wait_for_save(args.save_file, old)
     finally:
         pine.close()
-    export_samples(args.save_file, args.stage + 1, args.seed, args.out, args.gauge, seeded_tick if seeded_tick is not None else SEED_TICK)
+    export_samples(args.save_file, args.stage + 1, args.seed, args.out, args.gauge,
+                   seeded_tick if seeded_tick is not None else SEED_TICK, args.loadout)
 
 
 if __name__ == "__main__":

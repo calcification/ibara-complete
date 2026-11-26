@@ -12,6 +12,8 @@
 #define GAUGE_HP 0x00338B60u
 #define SEED_TICK 2000u
 #define RECORDS 8000u
+#define LOADOUT_BASE (AUDIT_BASE - 16u)
+#define POD_BASE 0x0044C8A0u
 
 struct audit {
 	u32 magic, requested_seed, applied_seed, seeded_tick;
@@ -31,6 +33,49 @@ _Static_assert(AUDIT_BASE + sizeof(struct audit) + RECORDS * sizeof(struct hp_sa
 static volatile struct audit *const audit = (volatile struct audit *)AUDIT_BASE;
 static volatile struct hp_sample *const samples =
 	(volatile struct hp_sample *)(AUDIT_BASE + sizeof(struct audit));
+
+#ifdef BL_DAMAGE_AUDIT_MATCH_PODS
+struct loadout {
+	u32 requested, equipped, frames, mismatches;
+};
+
+static volatile struct loadout *const loadout = (volatile struct loadout *)LOADOUT_BASE;
+
+/* The high byte is the selected weapon. Bytes 0–2 are the three pod kinds. */
+static void equip_pods(u32 player, u32 packed)
+{
+	unsigned i;
+
+	EE_RAM(u8, player + 0x270u) = packed >> 24;
+	for (i = 0; i < 3; i++) {
+		const unsigned kind = (packed >> (8 * i)) & 0xFFu;
+		const u32 pod = POD_BASE + 0x30u * i;
+
+		EE_RAM(u8, player + 0x26Du + i) = kind;
+		EE_RAM(u32, pod + 4) = EE_RAM(u32, pod + 16) = kind;
+		EE_RAM(u32, pod + 8) = EE_RAM(u32, pod + 12) = 0;
+		EE_RAM(u8, pod + 42) = EE_RAM(u8, pod + 43) = 0;
+	}
+	loadout->equipped = packed;
+}
+
+static void check_pods(u32 player, u32 packed)
+{
+	unsigned i;
+	u32 mismatch = EE_RAM(u8, player + 0x270u) != packed >> 24 ||
+		       EE_RAM(u8, player + PS2_PLAYER_POD_COUNT) != 3u;
+
+	for (i = 0; i < 3; i++) {
+		const unsigned kind = (packed >> (8 * i)) & 0xFFu;
+		const u32 pod = POD_BASE + 0x30u * i;
+
+		mismatch |= EE_RAM(u8, player + 0x26Du + i) != kind ||
+			    EE_RAM(u32, pod + 4) != kind;
+	}
+	loadout->frames++;
+	loadout->mismatches += mismatch;
+}
+#endif
 
 static void measure(u32 stage, u32 tick)
 {
@@ -75,6 +120,9 @@ void bl_damage_audit_players(void)
 		if (audit->magic != AUDIT_MAGIC || audit->stage != stage) {
 			audit->requested_seed = audit->applied_seed = audit->seeded_tick = 0;
 			audit->count = audit->dropped = audit->boss_type = 0;
+#ifdef BL_DAMAGE_AUDIT_MATCH_PODS
+			*loadout = (struct loadout){0};
+#endif
 			audit->stage = stage;
 			audit->magic = AUDIT_MAGIC;
 		}
@@ -83,6 +131,10 @@ void bl_damage_audit_players(void)
 			audit->seeded_tick = tick;
 			EE_RAM(u32, RNG) = audit->applied_seed;
 		}
+#ifdef BL_DAMAGE_AUDIT_MATCH_PODS
+		if (loadout->requested != 0 && loadout->equipped != loadout->requested)
+			equip_pods(p1, loadout->requested);
+#endif
 		EE_RAM(u16, p1 + PS2_PLAYER_HELD) = PS2_PAD_SHOT;
 		EE_RAM(u16, p1 + PS2_PLAYER_PRESSED) = was_shooting ? 0 : PS2_PAD_SHOT;
 		EE_RAM(u16, p1 + 0x250u) = was_shooting ? PS2_PAD_SHOT : 0;
@@ -93,6 +145,11 @@ void bl_damage_audit_players(void)
 	}
 	was_shooting = playing;
 	GAME_CALL0(0x0013AB30u);
-	if (playing)
+	if (playing) {
+#ifdef BL_DAMAGE_AUDIT_MATCH_PODS
+		if (loadout->equipped)
+			check_pods(p1, loadout->equipped);
+#endif
 		measure(stage, tick);
+	}
 }

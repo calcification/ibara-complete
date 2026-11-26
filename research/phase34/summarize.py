@@ -44,6 +44,29 @@ def collect(root, system):
         yield stage, system, seed, status, hp, elapsed
 
 
+def loadout_by_stage(root, arcade):
+    observed = {}
+    for file in sorted(root.glob("stage*/*.txt")):
+        with file.open() as capture:
+            markers = [line.split()[2:] for line in capture if line.startswith("# loadout ")]
+        if arcade:
+            # Every change is recorded. The loadout must stay constant from callback zero.
+            if len(markers) != 1 or len(markers[0]) != 5 or markers[0][0] != "0":
+                raise ValueError(f"{file}: expected one stable arcade loadout from restore")
+            fields = markers[0][1:]
+        else:
+            if (len(markers) != 1 or len(markers[0]) != 6 or
+                    markers[0][4] != "verified_frames" or int(markers[0][5]) <= 0):
+                raise ValueError(f"{file}: missing a verified PS2 loadout")
+            fields = markers[0][:4]
+        pods = tuple(map(int, fields))
+        if not all(0 < field < 256 for field in pods):
+            raise ValueError(f"{file}: expected three nonempty pods and a selected weapon")
+        if observed.setdefault(file.parent.name, pods) != pods:
+            raise ValueError(f"{file}: the stage loadout varies across seeds")
+    return observed
+
+
 def describe(trials):
     values = [elapsed for _, status, elapsed in trials if status == "kill"]
     if not values:
@@ -57,10 +80,22 @@ def main():
     parser.add_argument("--bl", type=Path, required=True)
     parser.add_argument("--ps2", type=Path, required=True)
     parser.add_argument("--csv", type=Path)
+    parser.add_argument("--bl-loadout-reference", type=Path,
+                        help="trace directory for verifying the checkpoints of a previously measured arcade cohort")
+    parser.add_argument("--match-loadout", action="store_true",
+                        help="require stable, identical arcade and PS2 pod loadouts in each paired stage")
     parser.add_argument("--min-seeds", type=int, default=8)
     args = parser.parse_args()
     if args.min_seeds < 1:
         parser.error("--min-seeds must be positive")
+    if args.bl_loadout_reference and not args.match_loadout:
+        parser.error("--bl-loadout-reference requires --match-loadout")
+    if args.match_loadout:
+        arcade = loadout_by_stage(args.bl_loadout_reference or args.bl, arcade=True)
+        ps2 = loadout_by_stage(args.ps2, arcade=False)
+        for stage, observed in ps2.items():
+            if arcade.get(stage) != observed:
+                parser.error(f"{stage} loadout differs: arcade {arcade.get(stage)}, PS2 {observed}")
     stages = defaultdict(list)
     trials = sorted([*collect(args.bl, "BL"), *collect(args.ps2, "Noir")])
     for stage, system, seed, status, _, elapsed in trials:
