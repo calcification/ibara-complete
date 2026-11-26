@@ -112,6 +112,11 @@ static void xtc_add(unsigned side, int n)
 		/* BL 0C06F10E: sound 89 on every graze. The PS2 bank still holds it (archive entry 1129, sample 32; it
 		 * matches BL's phrase 89, correlation 0.97, research/phase28). 0x001372B0 queues a code for the side, as
 		 * the PS2's extend sound does (0x0013AC84); one request per frame, like BL's per-graze calls. */
+		/* Volume: the PS2 bank gives code 89 volume byte 18 (table 0x00497550 + code, read when the code plays). Over
+		 * the sounds both games share, the PS2's bytes run about 1.4x BL's YMZ770 volumes (median); BL plays phrase 89
+		 * at 28 (MAME, research/phase28), so 18 is about half as loud as BL's. Noir uses 40 (kuro_set restores 18). BL
+		 * restarts the phrase every 6 frames while grazing, the PS2's cooldown for code 89 (table 0x00497350). */
+		EE_RAM(u8, 0x00497550u + 89u) = 40u;
 		GAME_CALL2(0x001372B0u, side, 89);
 		glow_hit[side] = 1u;
 	}

@@ -130,8 +130,12 @@ static void kuro_set(u32 on)
 	cfg_desc[16] = (const char *)(on ? 0x00302432u : 0x00302420u); /* KEY CONFIG: omit the Arcade prefix */
 	cfg_desc[18] = on ? noir_return_help : (const char *)0x00301EF0u;
 #endif
-	if (!on)
+	if (!on) {
 		bl_rank_bar_off(); /* the HUD page's retail (transparent) pixels back */
+		/* sound 89's volume byte: Noir's graze raises it to 40 (xtc.c); retail's bank value is 18 */
+		if (EE_RAM(u8, 0x00497550u + 89u) == 40u)
+			EE_RAM(u8, 0x00497550u + 89u) = 18u;
+	}
 	for (i = 0; i < n; i++, w++) {
 		volatile u32 *p = (volatile u32 *)w->addr;
 		const u32 from = on ? w->retail : w->kuro, to = on ? w->kuro : w->retail;

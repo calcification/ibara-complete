@@ -163,13 +163,41 @@ u32 sel_pause(void)
 	return sel_active ? 1u : (u32)GAME_CALL0(0x0012C220u);
 }
 
+/* 0-3 for a type state (A-D), -1 otherwise */
+static s32 type_of(u32 state)
+{
+	if (state >= SEL_TYPE_S && state < SEL_TYPE_S + 8u)
+		return (s32)((state - SEL_TYPE_S) & 3u);
+	if (state >= SEL_TYPE_S2 && state < SEL_TYPE_S2 + 8u)
+		return (s32)((state - SEL_TYPE_S2) & 3u);
+	return -1;
+}
+
+/* frames until every track of a state has played its transition */
+static u32 intro_frames(u32 state)
+{
+	u32 i, n = 0;
+	for (i = sel_state_first[state]; i < sel_state_first[state + 1]; i++)
+		if (sel_tracks[sel_state_refs[i]].intro > n)
+			n = sel_tracks[sel_state_refs[i]].intro;
+	return 2u * n;
+}
+
 static void draw_slot(u32 slot, u32 state, s32 ox, s32 oy, u32 flash, u32 fade)
 {
 	u32 i, k, ship;
 	/* the screen's opening / player 2's joining run into the straight ship's state: keep their own tracks */
 	if (!(slot_state[slot] == SEL_OPEN && state == SEL_SHIP_S) && !(slot_state[slot] == SEL_OPEN2 && state == SEL_SHIP_S2) &&
-	    slot_state[slot] != state)
+	    slot_state[slot] != state) {
+		const s32 from = type_of(slot_state[slot]), to = type_of(state);
 		slot_enter(slot, state);
+		/* The captures stepped A -> B -> C -> D with Down: type A's transition is the panel sliding in from the ship
+		 * screen, and B-D's first samples still show the type above (cursor and info). On BL a type change just swaps
+		 * the panel's content (MAME: wrap D -> A and Up A -> D), so any type change, and entering B-D from the ship
+		 * screen, starts after the transition. */
+		if (to >= 0 && (from >= 0 || to > 0))
+			slot_time[slot] = intro_frames(state);
+	}
 	k = slot_time[slot]++ >> 1;
 	state = slot_state[slot];
 	ship = sel_state_first[state] + sel_state_ship[state];

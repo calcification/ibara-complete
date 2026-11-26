@@ -228,3 +228,12 @@ screen, gameplay, stage 6). The rank bar's object moved to index 8, and the pack
 
 The patch's longest literal run (our hook image) is now 16,720 bytes, so `make_patch.py` allows 24 KiB per run;
 the total stays capped at 64 KiB.
+
+## Type changes (K57)
+
+Hardware report: scrolling up through the types made the cursor jump, and landing on type A replayed the panel
+sliding in. The long captures step A → B → C → D with Down, so type A's transition is the panel's slide-in from the
+ship screen and B–D's first samples still show the type above (cursor and info). BL itself just swaps the panel's
+content on a type change (the same captures' wrap D → A and Up A → D: one sample of the old content, then the new).
+`draw_slot` now starts a type state after its transition when it comes from another type, or from the ship screen
+into B–D. PCSX2: bursts of screenshots on C → B, B → A, A → D, D → A each show a single clean swap.

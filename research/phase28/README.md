@@ -22,6 +22,19 @@ with the test define `BL_TEST_XTC_POPUP` (one graze per frame while shot is held
 is sample 32's (SPU byte 0x43CA0) and whose play address moves between two savestates; none after the shot is
 released, and none in an Arrange game.
 
+### Volume and cadence (K57, hardware report: "I don't hear a graze sound")
+
+PS2 sound driver (0x001374A0, every frame): a request byte per code (0x00497650 + code, set by 0x001372B0) starts
+the code on one of channels 3–7 by priority (0x00497450 + code), unless its cooldown (0x00497350 + code) is running;
+the volume byte comes from 0x00497550 + code when it plays. Code 89: cooldown 6, priority 96, **volume 18**.
+
+BL (MAME, `bl_sound_log.lua`: stage 1, invincible, shot held; YMZ770 save items per frame): phrase 89 plays at
+volume2 **28** and restarts every 6 frames while grazing (76 of 119 restarts 6 frames apart, most others 12), the
+same cadence as the PS2's cooldown. Over the 25 sounds both games play, PS2 volume / BL volume has a median of ~1.4;
+code 89 is 0.64, so the PS2's graze sound is about half as loud as BL's relative to everything else. Noir writes 40
+(28 × 1.4) to code 89's volume byte when it queues a graze; leaving Noir puts 18 back (retail also uses code 89, in
+the bomb code at 0x0012A924 / 0x0012ABD0).
+
 ## Rank glow (K50)
 
 BL `0C0713F2`-`0C071500`, inside the routine that draws the graze sphere (so only while the shot is held, held count
