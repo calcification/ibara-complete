@@ -10,33 +10,60 @@ screen's tables), and the logo should add only a few KB.
 
 | Use | Texture (resource archive `IBARAR.PDM`) | Notes |
 |---|---|---|
-| Title screen | entry **875**, 256 × 256, 8-bit indexed, one 256-colour palette (32-bit entries), alpha 0 or opaque only | texture table row 4 / col 13 while the title is up. The texture holds three things: rows 0–~80 a piece of the title's silhouette artwork (keep), rows ~84–136 the 鋳薔薇 kanji with small "I BA RA" letters (about 240 × 52), rows ~140–206 a large "IBARA" wordmark (about 205 × 66). The title draws the kanji line **magnified about 2×** with a blue outline (PCSX2 screenshots), so on-screen sharpness is limited by the texture's pixels. |
-| Attract demo banner, high-score screens | entry **876**, 256 × 256, same format | small 鋳薔薇 / IBARA logos next to the "Today's Heroes / Heroes' Histories" banners; they share the texture's palette with those banners |
-| Menus (Mode Select, ARCADE / ARRANGE / NOIR menus) | menu header plate, top right | texture not located yet |
+| Title screen | entry **875**, 256 × 256, 8-bit indexed, one 256-colour RGBA palette | The main draw samples **(0, 80) to (240, 168)**. A second draw samples **(0, 168) to (240, 224)**. Keep the silhouette area above row 80. |
+| Attract and high-score banners | entry **876**, 256 × 256, same format | Small 鋳薔薇 / IBARA graphics share the palette with the “Today's Heroes / Heroes' Histories” banners. Banner draw rectangles and scale still need a live capture. |
+| Mode Select header | entry **945**, 256 × 256, same format | The right header plate samples **(120, 0) to (240, 48)**, including the badge and its background. The left MODE SELECT plate uses **(0, 0) to (120, 64)**. |
 
-**Still to pin down before the artist starts** (a GS-level capture of the title, attract and score screens): the exact
-source rectangle and on-screen scale of each use, whether the large "IBARA" wordmark is drawn anywhere, whether the
-title's draw blends partial alpha (if it does, soft edges become possible), and the menu plate's texture.
+## Verified draw geometry
+
+Source rectangles use exclusive right and bottom edges. Output sizes below
+are GS sprite dimensions before presentation scaling or user rotation.
+The PCSX2 title dump used retail Yoko with a 640 × 448 display. The
+compositor presented the 240-pixel game canvas as a 336-pixel-wide
+centered image. Vertical presentation scaled the 320-pixel canvas to
+about 478 pixels in the 640 × 480 PCSX2 screenshot.
+
+| Draw | Source (left, top, right, bottom) | Sprite size | Sprite top-left |
+|---|---|---:|---:|
+| Title primary, TBP0 15000 | (0, 80, 240, 168) | 240 × 88 | (−0.5, 58.4375) |
+| Title lower layer, TBP0 15000 | (0, 168, 240, 224) | 240 × 56 | (−0.5, 122.4375) |
+| Mode Select left plate, TBP0 13960 | (0, 0, 120, 64) | 120 × 64 | (−0.5, −1.5625) |
+| Mode Select right plate, TBP0 13960 | (120, 0, 240, 48) | 120 × 48 | (119.5, −1.5625) |
+
+These draws use 1:1 GS sprite sizes. Presentation scales the title's
+primary box to about 336 × 131 in the captured window. Within its source
+box, the nontransparent pixels occupy **(1, 80) to (216, 168)**. The
+lower layer contains glyphs from the large wordmark area at **(7, 168)
+to (206, 207)**. It draws with an additive blend and vertex alpha 96.
+The primary logo and Mode Select plates draw with standard source-alpha
+blending and vertex alpha 128. Their alpha test accepts values greater
+than 1. The draw can blend partial alpha. The current palettes of
+entries 875, 876 and 945 contain only alpha 0 and 128. Soft edges would
+require palette slots and a patcher check for the art sharing the palette.
+
+The right plate's 120 × 48 is a placement box. Its background, border
+and vine motif share that box with the logo badge. Supply a separate
+transparent badge so the integrator can keep those details. The title's
+two sprites use adjacent atlas rows and overlap by 24 GS pixels on
+screen. Review both sprites together in the preview.
 
 ## What to ask the artist for
 
-1. **A master** at any resolution (kept outside the repository) and **final-pixel versions** at the texture sizes:
-   - the main logo line: about 240 × 52 (fits the kanji line's area; the title shows it ~2× larger),
-   - optionally a wordmark line: about 205 × 66 (only if that line turns out to be used),
-   - the small versions for entry 876 (sizes from the capture above); or let the patcher scale them from the main
-     logo at no patch cost, and commission hand-made ones only if the scaled ones look poor.
+1. **A master** at any resolution (kept outside the repository) and **final-pixel versions** for the measured title
+   boxes, 240 × 88 and 240 × 56, plus a compact badge for the 120 × 48 menu plate. Align the title designs with the
+   existing visible bounds. Prepare the entry 876 versions after the banner draw is captured.
 2. **At most 16 flat colours** (32 at the very most). The patch stores indexed pixels with LZMA; measured on the
    retail logo area (240 × 123): 16 colours ≈ 5.3 KB, 64 colours ≈ 7.3 KB. A clean flat design compresses to ≈ 1–2 KB.
-3. **Hard edges**, transparent background, no anti-aliasing against transparency (the texture has on / off
-   transparency only, unless the capture shows the title blends partial alpha). Pixel-clean art reads best at 2×.
-4. Readable when magnified ~2× (title) and at its small size (banners).
+3. **Hard edges** and a transparent background for the first production pass. Partial-alpha variants can be previewed
+   if there is room in the shared palette.
+4. Readable at the measured title scale and in the smaller menu badge.
 5. Delivered as indexed PNG files at the final sizes, plus the master.
 
 ## How it ships
 
 * `patcher/art/` (to be added): the final-size indexed images, compressed (LZMA) or as PNG (decoded by the patcher
   with the standard library).
-* The patcher writes the new pixels and palette entries into entries 875 / 876 (and the menu plate's texture) in
+* The patcher writes the new pixels and palette entries into entries 875 / 876 (and entry 945 for the menu plate) in
   place: only the logo's rectangles and the palette entries the old logo used change; the silhouette art and banners
   stay. The archive entries keep their size, so the disc does not grow.
 * No `--bl-rom` needed for the logo.
