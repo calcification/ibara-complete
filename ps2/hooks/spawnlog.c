@@ -364,7 +364,7 @@ static void rose_life_frame(u32 tick)
 		volatile u32 *ch = (volatile u32 *)0x01FEE000u;
 		if ((EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == 74u) {
 			const u32 st = EE_RAM(u8, a + 0x9F) | EE_RAM(u8, a + 0xA0) << 8 | EE_RAM(u8, a + 0x98) << 16;
-			if (st != rl_state[i] && ch[0] < 500u) {
+			if ((st & 0xFFFFu) != (rl_state[i] & 0xFFFFu) && ch[0] < 500u) { /* phase or sub-state changed */
 				volatile u32 *r = (volatile u32 *)(0x01FEE010u + 16u * ch[0]++);
 				r[0] = tick;
 				r[1] = i;
