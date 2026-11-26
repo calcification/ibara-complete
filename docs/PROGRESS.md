@@ -40,7 +40,7 @@ check) is superseded by K03. The rest are older optional or hardware rows. Unit 
 
 1. XTC is complete: graze sphere (K31), number popup (K32), deployed-pod requirement, graze sound (K49) and rank glow (K50).
 2. Pod shot counts still apart from BL: 5-way, homing, napalm (targeting / fire rules).
-3. Hadou drops: done (K56, research/phase29).
+3. Hadou drops: done (K56, research/phase32).
 4. Stage-6 rose form: BL spawns roses ≈15 % faster and adds a type-14 barrage, so its rose core lasts ≈40 % longer (research/phase25); port from the type-74 handler. Then player-side damage.
 5. BL title logo.
 6. Game flow: side select done (K53).

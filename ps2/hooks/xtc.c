@@ -306,7 +306,7 @@ void xtc_reset(void)
 
 #ifdef BL_ITEM_LOG
 /* TEST BUILDS ONLY: every new item (pool 0x00453A40, 256 x 0x58; +4 type, +8 subtype) logged each frame as
- * (frame, type, subtype) at 0x01FD0010, count at 0x01FD0000 (research/phase29, Hadou drops). */
+ * (frame, type, subtype) at 0x01FD0010, count at 0x01FD0000 (research/phase32, Hadou drops). */
 void xtc_item_log_install_ext(void)
 {
 	static u8 alive[256];

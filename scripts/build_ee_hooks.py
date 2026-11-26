@@ -258,7 +258,7 @@ HOOKS = {
         # 5 The Family's Work instead of Show Time, Sky High, Robot No28) - and the HUD's song title follows it.
         # 0x00115338 `lw v0,$gp-28076` (Arrange flag) -> `li v0,1`.
         (0x00115338, 0x8F829254, 0x24020001),
-        # BL's bullet-cancel items (research/phase29): Arcade makes a rose for every cancel; BL makes none for the
+        # BL's bullet-cancel items (research/phase32): Arcade makes a rose for every cancel; BL makes none for the
         # Hadou (player projectile types 1 / 2), as the PS2's Arrange branch does (subtype 1 a medal, others nothing),
         # and roses for everything else (bombs and their type-0 explosions; Arrange's branch would drop those).
         # 0x0012AE50 `lw v1,$gp-28076` (Arrange flag) -> `li v1,1`: take the branch that tests types 1 / 2;

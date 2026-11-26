@@ -1,4 +1,4 @@
--- research/phase29: BL (MAME) item spawns per frame around a bomb (HOLD=8) or the Hadou (HOLD=140); env TYPE (0-3), BOMBS (frames), HOLD, END, OUT; bombs kept at 3 and rank at 0x600000 until frame 1700
+-- research/phase32: BL (MAME) item spawns per frame around a bomb (HOLD=8) or the Hadou (HOLD=140); env TYPE (0-3), BOMBS (frames), HOLD, END, OUT; bombs kept at 3 and rank at 0x600000 until frame 1700
 -- BL: pick straight type TYPE (env, 0=A..3=D), play stage 1 holding shot, bomb at BOMB frames; log new items
 local m = manager.machine; local sp = m.devices[":maincpu"].spaces["program"]
 local ports = m.ioport.ports; local function fld(p, n) return ports[p].fields[n] end

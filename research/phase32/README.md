@@ -1,4 +1,4 @@
-# Phase 29 — Hadou drops (K56, 2026-11-26)
+# Phase 32 — Hadou drops (K56, 2026-11-26)
 
 **The Hadou** is the bomb button held 16 frames with a full bomb in stock, then released (ibara360 notes, "the same code
 in both games"): a charging column, then a blast. Its player projectiles are type 1 / 2 (side + 1; subtypes are its
