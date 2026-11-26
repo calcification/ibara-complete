@@ -202,6 +202,12 @@ void xtc_frame(void)
 #endif
 	if (bl_boss_cancel_frame)
 		bl_boss_cancel_frame();
+#ifdef BL_ITEM_LOG
+	{
+		void xtc_item_log_install_ext(void);
+		xtc_item_log_install_ext();
+	}
+#endif
 #ifdef BL_TEST_GLOW_LEVELS
 	{ /* TEST BUILDS ONLY: rank stepped through the rank glow's levels 8-15, 120 frames each (research/phase28) */
 		static u32 n;
@@ -297,3 +303,56 @@ void xtc_reset(void)
 		glow_a[s] = glow_hit[s] = 0;
 	}
 }
+
+#ifdef BL_ITEM_LOG
+/* TEST BUILDS ONLY: every new item (pool 0x00453A40, 256 x 0x58; +4 type, +8 subtype) logged each frame as
+ * (frame, type, subtype) at 0x01FD0010, count at 0x01FD0000 (research/phase29, Hadou drops). */
+void xtc_item_log_install_ext(void)
+{
+	static u8 alive[256];
+	if (EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_BOMBS) < 3u) /* test: bombs kept at 3 */
+		EE_RAM(u8, PS2_PLAYER_BASE + PS2_PLAYER_BOMBS) = 3;
+	volatile u32 *n = (volatile u32 *)0x01FD0000u;
+	u32 i;
+	for (i = 0; i < 256u; i++) {
+		const u32 a = 0x00453A40u + i * 0x58u;
+		const u8 on = EE_RAM(u32, a) != 0;
+		if (on && !alive[i] && *n < 4000u) {
+			volatile u32 *e = (volatile u32 *)(0x01FD0010u + *n * 12u);
+			e[0] = EE_RAM(u32, 0x00338CDCu);
+			e[1] = EE_RAM(u32, a + 4u);
+			e[2] = EE_RAM(u32, a + 8u);
+			*n = *n + 1u;
+		}
+		alive[i] = on;
+	}
+	{ /* new player projectiles (pool 0x0044EA40, 256 x 0x50; +4 type, +8 subtype): (frame, 0xFFFE0000 | type, sub) */
+		static u8 pal[256];
+		for (i = 0; i < 256u; i++) {
+			const u32 a = 0x0044EA40u + i * 0x50u;
+			const u8 on = (EE_RAM(u32, a) & 0x80000000u) != 0;
+			const u32 ty = EE_RAM(u32, a + 4u);
+			if (on && !pal[i] && ty != 0u && ty != 3u && *n < 4000u) { /* not the plain shots */
+				volatile u32 *e = (volatile u32 *)(0x01FD0010u + *n * 12u);
+				e[0] = EE_RAM(u32, 0x00338CDCu);
+				e[1] = 0xFFFE0000u | ty;
+				e[2] = EE_RAM(u32, a + 8u);
+				*n = *n + 1u;
+			}
+			pal[i] = on;
+		}
+	}
+	{ /* and player 1's held buttons when they change: (frame, 0xFFFF, held) */
+		static u32 last;
+		const u32 h = EE_RAM(u16, PS2_PLAYER_BASE + PS2_PLAYER_HELD);
+		if (h != last && *n < 4000u) {
+			volatile u32 *e = (volatile u32 *)(0x01FD0010u + *n * 12u);
+			e[0] = EE_RAM(u32, 0x00338CDCu);
+			e[1] = 0xFFFFu;
+			e[2] = h;
+			*n = *n + 1u;
+		}
+		last = h;
+	}
+}
+#endif
