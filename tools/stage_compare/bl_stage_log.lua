@@ -16,6 +16,7 @@
 --   SEED      with RESUME_STATE: random seed written after the restore (repeat trials, research/phase33)
 --   RESUME_STATE absolute MAME checkpoint (restore with the same player, rank and shot setup)
 --   CORESTATE=1 core.txt also gets "S frame slot +0x50 +0x9F +0xA0 +0x98" lines (rose core phase machine)
+--   PARTS=1   parts.txt: every alive enemy part every 8 frames (frame slot type subtype hp x y flags)
 --   ROSES=1   roses.txt: one line per type-79 rose when it goes away: spawn frame, last frame, slot, subtype, HP at
 --             spawn, last HP, spawn x y, last x y, minimum HP seen (research/phase33)
 --   SHOTOFF   release the shot button from this frame of STAGE on (timer-driven or damage-driven phase?)
@@ -39,6 +40,7 @@ local tout = io.open(dir .. "/tables.txt", "w"); local tseen = {}
 local frame, first, shooting, left = 0, nil, false, false
 local alive, typ, balive, bpend, hp0 = {}, {}, {}, {}, {}
 local NOSHOT = os.getenv("NOSHOT")
+local pout
 local rout = os.getenv("ROSES") and io.open(dir .. "/roses.txt", "w"); local rose = {}
 local contact_source = os.getenv("CONTACT_TAP")
 local close_contacts
@@ -82,7 +84,7 @@ local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34
     salive[k] = on
   end
 end
-local function finish() if rout then rout:close() end; if close_contacts then close_contacts() end; if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
+local function finish() if pout then pout:close() end; if rout then rout:close() end; if close_contacts then close_contacts() end; if sout then sout:close() end; out:close(); bout:close(); cout:close(); tout:close(); m:exit() end
 emu.register_frame_done(function()
   frame = frame + 1
   if resume_state then
@@ -173,6 +175,18 @@ emu.register_frame_done(function()
     end
   end
   if not first then return end
+  -- PARTS=1: parts.txt every 8 frames, every alive enemy part: frame slot type subtype hp x y flags (research/phase34)
+  if os.getenv("PARTS") and (frame - first) % 8 == 0 then
+    if not pout then pout = io.open(dir .. "/parts.txt", "w") end
+    for i = 0, 191 do
+      local a = EN + i * 0xB4
+      local fl = sp:read_u32(a)
+      if (fl & 0x80000000) ~= 0 then
+        pout:write(string.format("%d %d %d %08X %d %d %d %08X\n", frame - first, i, sp:read_u32(a + 4), sp:read_u32(a + 8),
+          sp:read_u16(a + 0x3C), sp:read_u32(a + 0x24) >> 16, sp:read_u32(a + 0x28) >> 16, fl))
+      end
+    end
+  end
   if save_state and frame - first == 10500 then
     m:save(save_state)
   elseif save_state and frame - first > 10500 then

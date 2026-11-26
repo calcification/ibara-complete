@@ -407,6 +407,51 @@ static void rose_life_frame(u32 tick)
 	}
 }
 #endif
+#ifdef BL_PART_STATS
+/* TEST BUILDS ONLY (research/phase34): stage 6, ticks 12,000-16,000 (the first core), type-74 parts per subtype
+ * (0..255): u16 spawns, u16 HP lost, u16 HP at first sight, s16 x, s16 y, u16 pad, u32 first tick: 16-byte rows at
+ * 0x01FD0010, magic "PST1" at 0x01FD0000. Not with BL_ROSE_LIFE (same buffer). */
+struct ps_row { u16 spawns, lost, hp0; s16 x, y; u16 pad; u32 tick; };
+static u16 ps_hp[EN_COUNT];
+static u8 ps_sub[EN_COUNT], ps_on[EN_COUNT];
+
+static void part_stats_frame(u32 tick)
+{
+	volatile u32 *h = (volatile u32 *)0x01FD0000u;
+	struct ps_row *row = (struct ps_row *)0x01FD0010u;
+	u32 i;
+	if (h[0] != 0x31545350u) {
+		h[0] = 0x31545350u;
+		for (i = 0; i < 256u * 4u; i++)
+			((u32 *)row)[i] = 0;
+		for (i = 0; i < EN_COUNT; i++)
+			ps_on[i] = 0;
+	}
+	if (tick < 12000u || tick > 16000u)
+		return;
+	for (i = 0; i < EN_COUNT; i++) {
+		const u32 a = EN_BASE + i * EN_STRIDE;
+		const u32 on = (EE_RAM(u32, a) & 0x80000000u) && EE_RAM(u32, a + 4) == 74u;
+		const u8 sub = (u8)EE_RAM(u32, a + 8);
+		const u16 hp = EE_RAM(u16, a + 0x3C);
+		if (on && ps_on[i] && ps_sub[i] == sub && hp < ps_hp[i])
+			row[sub].lost += ps_hp[i] - hp;
+		if (on && (!ps_on[i] || ps_sub[i] != sub)) {
+			struct ps_row *r = &row[sub];
+			if (!r->spawns) {
+				r->hp0 = hp;
+				r->x = (s16)(EE_RAM(u32, a + 0x24) >> 16);
+				r->y = (s16)(EE_RAM(u32, a + 0x28) >> 16);
+				r->tick = tick;
+			}
+			r->spawns++;
+		}
+		ps_on[i] = (u8)on;
+		ps_sub[i] = sub;
+		ps_hp[i] = hp;
+	}
+}
+#endif
 static u32 sl_type[EN_COUNT];
 static u16 sl_hp0[EN_COUNT]; /* HP at first sight (BL_NOSHOT keeps boss parts at it) */
 static u8 sl_alive[EN_COUNT];
@@ -425,6 +470,10 @@ void spawn_log_frame(void)
 #ifdef BL_ROSE_LIFE
 	if (stage == 7u)
 		rose_life_frame(stage_tick);
+#endif
+#ifdef BL_PART_STATS
+	if (stage == 7u)
+		part_stats_frame(stage_tick);
 #endif
 #ifdef BL_RATE_TEST
 	rate_test_frame();
