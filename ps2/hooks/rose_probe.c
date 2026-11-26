@@ -56,6 +56,27 @@ void bl_rose_probe_players(void)
 #endif
 		test->magic = ROSE_TEST_MAGIC;
 	}
+#ifdef BL_FORCE_POD_WEAPON /* research/phase34: the BL reference run's pods (weapon 6, three pods of shot kind 12), once */
+	{
+		static u8 armed;
+		const u32 rec = PS2_PLAYER_BASE;
+		if (!armed && EE_RAM(u8, STAGE_COUNT) == ROSE_STAGE && EE_RAM(u32, 0x00338EA0u) >= 10000u) {
+			u32 k;
+			EE_RAM(u8, rec + 0x270) = BL_FORCE_POD_WEAPON;
+			EE_RAM(u8, rec + 0x26D) = EE_RAM(u8, rec + 0x26E) = EE_RAM(u8, rec + 0x26F) = 2u * BL_FORCE_POD_WEAPON;
+			for (k = 0; k < 3u; k++) { /* each pod record, as 0x00139938 (spawnlog.c BL_RATE_TEST) */
+				const u32 pod = 0x0044C8A0u + 0x30u * k;
+				EE_RAM(u32, pod + 4) = 2u * BL_FORCE_POD_WEAPON;
+				EE_RAM(u32, pod + 16) = 2u * BL_FORCE_POD_WEAPON;
+				EE_RAM(u32, pod + 8) = 0;
+				EE_RAM(u32, pod + 12) = 0;
+				EE_RAM(u8, pod + 42) = 0;
+				EE_RAM(u8, pod + 43) = 0;
+			}
+			armed = 1;
+		}
+	}
+#endif
 #ifdef BL_ROSE_SEED /* repeat trials (research/phase33): the game's random seed ($gp-32744), once, before the first core */
 	{
 		static u8 seeded;

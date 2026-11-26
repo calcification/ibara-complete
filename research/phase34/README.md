@@ -44,6 +44,28 @@ The shields (0x10, 0x11, 0x28) exist and absorb about the same in both. In BL th
   creates parts without bit 0x8000 (e.g. rose linked part BL 0xD300C100 vs PS2 0xD3004100). Not the core's cause
   (HP 359), but a real difference.
 
+## Where the shots go (contact traces, first 1,400 frames of the core)
+
+BL (`bl_contacts.lua`, checkpoint replay): the core is touched 9 times (1 HP); the shields take the rest (0x10
+1,305, 0x28 883, 0x11 665 contacts). PS2 (`BL_CONTACT_ALL74`): the core 837 contacts (98 HP), the shields about
+as often as in BL. The core's own hitbox is empty in both (it takes damage only through linked parts: slot 1
+sub 0xE, the six-part ring 0x19, sub 3 / 5–7); hitbox sizes of every linked part and shield are identical; and the
+first hittable part in the player's lane is the same shield in both games (0x28 / 0xF / 0x10, same shares).
+
+By shot type: every BL contact is shot type 0; on the PS2, type-3 shots make 828 of the core's 837 contacts and 97 of
+its 98 HP. BL's collision pool (0C2A6D9C) holds only type-0 shots in this window (4,396 new shots).
+
+### The cause: different pods, and one real rule
+
+* **Set-up mismatch.** The BL reference run (natural route) reaches stage 6 with weapon 6 and three pods of shot kind
+  12; the PS2 Practice run has weapon 0xFF and pods of kind 10, which fire the type-3 shots. Phases 30–33 matched ship
+  and shot level, not pods, so their first-core and rose numbers compare different weapons.
+* **Piercing shots (real rule).** BL's shot-vs-enemy loop takes the next shot after any damage call (0C06E404 →
+  0C06E308, also for shots with flag 0x00800000). The PS2's main-shot loop sends a 0x00800000 shot on to the next
+  enemy after scoring (0x0012B588 → 0x0012B5B8), so it can hit a shield and the ring behind it in one frame. Noir
+  now patches 0x0012B5B4 `nop` → `b 0x0012B370` (candidate, committed). Alone, with the mismatched pods, it moved the
+  first core from 3,566 to 4,054 ticks on average (seeds 1–4) and the rose core from 3,651 to 3,558.
+
 ## Next
 
 Compare the core's own hit area / collision settings, then trace which part each player hit lands on (Codex's

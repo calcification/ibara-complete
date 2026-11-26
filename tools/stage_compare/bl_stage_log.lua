@@ -76,6 +76,15 @@ local function shot_frame()  -- every new player shot (pool 0C2380D0, 160 x 0x34
     if (sp:read_u32(a) >> 30) == 3 then if (sp:read_u32(a + 4) & 0xFF) == 0 then c0 = c0 + 1 end end
   end
   sout:write(string.format("%d 255 %d %d 0\n", sframe, c0, c2))
+  -- the pool BL's shot-vs-enemy loop reads (0C2A6D9C, 32 per player): new shots as "frame 254 slot type +8 +C"
+  for k = 0, 63 do
+    local a = 0x0C2A6D9C + 0x34 * k
+    local on = (sp:read_u32(a) >> 30) == 3
+    if on and not salive[1000 + k] then
+      sout:write(string.format("%d 254 %d %d %d %d\n", sframe, k, sp:read_u32(a + 4) & 0xFF, sp:read_u32(a + 8) & 0xFF, sp:read_u32(a + 12) & 0xFF))
+    end
+    salive[1000 + k] = on
+  end
   for k = 0, 159 do
     local a = 0x0C2380D0 + 0x34 * k
     local on = (sp:read_u32(a) >> 30) == 3
