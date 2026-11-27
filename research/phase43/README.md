@@ -12,8 +12,30 @@ deterministic, so the screens match until the input shows; the first differing d
 in MAME's CV1000 model. The real board can differ (MAME's video timing is a model): the PCB tap kit can measure it
 the same way (the Pico presses the input, the capture finds the changed frame).
 
-## PS2 (to do)
+## PS2 (PCSX2, Noir)
 
-Same A/B needs frame-exact input and per-frame display hashes in PCSX2: a local PCSX2 build option that forces a pad
-bit from a given vsync after a state load and logs a hash of each displayed frame. Then read the game's pad and
-frame loop to see where any extra frames come from (pad read timing, draw / flip buffering).
+`pcsx2_lag_instrumentation.diff` (local PCSX2 build, research only): `LAG_AT` / `LAG_BIT` press a pad bit from a
+given EE vsync after launch, at the emulated pad response (so the game's whole pad path through the IOP is
+measured); `LAG_HASH` logs, per presented frame, a hash of both display circuits' framebuffers (software renderer)
+tagged with the EE vsync number of that frame (passed through the MTGS vsync packet). `pcsx2_lag_ab.sh` boots
+PCSX2 straight from a savestate (Noir stage 1, current patched ISO).
+
+* Two runs without input: identical on every frame (one display circuit has a one-byte difference on some frames,
+  ignored).
+* The game ignores the pad for ~380 vsyncs after a savestate load (presses at 200 and 210 both first showed at
+  379): measure after that.
+* Right pressed from EE vsync 500: first changed presented frame 503. From 510: 513. **3 frames**, as in MAME.
+
+PCSX2's pad and display timing are themselves models; the host's presentation (and the user's display chain) adds
+to both systems equally and is not counted here.
+
+## So far
+
+| System | Input to first changed frame |
+|---|---:|
+| MAME (Black Label) | 3 |
+| PS2 (PCSX2, Noir) | 3 |
+| PCB | to measure (tap kit) |
+
+The PS2 port does not add internal frames compared with MAME's model. Reducing below 3 would make it faster than
+MAME's arcade model; whether that matches the real board waits for the PCB measurement.

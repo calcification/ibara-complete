@@ -1,0 +1,91 @@
+diff --git a/pcsx2/GS/Renderers/Common/GSRenderer.cpp b/pcsx2/GS/Renderers/Common/GSRenderer.cpp
+index ab9f5bb..5264a8c 100644
+--- a/pcsx2/GS/Renderers/Common/GSRenderer.cpp
++++ b/pcsx2/GS/Renderers/Common/GSRenderer.cpp
+@@ -598,9 +598,30 @@ void GSJoinSnapshotThreads()
+ 	}
+ }
+ 
++u32 g_lag_gs_vsync = 0; // research (input lag): EE vsync number of the frame being presented
+ void GSRenderer::VSync(u32 field, bool registers_written)
+ {
+ 	Flush(GSFlushReason::VSYNC);
++	{ // research (input lag): LAG_HASH=<file>: per GS vsync since launch, a hash of both display circuits' framebuffers
++		static FILE* lag_f = nullptr; static bool lag_init = false; static u32 lag_n = 0;
++		if (!lag_init) { lag_init = true; if (const char* f = getenv("LAG_HASH")) lag_f = fopen(f, "w"); }
++		lag_n++;
++		if (lag_f)
++		{
++			u32 h[2] = {0, 0};
++			for (int i = 0; i < 2; i++)
++			{
++				const GSRegDISPFB& fb = m_regs->DISP[i].DISPFB;
++				const u32 bp = fb.Block(), bw = fb.FBW, psm = fb.PSM;
++				const auto rp = GSLocalMemory::m_psm[psm].rp;
++				for (int y = 0; y < 512; y += 2)
++					for (int x = 0; x < 640; x += 3)
++						h[i] = h[i] * 16777619u ^ (m_mem.*rp)(x, y, bp, bw);
++			}
++			fprintf(lag_f, "%u %08x %08x %05x %u\n", lag_n, h[0], h[1], m_regs->DISP[1].DISPFB.Block(), g_lag_gs_vsync);
++			fflush(lag_f);
++		}
++	}
+ 
+ 	if (GSConfig.DumpGSData && s_n >= GSConfig.SaveN)
+ 	{
+diff --git a/pcsx2/MTGS.cpp b/pcsx2/MTGS.cpp
+index b724228..32533a4 100644
+--- a/pcsx2/MTGS.cpp
++++ b/pcsx2/MTGS.cpp
+@@ -210,6 +210,7 @@ void SysMtgsThread::PostVsyncStart(bool registers_written)
+ 	remainder[1] = GSIMR._u32;
+ 	(GSRegSIGBLID&)remainder[2] = GSSIGLBLID;
+ 	remainder[4] = static_cast<u32>(registers_written);
++	{ extern u32 g_lag_vsync; remainder[5] = g_lag_vsync; } // research (input lag): EE vsync of this frame
+ 	m_packet_writepos = (m_packet_writepos + 2) & RingBufferMask;
+ 
+ 	SendDataPacket();
+@@ -468,6 +469,7 @@ void SysMtgsThread::MainLoop()
+ 							((u32&)RingBuffer.Regs[0x1010]) = remainder[1];
+ 							((GSRegSIGBLID&)RingBuffer.Regs[0x1080]) = (GSRegSIGBLID&)remainder[2];
+ 
++							{ extern u32 g_lag_gs_vsync; g_lag_gs_vsync = remainder[5]; } // research (input lag)
+ 							// CSR & 0x2000; is the pageflip id.
+ 							GSvsync((((u32&)RingBuffer.Regs[0x1000]) & 0x2000) ? 0 : 1, remainder[4] != 0);
+ 
+diff --git a/pcsx2/PAD/Host/StateManagement.cpp b/pcsx2/PAD/Host/StateManagement.cpp
+index 71e30eb..e4cc27b 100644
+--- a/pcsx2/PAD/Host/StateManagement.cpp
++++ b/pcsx2/PAD/Host/StateManagement.cpp
+@@ -258,7 +258,15 @@ u8 pad_poll(u8 value)
+ #endif
+ 
+ 				const u32 ext_port = sioConvertPortAndSlotToPad(query.port, query.slot);
+-				const u32 buttons = g_key_status.GetButtons(ext_port);
++				u32 buttons = g_key_status.GetButtons(ext_port);
++				{ // research (input lag): from EE vsync LAG_AT after launch, press bit LAG_BIT on pad 0 (active low)
++					extern u32 g_lag_vsync;
++					static int lag_at = -2, lag_bit = 0;
++					if (lag_at == -2) { const char* a = getenv("LAG_AT"); const char* b = getenv("LAG_BIT");
++						lag_at = a ? atoi(a) : -1; lag_bit = b ? atoi(b) : 13; }
++					if (lag_at >= 0 && ext_port == 0 && g_lag_vsync >= static_cast<u32>(lag_at))
++						buttons &= ~(1u << lag_bit);
++				}
+ 				if (!test_bit(buttons, PAD_ANALOG) && !pad->modeLock)
+ 				{
+ 					switch (pad->mode)
+diff --git a/pcsx2/Counters.cpp b/pcsx2/Counters.cpp
+index 7c10ff6..475e195 100644
+--- a/pcsx2/Counters.cpp
++++ b/pcsx2/Counters.cpp
+@@ -600,8 +600,10 @@ static __fi void frameLimit()
+ 	frameLimitUpdateCore();
+ }
+ 
++u32 g_lag_vsync = 0; // research (input lag): EE vsyncs since launch
+ static __fi void VSyncStart(u32 sCycle)
+ {
++	g_lag_vsync++;
+ 	// Update vibration at the end of a frame.
+ 	PAD::Update();
+ 
