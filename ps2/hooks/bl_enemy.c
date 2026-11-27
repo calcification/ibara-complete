@@ -58,6 +58,17 @@ static const u8 bc_trig[][4] = { /* stage byte (2 = stage 1), type, subtype, HOL
 static u16 bc_hp[EN_COUNT]; /* HP last frame, 0 when not alive */
 u32 bc_left; /* frames of clearing left (read by the BL_MIDLOG test logger) */
 
+#ifdef REPLAY_BUILD
+/* A new game starts with no kill pending (replay.c, at a game's first update): both persist across games. */
+void bl_enemy_reset(void)
+{
+	u32 i;
+	for (i = 0; i < EN_COUNT; i++)
+		bc_hp[i] = 0;
+	bc_left = 0;
+}
+#endif
+
 void bl_boss_cancel_frame(void)
 {
 	const u32 stage = EE_RAM(u8, PS2_STAGE_COUNT);
