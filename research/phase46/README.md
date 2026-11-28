@@ -58,4 +58,43 @@ Test build: `mcfile.c` + `mctest.c` with `MC_TEST`, started from the frontend. I
 * Checked from outside with `tools/mc_read.py`: the file system is consistent (FAT chains match sizes, no shared or
   lost clusters). The game's three files are byte-identical to before, `REPLAY1.DAT` holds the second pattern, and
   the folder title reads イバラ / ＫＵＲＯ　ＲＥＰＬＡＹ.
-* The game still boots and auto-loads its own save from the card afterwards (its "auto-loaded" message at boot).
+* The release ISO still boots and auto-loads its own save from a card that has our folder (the game's "auto-loaded"
+  message at boot).
+
+### Power cuts (`MC_TEST_CUT=n`: the module stops after n card commands, then PCSX2 is killed)
+
+Commands 1–53 are the first save (folder and icons, then the file), 54–74 the load, and 75–121 the overwrite.
+
+| Cut after | Where | Card afterwards |
+|---:|---|---|
+| 5 | icon.sys written, icon not | consistent; folder with icon.sys only |
+| 20 | first-ever save, mid-write, file still open | `REPLAY1.DAT.TMP`'s directory size (32 KB) is ahead of its cluster chain (1 cluster): the card's write cache was never flushed. Only our temp file is affected |
+| 77 | stale temp deleted | consistent; old `REPLAY1.DAT` intact (pattern 1) |
+| 85 | temp part-written | consistent; old file intact, temp 0 bytes |
+| 98 / 110 / 119 | temp complete / mid-verify / verified | consistent; old file intact, complete temp beside it |
+| 120 | old file deleted, rename not done | consistent; only the complete temp (pattern 2) |
+| 121 | done | consistent; new file |
+
+In every case the game's three files are byte-identical. Follow-ups:
+* Load after cut 120 falls back to `REPLAY1.DAT.TMP` and returns all 300,000 bytes of the new version.
+* Load after cut 20 fails cleanly (opening the partial temp is refused, −3); nothing partial is returned.
+* A full save sequence on the cut-20 and cut-120 cards succeeds and leaves a consistent card (the stale temp is
+  deleted first).
+
+A first-ever save cut mid-write can leave our own temp file inconsistent, as with any PS2 save cut while a file is
+open. The replay format carries a length and checksum, so a damaged file is rejected rather than played.
+
+### Card problems
+
+| Case | Result |
+|---|---|
+| No memory card (slot disabled; the game's own "no card, start anyway?" → Yes) | save refused at the card check (−11), load fails (−12), the game carries on |
+| Unformatted card (all 0xFF) | save refused at the card check (not formatted), load fails (−2); nothing written |
+| Not enough space (a 9 MB file claimed) | refused by the space check (−1000) before anything is written; card unchanged |
+
+## Next
+
+* Replay file format: header (magic, version, mode, ship / bomb, stage, start state), compressed per-update
+  data, length and checksum.
+* Save / load screens (only where the game does no card work), then the REPLAY menu entry and playback.
+* Hardware: one real card on an original PS2 before any release use.

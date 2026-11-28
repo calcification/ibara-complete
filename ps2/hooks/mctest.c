@@ -71,6 +71,17 @@ void mc_test_frame(void)
 	else
 		return;
 #else
+#ifdef MC_TEST_FAKE_SIZE
+	/* more than the card holds: refused by the space check before anything is written */
+	if (stage == 0)
+		mc_save("BIG.DAT", SRC, MC_TEST_FAKE_SIZE);
+	else if (stage == 1)
+		record(0, 0);
+	else
+		return;
+	stage++;
+	return;
+#endif
 	/* jobs: 0 save pattern 1, 1 load, 2 save pattern 2 over it, 3 load, 4 save SETTINGS.DAT */
 	switch (stage) {
 	case 0: fill(1u); mc_save("REPLAY1.DAT", SRC, MC_TEST_SIZE); break;
