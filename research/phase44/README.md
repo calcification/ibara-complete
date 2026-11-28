@@ -45,6 +45,26 @@ loading and ship select, so neither is in the replay.
   update 704. It is preceded by an enemy (type 0x0D, subtype 0x10, slot 0) whose animation frame and x position
   are one update apart at update 650. Under investigation.
 
+### The open Noir slips (status 28 November)
+
+Over about 30 runs of the latest test build, roughly 40 % match exactly through update 1,800. The rest have one of two slips:
+* **Early slip:** an enemy-controller object (type 76, slot 3) is created one update apart around update 450–500.
+  Its counter +0x98 differs by one step, and the RNG is one call apart by update 704. Both outcomes occur in the
+  recording and in the playback, like a coin flip per game.
+* **Late slip:** a graze (+10) or a kill is one update apart around update 1,070–1,078.
+
+Ruled out so far:
+* Full-RAM snapshots at the first update (0x00200000–0x00500000 and the hook area) show no word whose difference
+  matches the early slip, except leftovers in the effects pool after the bullets (0x00468340, 0x3C records).
+  Clearing that pool did not help.
+* The loader busy flag (0x00339D90) is identical per update in the recording and the playback, including in runs
+  that slip.
+* The graze sound path (0x001372B0) does not use the RNG. The late slip correlates with the recorded game having
+  grazed (XTC's debug counters), but XTC's state is now reset at the start.
+
+Next: find what decides the type-76 creation update (its creating call site), and check state outside main RAM
+(scratchpad RAM at 0x70000000, IOP / sound) and any remaining per-vsync code that writes game state.
+
 ## Not covered yet
 
 * Runs longer than one stage: stage loads, stage transitions, continues.
