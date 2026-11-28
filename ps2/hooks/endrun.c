@@ -47,8 +47,7 @@ static u32 phase, cursor, wait, started_save;
 static u32 old_save[2], old_fail;
 static char dir[28];
 static u8 title[72], line_size[40];
-static const u8 line_ask[] = "\x83\x8A\x83\x76\x83\x8C\x83\x43\x82\xF0\x83\x5A\x81\x5B\x83\x75\x82\xB5\x82\xDC\x82\xB7\x82\xA9\x81\x48"; /* リプレイをセーブしますか？ */
-static const u8 line_full[] = "\x8B\xF3\x82\xAB\x97\x65\x97\xCA\x82\xAA\x95\x73\x91\xAB\x82\xB5\x82\xC4\x82\xA2\x82\xDC\x82\xB7\x81\x42"; /* 空き容量が不足しています。 */
+static const u8 line_full[] = "\x8B\xF3\x82\xAB\x97\x65\x97\xCA\x82\xAA\x91\xAB\x82\xE8\x82\xDC\x82\xB9\x82\xF1\x81\x42"; /* 空き容量が足りません。 (the dialog fits about 12 full-width characters) */
 
 /* Shift-JIS full-width text: digits, A-Z, space */
 static u8 *fw(u8 *p, const char *s)
@@ -118,23 +117,21 @@ static void prepare(void)
 		p = fw(p, " ");
 		fw_num(p, score);
 	}
-	/* "（使用容量　ＮＮＮＫＢ）" */
+	/* "リプレイ（ＮＮＫＢ）" above the game's own "セーブしますか？": the dialog fits about 12 full-width characters */
 	kb = (rpl_size() + ICON_BYTES + 1023u) / 1024u + 3u; /* the folder's entries take a few clusters */
 	p = line_size;
+	*p++ = 0x83; *p++ = 0x8A; *p++ = 0x83; *p++ = 0x76; /* リプ */
+	*p++ = 0x83; *p++ = 0x8C; *p++ = 0x83; *p++ = 0x43; /* レイ */
 	*p++ = 0x81; *p++ = 0x69;                       /* （ */
-	*p++ = 0x8E; *p++ = 0x67; *p++ = 0x97; *p++ = 0x70; /* 使用 */
-	*p++ = 0x97; *p++ = 0x65; *p++ = 0x97; *p++ = 0xCA; /* 容量 */
-	p = fw(p, " ");
 	p = fw_num(p, kb);
 	p = fw(p, "KB");
 	*p++ = 0x81; *p++ = 0x6A;                       /* ） */
 	*p = 0;
-	/* message 11 shows our two lines while the prompt is up */
+	/* message 11 shows our line in place of its blank one while the prompt is up */
 	old_save[0] = EE_RAM(u32, REC_SAVE + 4u);
 	old_save[1] = EE_RAM(u32, REC_SAVE + 8u);
 	old_fail = EE_RAM(u32, REC_FAIL + 4u);
-	EE_RAM(u32, REC_SAVE + 4u) = (u32)line_ask;
-	EE_RAM(u32, REC_SAVE + 8u) = (u32)line_size;
+	EE_RAM(u32, REC_SAVE + 4u) = (u32)line_size;
 }
 
 static void restore(void)

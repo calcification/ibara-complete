@@ -98,7 +98,8 @@ PCSX2 (release build; the test card has the game's save with Tate on, so the scr
 
 ## Next
 
-1. Noir playback accuracy: bring Codex's stage-1 asset-readiness hold (phase 45) into the release player.
+1. ~~Noir playback accuracy~~ format 4 ([loader gates, Stage 1 start, start state](LOADER_GATES.md)): Noir and
+   Arcade play back exactly in PCSX2; one Noir run still split at update 1,048 (an enemy died a hit early).
 2. Arrange's own CONFIG values (PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE; options.c) and the rank / slowdown
    options into the replay header.
 3. Practice and 2P runs (no end-of-run prompt yet for Practice).
@@ -153,3 +154,9 @@ Stage 2 was first observed at update 8100 in the recording and 8070 in
 playback, with samples every 30 updates. The first mismatch was already
 in Stage 1. The [per-update drift investigation](STAGE1_DRIFT.md)
 traces the mismatch back to a texture-queue wait.
+
+## Format 4
+
+See [LOADER_GATES.md](LOADER_GATES.md): the loader's answers are recorded and replayed, every mode but Practice
+starts at Stage 1's first update, and the shot-held counter, the pod records and a clean start (shots, pod shots,
+bullets) are part of the start state.

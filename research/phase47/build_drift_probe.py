@@ -27,7 +27,8 @@ def main():
     profile["sources"] = [*profile["sources"], str(Path(__file__).with_name("drift_probe.c").resolve())]
     profile["defines"] = [*profile["defines"], "RPL_TRACE", "RPL_DRIFT_PROBE"]
     profile["sym_patches"] = [
-        *profile["sym_patches"],
+        # the probe's own FF27 gate replaces the release loader gate there
+        *[x for x in profile["sym_patches"] if x[0] != 0x001EACAC],
         (0x001EACAC, 0x00114820, "word", "drift_gate"),
         (0x00115600, 0x0C058CD4, "jal", "drift_create"),
         (0x00163370, 0x0C04D75C, "jal", "drift_resources"),

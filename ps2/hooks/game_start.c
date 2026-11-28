@@ -42,12 +42,15 @@ static void clear_pool(u32 base, u32 stride, u32 count, u32 all)
 				EE_RAM(u32, base + w) = 0;
 }
 
-static void game_start_reset(void)
+/* also rpl.c, where a Noir replay starts (Stage 1's first update): the player may already be firing as the select
+ * screen hands over, and a playback skips the select screen, so both sides start Stage 1 without leftovers */
+void game_start_reset(void)
 {
 	u32 i;
 	/* no shot, item or bullet exists at a game's first update; items can survive RETURN MENU */
 	clear_pool(PS2_SHOTS_BASE, PS2_SHOT_STRIDE, 256u, 1u);
 	clear_pool(PS2_BULLETS_BASE, PS2_BULLET_STRIDE, PS2_BULLET_COUNT, 1u);
+	clear_pool(0x0044D6C0u, 0x34u, 96u, 1u);   /* pod shots (48 per side) */
 	clear_pool(0x0045A840u, 0xB4u, 192u, 0u);   /* enemies: inactive slots */
 	clear_pool(0x00468340u, 0x3Cu, 532u, 0u);   /* the pool after the bullets (effects): inactive slots */
 	for (i = 0; i < ITEMS_COUNT; i++) /* as 0x00132640: every item slot's flags word */
@@ -77,7 +80,16 @@ void game_update(void)
 
 /* Replaces `jal 0x00138CD0` at 0x0012E5CC: ra (0x0012E5D4) is set by our jal and kept for the tail call. Saves the
  * callee-saved registers with 128-bit sq (our C may use them with 32-bit saves) and the argument, result and
- * temporary registers the update path might still hold. */
+ * temporary registers the update path might still hold. MAY_UPDATE decides first: 0 skips this update and takes the
+ * retail draw-only path 0x0012E1EC (the loaders run; the input and the stage clock wait), as a replay holds for a
+ * load that finished sooner in its recording (rpl.c, loader gates). */
+#if defined(RP_CONTROLLER_SYNC)
+#define MAY_UPDATE "replay_controller_may_update"
+#elif defined(RPL_DRIFT_PROBE)
+#define MAY_UPDATE "rpl_drift_may_update"
+#else
+#define MAY_UPDATE "rpl_may_update"
+#endif
 __asm__(
 	".set push\n.set noreorder\n.set noat\n"
 	".globl game_update_entry\n"
@@ -102,26 +114,14 @@ __asm__(
 	"	sq $v1,0x100($sp)\n"
 	"	sq $t0,0x110($sp)\n"
 	"	sq $t1,0x120($sp)\n"
-#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
-	/* Pause before game_update consumes input. The native render-only path
-	 * gives the disc and texture loader time to finish the recorded spawn. */
 	"	sq $t2,0x130($sp)\n"
-#ifdef RPL_DRIFT_PROBE
-	"	jal rpl_drift_may_update\n"
-#else
-	"	jal replay_controller_may_update\n"
-#endif
+	"	jal " MAY_UPDATE "\n"
 	"	nop\n"
 	"	beqz $v0,1f\n"
 	"	sw $v0,0x140($sp)\n"
 	"	jal game_update\n"
 	"	nop\n"
 	"1:\n"
-#else
-	"	jal game_update\n"
-	"	sq $t2,0x130($sp)\n"
-#endif
-	"	lq $t2,0x130($sp)\n"
 	"	lq $t1,0x120($sp)\n"
 	"	lq $t0,0x110($sp)\n"
 	"	lq $v1,0x100($sp)\n"
@@ -141,16 +141,12 @@ __asm__(
 	"	lq $s1,0x20($sp)\n"
 	"	lq $s0,0x10($sp)\n"
 	"	lq $ra,0x00($sp)\n"
-#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
 	"	lw $t2,0x140($sp)\n"
 	"	beqz $t2,2f\n"
 	"	lq $t2,0x130($sp)\n"
-#endif
 	"	j 0x00138CD0\n"
 	"	addiu $sp,$sp,0x150\n"
-#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
 	"2:\n"
 	"	j 0x0012E1EC\n"
 	"	addiu $sp,$sp,0x150\n"
-#endif
 	".set pop\n");

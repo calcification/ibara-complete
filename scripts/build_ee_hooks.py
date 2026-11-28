@@ -483,6 +483,14 @@ KURO_PATCHES = [
     # replays (ps2/hooks/rpl.c, phase 47): both pad reads of 0x00112A80 (`jal 0x0010DDD0`, port in the delay slot)
     (0x00112B1C, 0x0C043774, "jal", "rpl_pad_entry"),
     (0x00112B28, 0x0C043774, "jal", "rpl_pad_entry"),
+    # replay loader gates (rpl.c; research/phase47/LOADER_GATES.md): the enemy texture residency check every factory
+    # calls, and the stage script's commands that wait on or queue the loaders (its table 0x001EAC10, FF00 first)
+    (0x00135D70, 0x27BDFFE0, "j", "rpl_res_entry"),
+    (0x001EAC30, 0x00114E20, "word", "rpl_gate_bg_entry"),      # FF08: background textures resident
+    (0x001EAC40, 0x00114B40, "word", "rpl_gate_req_entry"),     # FF0C: queue a texture group
+    (0x001EAC50, 0x00114B20, "word", "rpl_gate_req2_entry"),    # FF10: queue a texture group
+    (0x001EACAC, 0x00114820, "word", "rpl_gate_queue_entry"),   # FF27: texture queue empty
+    (0x001EACB0, 0x001147E0, "word", "rpl_gate_queues_entry"),  # FF28: disc and texture queues empty
     # K64: the end of a run offers to save its replay (ps2/hooks/endrun.c): state 8's call in the main state machine
     (0x00113610, 0x0C04F560, "jal", "endrun_state8"),
     # In Tate the first visible text column is 1. Start 1P at column 2 to leave a visible gutter.
