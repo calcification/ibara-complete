@@ -98,3 +98,23 @@ well before the Stage 2 transition.
 Use --event-start 2464 to capture updates 2,464–2,591 with the same
 event reporters. The fixture writes its chosen window into EE RAM
 so the reporter resolves it from the matching capture and symbols.
+
+### First differing event in the focused rerun
+
+In a 3,205-update assisted pair, the relocated trace first differed
+at update 2,559. Both sides reached the same RNG seed after the call
+at 0x0019698C. The recording then registered a pod-shot contact and
+advanced the RNG in the shot-to-spark handler at 0x0013BCCC. The damage
+call at 0x0012B578 reduced enemy slot 3 from 2 HP to 1 HP. Playback
+skipped both events on that update and went straight to the next XTC
+eligibility check. Its first score and RNG differences were visible
+at the start of update 2,560. Score was 45,350 in the recording and
+45,340 in playback. There were zero timing misses.
+
+The regression test reproduces the reporter's identification of the
+captured event sequence. The remaining question is why the pod
+projectile or its target was out of contact on that update. The pod
+projectile pool starts at 0x0044D6C0 and uses 0x34-byte slots. The
+contact routine at 0x0012B2D0 walks this pool separately from the
+main shot pool. The 128-update trace around the original report
+continues to match in the observed pairs.
