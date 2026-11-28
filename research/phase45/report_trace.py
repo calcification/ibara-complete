@@ -13,6 +13,10 @@ CP_BASE = 0x01FC0000
 TRACE_BASE = 0x01AC0000
 CP = struct.Struct("<8I")
 TRACE = struct.Struct("<18I")
+SYNC_FIELDS = (
+    "forced_record_retries", "early_blocks", "withheld_checks",
+    "render_holds", "timeouts", "cursor_misses",
+)
 TRACE_FIELDS = (
     "scroll", "step", "cursor", "wait", "position", "animation", "kind", "active",
     "calls", "result", "spawn_tick", "spawn_scroll", "spawn_seed", "spawn_cursor",
@@ -62,25 +66,57 @@ def analyze(mem, rp, controller):
     return result
 
 
+def verify_sync(report, scenario):
+    stats = report["controller_sync"]
+    if stats["timeouts"] or stats["cursor_misses"]:
+        return "controller synchronization fell back to the native update"
+    if scenario == "early" and not stats["early_blocks"]:
+        return "playback never encountered early assets"
+    if scenario == "late" and not stats["render_holds"]:
+        return "playback never waited for late assets"
+    outcomes = [[(e["update"], e["calls"], bool(e["result"])) for e in side]
+                for side in report["factory"]]
+    if outcomes[0] != outcomes[1] or not any(success for _, _, success in outcomes[0]):
+        return "type-76 factory outcomes differ or no creation was captured"
+    if report["stage_clock"] or report["slot_3"]:
+        return "stage clock or type-76 slot diverged"
+    if report["mismatches"] or report["tick_miss"]:
+        return "gameplay checkpoints or update timing diverged"
+    return None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("state", type=Path)
     parser.add_argument("symbols", type=Path)
     parser.add_argument("--controller-trace", action="store_true")
     parser.add_argument("--factory-events", action="store_true", help="include every retry in the report")
+    parser.add_argument("--expect-controller-sync", choices=("aligned", "early", "late"),
+                        help="fail on replay drift or if the specified timing case was not exercised")
     args = parser.parse_args()
-    rp = json.loads(args.symbols.read_text())["rp"]
-    report = analyze(load_ee(args.state), rp, args.controller_trace)
-    if args.controller_trace and not args.factory_events:
+    syms = json.loads(args.symbols.read_text())
+    sync_addr = syms.get("replay_controller_sync_stats")
+    if args.expect_controller_sync and sync_addr is None:
+        parser.error("--expect-controller-sync requires symbols from a --sync-controller build")
+    mem = load_ee(args.state)
+    report = analyze(mem, syms["rp"], args.controller_trace or bool(args.expect_controller_sync))
+    if sync_addr is not None:
+        sync = struct.unpack_from("<6I", mem, sync_addr)
+        report["controller_sync"] = dict(zip(SYNC_FIELDS, sync))
+    if args.expect_controller_sync:
+        report["sync_failure"] = verify_sync(report, args.expect_controller_sync)
+    if "factory" in report and not args.factory_events:
         report["factory"] = [dict(
             attempts=sum(event["calls"] for event in events),
             first_attempt=events[0] if events else None,
             first_success=next((event for event in events if event["result"]), None),
+            first_native_ready_update=next((e["update"] for e in events if e["resources_ready"]), None),
             resource_failures=sum(e["resource_checks"] - e["resources_ready"] for e in events),
             slot_failures=sum(e["pool_checks"] - e["pool_ready"] for e in events),
         ) for events in report["factory"]]
     print(json.dumps(report, indent=2))
+    return int(bool(report.get("sync_failure")))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

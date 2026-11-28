@@ -99,8 +99,66 @@ agreed. That establishes that one extra factory retry is sufficient
 to cause an early replay slip. The independent late graze or kill
 difference still needs a pair that matches through the early window.
 
-Next trace insertion of the three required IDs into the
-512-halfword residency table at 0x00448F80 and correlate it with the
-asset request and completion. A replay synchronization experiment
-needs to handle assets arriving on both sides of the recorded
-creation update.
+## Playback asset synchronization
+
+Build the experimental fixture with `--controller-trace --sync-controller`.
+The fixture records the factory outcome for each traced update and uses it
+during playback in Stage 1. If the native resource check succeeds on a
+recorded retry, the script still retries once on that update. Before an
+update where creation originally succeeded, the fixture checks whether the
+same script command has its assets. If the assets are pending, the retail
+render-only path runs while the input cursor and stage clock are held. The
+factory still uses the retail resource check and slot allocator when
+the update runs.
+
+The render-only path services the CD queue at `0x0010D520` and the texture
+loader at `0x001117D0`. The loader moves requests through `0x00111B30` and
+publishes residency after texture upload in `0x00111850`. A hold is limited
+to 120 render-only passes per playback. The existing first-update hook
+at `0x0012E5CC` makes the decision, with `0x0012E1EC` as the retail
+render-only destination. The standalone slow-motion patch uses its own
+branch site at `0x0012E1E4`.
+
+Use the full Black Label zip for the following controlled tests. Add one
+option to the build command and use the corresponding report option:
+
+| Case | Build option in addition to `--sync-controller` | Report option |
+| --- | --- | --- |
+| Early playback assets | `--force-record-retries 3` | `--expect-controller-sync early` |
+| Late playback assets | `--withhold-playback-load` | `--expect-controller-sync late` |
+| Native timing | | `--expect-controller-sync aligned` |
+
+The early case pushes the recording back three updates with assets already
+ready. The late case withholds playback's factory asset requests until
+the original spawn update, then uses the native loader. The report
+returns a failure status if the specified timing case was never exercised,
+factory attempts or outcomes differ, stage clock or slot 3 diverges,
+a checkpoint differs, or the hold fails. Use separate ISO names, symbol
+files and save states for each case.
+
+### Synchronization results in PCSX2 2.8.2
+
+All pairs used Noir Stage 1 Practice with the full Black Label zip. The
+original unsynchronized OpenGL capture is the negative control.
+
+| Case | Renderer | Successful creation, record / play | Checkpoint mismatches |
+| --- | --- | ---: | ---: |
+| Natural slip, unsynchronized | OpenGL | 460 / 457 | 561 / 1,202 |
+| Forced early playback | OpenGL | 461 / 461 | 0 / 1,202 |
+| Forced early playback, repeat | Null | 460 / 460 | 0 / 1,202 |
+| Forced late playback | Null | 458 / 458 | 0 / 1,202 |
+| Native timing, synchronized | Null | 457 / 457 | 0 / 1,202 |
+
+In the early run, the native check first succeeded on update 458 in the
+recording and 457 in playback. The test forced three recording retries.
+Playback suppressed four early successes and resumed creation at 461.
+The Null repeat also suppressed four early successes, from update 456
+to 459, and matched the recorded creation at 460. In the late run, playback withheld 44 checks, then held update 458 for
+42 render-only passes until the assets were ready. The unforced pair
+needed two render-only passes at update 457. The stage clock, slot 3,
+and gameplay checkpoints matched in every synchronized pair. There were
+no timing misses, cursor misses, or hold timeouts.
+
+This is a source-only Stage 1 Practice fixture. Multi-stage playback,
+2P, replay storage, and the separate late graze or kill slip are still
+open.

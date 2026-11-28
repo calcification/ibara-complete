@@ -117,15 +117,82 @@ u32 replay_controller_create(void)
 static u32 controller_delayed;
 #endif
 
+#ifdef RP_CONTROLLER_SYNC
+/* Diagnostic only. Shadow the recorded type-76 factory outcome in Stage 1.
+ * When playback is late, use the normal render-only path so CD reads and GS
+ * uploads continue while the input log and stage interpreter stay put. */
+#define CONTROLLER_HOLD_MAX 120u
+struct controller_sync_stats {
+	u32 forced_record_retries, early_blocks, withheld_checks;
+	u32 render_holds, timeouts, cursor_misses;
+};
+volatile struct controller_sync_stats replay_controller_sync_stats;
+
+u32 replay_controller_may_update(void)
+{
+	const volatile struct controller_trace *recorded;
+
+	if (!rp_started || rp.mode != 1u || EE_RAM(u8, SCENE) != 2u ||
+	    rp.play_upd >= rp.n_upd || rp.play_upd >= RP_TRACE_FRAMES)
+		return 1u;
+	recorded = &RP_TRACE[0][rp.play_upd];
+	if (!recorded->result)
+		return 1u;
+	if (recorded->calls != 1u || recorded->cursor != EE_RAM(u32, 0x00338E00u)) {
+		replay_controller_sync_stats.cursor_misses++;
+		return 1u;
+	}
+	if (GAME_CALL2(0x00135D70u, 76u, 0xFFFF8000u))
+		return 1u;
+	if (replay_controller_sync_stats.render_holds >= CONTROLLER_HOLD_MAX) {
+		replay_controller_sync_stats.timeouts++;
+		return 1u;
+	}
+	replay_controller_sync_stats.render_holds++;
+	return 0u;
+}
+
+#endif
+
 u32 replay_controller_resources(u32 kind, u32 flags)
 {
-	const u32 result = ((u32 (*)(u32, u32))0x00135D70u)(kind, flags);
 	volatile struct controller_trace *row = controller_event();
+	u32 result;
 
+#ifdef RP_CONTROLLER_SYNC
+	const volatile struct controller_trace *recorded = 0;
+	const u32 sync = row && kind == 76u && EE_RAM(u8, SCENE) == 2u;
+
+	if (sync && rp.mode == 1u) {
+		recorded = &RP_TRACE[0][rp.play_upd - 1u];
+		if (recorded->calls != 1u || recorded->spawn_cursor != row->spawn_cursor)
+			recorded = 0;
+	}
+#ifdef RP_CONTROLLER_WITHHOLD_LOAD
+	if (recorded && !recorded->result) {
+		replay_controller_sync_stats.withheld_checks++;
+		return 0;
+	}
+#endif
+#endif
+	result = GAME_CALL2(0x00135D70u, kind, flags);
 	if (row) {
 		row->resource_checks++;
 		row->resources_ready += result != 0;
 	}
+#ifdef RP_CONTROLLER_SYNC
+#ifdef RP_CONTROLLER_RECORD_RETRIES
+	if (sync && rp.mode == 0u && result &&
+	    replay_controller_sync_stats.forced_record_retries < RP_CONTROLLER_RECORD_RETRIES) {
+		replay_controller_sync_stats.forced_record_retries++;
+		return 0;
+	}
+#endif
+	if (recorded && !recorded->result && result) {
+		replay_controller_sync_stats.early_blocks++;
+		return 0;
+	}
+#endif
 #ifdef RP_CONTROLLER_ONE_UPDATE
 	if (row && rp.mode == 1u && kind == 76u && result && !controller_delayed) {
 		controller_delayed = 1u;
@@ -202,7 +269,17 @@ static void game_start(void)
 	clear_pool(0x0045A840u, 0xB4u, 192u, 0u);
 	clear_pool(PS2_BULLETS_BASE, PS2_BULLET_STRIDE, PS2_BULLET_COUNT, 1u);
 	clear_pool(0x00468340u, 0x3Cu, 532u, 0u); /* the pool after the bullets (0x3C records, effects) */
+#ifdef RP_CONTROLLER_SYNC
+	replay_controller_sync_stats.early_blocks = 0;
+	replay_controller_sync_stats.withheld_checks = 0;
+	replay_controller_sync_stats.render_holds = 0;
+	replay_controller_sync_stats.timeouts = 0;
+	replay_controller_sync_stats.cursor_misses = 0;
+#endif
 	if (rp.mode == 0) {
+#ifdef RP_CONTROLLER_SYNC
+		replay_controller_sync_stats.forced_record_retries = 0;
+#endif
 		rp.seed0 = EE_RAM(u32, SEED);
 		rp.frames0 = EE_RAM(u32, FRAMES);
 		for (i = 0; i < 2u; i++)

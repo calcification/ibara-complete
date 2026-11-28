@@ -20,12 +20,23 @@ def main():
     parser.add_argument("--controller-trace", action="store_true")
     parser.add_argument("--delay-controller", action="store_true",
                         help="positive control: force one extra resource-check retry on playback")
+    parser.add_argument("--sync-controller", action="store_true",
+                        help="synchronize the Stage 1 type-76 spawn during playback")
+    skew = parser.add_mutually_exclusive_group()
+    skew.add_argument("--force-record-retries", type=int, choices=range(1, 11), metavar="COUNT",
+                      help="test early playback by delaying the recorded spawn")
+    skew.add_argument("--withhold-playback-load", action="store_true",
+                      help="test late playback by delaying native asset requests")
     parser.add_argument("--bl-rom", type=Path)
     args = parser.parse_args()
     if args.symbols.exists() or args.output.exists():
         parser.error("choose new output paths")
     if args.delay_controller and not args.controller_trace:
         parser.error("--delay-controller requires --controller-trace")
+    if args.sync_controller and (not args.controller_trace or args.delay_controller):
+        parser.error("--sync-controller requires --controller-trace and conflicts with --delay-controller")
+    if (args.force_record_retries or args.withhold_playback_load) and not args.sync_controller:
+        parser.error("asset timing test options require --sync-controller")
     if not hooks.have_toolchain():
         parser.error("the MIPS cross toolchain is required for this test build")
     profile = hooks.HOOKS["kuro"]
@@ -43,6 +54,12 @@ def main():
             (0x00163370, 0x0C04D75C, "jal", "replay_controller_resources"),
             (0x00163398, 0x0C04B4A0, "jal", "replay_controller_slots"),
         ]
+    if args.sync_controller:
+        profile["defines"].append("RP_CONTROLLER_SYNC")
+    if args.force_record_retries:
+        profile["defines"].append(f"RP_CONTROLLER_RECORD_RETRIES={args.force_record_retries}u")
+    if args.withhold_playback_load:
+        profile["defines"].append("RP_CONTROLLER_WITHHOLD_LOAD")
     if args.delay_controller:
         profile["defines"].append("RP_CONTROLLER_ONE_UPDATE")
     with tempfile.TemporaryDirectory() as tmp:
