@@ -179,7 +179,19 @@ u32 replay_pad(u32 port, u32 buttons)
 #ifndef RP_SNAP_AT
 #define RP_SNAP_AT 925u
 #endif
-#if defined(RP_SNAP_LOW)
+#if defined(RP_SNAP_WIDE) /* 0x00280000-0x00480000 and the hook area 0x01F00000-0x01F20000 */
+static void snap(u32 which, u32 n)
+{
+	u32 *dst = (u32 *)(0x01660000u + which * 0x00220000u);
+	u32 i;
+	(void)n;
+	for (i = 0; i < 0x00200000u / 4u; i++)
+		dst[i] = ((const u32 *)0x00280000u)[i];
+	for (i = 0; i < 0x00020000u / 4u; i++)
+		dst[0x00200000u / 4u + i] = ((const u32 *)0x01F00000u)[i];
+}
+#define SNAP_N(u) ((u) == RP_SNAP_AT)
+#elif defined(RP_SNAP_LOW)
 static void snap(u32 which, u32 n)
 {
 	u32 *dst = (u32 *)(0x01660000u + which * 0x00120000u);
