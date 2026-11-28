@@ -1,6 +1,7 @@
-# Phase 47: replays for release — Ibara Full Bloom v1.0 (Claude, 28 November 2026)
+# Phase 47: replays in the release build (Claude, 28 November 2026)
 
-Release name and version: `ps2/include/version.h` (`IFB_NAME` "Ibara Full Bloom", `IFB_VERSION` "1.0").
+The project's release name is Ibara Full Bloom; nothing is released before 1.0. `ps2/include/version.h` holds the
+name and version for text shown at release (e.g. over replay playback); that text waits until 1.0.
 
 ## K63: every game is recorded (`ps2/hooks/rpl.c`)
 
@@ -15,7 +16,7 @@ Method from phase 44 (and Codex's phase 45), in a compact form for saving:
   (0x00338EAC–0x00338EBB), both player records; the start-of-game reset (game_start.c) now also clears shots,
   bullets, and inactive enemy and effect slots, so a recording and its playback start from the same baseline.
 
-File (in RAM at 0x01700000, up to 7 MB): `struct rpl_head` (magic "IBFB", Adler-32 checksum, version 0x0100,
+File (in RAM at 0x01700000, up to 7 MB): `struct rpl_head` (magic "IBFB", Adler-32 checksum, file format 1,
 stream length, update count, mode, stage, end state), then the stream: a byte 0x00–0x7F repeats the previous update
 n + 1 times; 0x80 is followed by a 3-byte mask of changed 16-bit fields (18 fields) and their new values.
 
@@ -38,5 +39,6 @@ object slots are cleared at a game's first update.
 1. The end-of-run prompt ("リプレイをセーブしますか？", size in KB) in the game's own memory-card dialog
    (panel 0x001CE830, text 0x001CEC40; message records like 0x002A9948), then saving with mcfile.c to
    `BISLPM-66301R<date>`.
-2. A REPLAY entry listing replay saves; playback with the mode and "Ibara Full Bloom v1.0" drawn over the game.
+2. A REPLAY entry listing replay saves; playback with the mode drawn over the game (the name and version text
+   at 1.0).
 3. Noir: bring Codex's asset-readiness hold into the release player.

@@ -10,7 +10,6 @@
  * 0x80 is followed by a 3-byte mask of changed 16-bit fields (FIELDS of them) and the new values.
  * The header carries the stream length and a checksum (Adler-32 over the header after the checksum and the stream). */
 #include "ibara_ps2.h"
-#include "version.h"
 
 #define SEED       0x00337D08u
 #define FRAMES     0x00338CDCu
@@ -24,6 +23,7 @@
 #define FIELDS     18u /* 2 ports x (current, pressed, repeat), 2 players x 5 words, rank change (2 halves) */
 
 #define RPL_MAGIC  0x42464249u /* "IBFB" */
+#define RPL_FORMAT 1u           /* replay file format; bump when the stream or header changes */
 #define RPL_BUF    ((u8 *)0x01700000u) /* header + stream; RAM unused in the frontend and in games */
 #define RPL_MAX    0x00700000u
 
@@ -146,7 +146,7 @@ static void game_start(void)
 		for (i = 0; i < sizeof(*h) / 4u; i++)
 			((u32 *)h)[i] = 0;
 		h->magic = RPL_MAGIC;
-		h->version = IFB_VERSION_NUM;
+		h->version = RPL_FORMAT;
 		h->head_size = sizeof(*h);
 		h->seed0 = EE_RAM(u32, SEED);
 		h->frames0 = EE_RAM(u32, FRAMES);
@@ -201,7 +201,7 @@ static void game_end(void)
 u32 rpl_valid(void)
 {
 	const struct rpl_head *h = HEAD;
-	return h->magic == RPL_MAGIC && h->head_size == sizeof(*h) && h->length <= RPL_MAX - sizeof(*h) &&
+	return h->magic == RPL_MAGIC && h->version == RPL_FORMAT && h->head_size == sizeof(*h) && h->length <= RPL_MAX - sizeof(*h) &&
 	       h->sum == adler(RPL_BUF + 8, h->head_size + h->length - 8u);
 }
 u32 rpl_size(void) { return HEAD->head_size + HEAD->length; }

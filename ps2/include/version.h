@@ -1,4 +1,5 @@
-/* The release name and version shown during replay playback and stored in replay files. */
+/* The release name and version, for text shown at release (e.g. over replay playback). Not used yet: nothing is
+ * released before 1.0, and on-screen version text waits until then. */
 #ifndef IBARA_VERSION_H
 #define IBARA_VERSION_H
 #define IFB_NAME    "Ibara Full Bloom"
