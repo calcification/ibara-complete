@@ -46,6 +46,11 @@ __attribute__((section(".hookhdr"), used)) struct xtc_state xtc = { 0x31435458u,
 
 static inline s32 iabs(s32 v) { return v < 0 ? -v : v; }
 
+#ifdef RP_LATE_TRACE
+void replay_late_graze_test(u32 side, u32 held, u32 pods, u32 flags);
+void replay_late_graze(u32 slot, s32 dx, s32 dy, u32 half_width, u32 half_height);
+#endif
+
 static int xtc_test_player(unsigned side)
 {
 	const u32 rec = PS2_PLAYER_BASE + side * PS2_PLAYER_STRIDE;
@@ -57,6 +62,10 @@ static int xtc_test_player(unsigned side)
 	unsigned k;
 	int n = 0;
 
+#ifdef RP_LATE_TRACE
+	replay_late_graze_test(side, p->held, EE_RAM(u8, rec + PS2_PLAYER_POD_COUNT),
+			      EE_RAM(u32, rec + PS2_PLAYER_FLAGS));
+#endif
 	if (!(EE_RAM(u32, rec + PS2_PLAYER_FLAGS) & PLAYER_CAN_BE_HIT))
 		return 0;
 	if (p->held < XTC_MIN_HELD || !EE_RAM(u8, rec + PS2_PLAYER_POD_COUNT))
@@ -72,8 +81,12 @@ static int xtc_test_player(unsigned side)
 			continue;
 		bx = EE_RAM(s32, b + PS2_BULLET_X) >> 16;
 		by = EE_RAM(s32, b + PS2_BULLET_Y) >> 16;
-		if (iabs(bx - px) < hx && iabs(by - py) < hy)
+		if (iabs(bx - px) < hx && iabs(by - py) < hy) {
+#ifdef RP_LATE_TRACE
+			replay_late_graze(k, bx - px, by - py, (u32)hx, (u32)hy);
+#endif
 			n++;
+		}
 	}
 	return n;
 }
