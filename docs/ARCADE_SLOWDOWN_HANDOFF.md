@@ -21,6 +21,10 @@ The original disc patch stays at the retail ISO size. The latest research uses a
 
 ## Slowdown research
 
+**Note from Claude's replay tests (28 November):** the frame counter 0x00338CDC, the pad block's auto-repeat flags and
+Arcade rank creep advance per refresh, not per update, so they keep full speed during a hold (weapon-item cycling,
+autofire timing). Details and a fix pattern: [phase 44](../research/phase44/README.md#for-the-slowdown-work-what-counts-refreshes-not-updates).
+
 The PS2 runs its native game and can hold core updates while rendering and polling pads. The current console build exposes the manual half-speed test. Automatic slowdown needs a predictor that clears the project's 80% event target on independent reference captures.
 
 MAME 0.289 on the original Arcade parent set held 200 refreshes on max-rank Bond and four on max-rank Dyne, over 600 gameplay updates each. Stage 1 held zero out of 300. All 204 holds occurred with the SH-3 draw list unpublished and the blitter ready at the video IRQ. Both routes reproduced their earlier cadence exactly. An independent rank-`0x200000` Bond capture added 166 holds. [Deadline trace and model](../research/phase22/README.md#check-the-draw-deadline-in-mame)

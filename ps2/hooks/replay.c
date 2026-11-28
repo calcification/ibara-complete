@@ -3,7 +3,8 @@
  * Inputs are recorded and replayed per game update, not per pad read. The retail loop polls the pad from its
  * vsync wait (0x00113390 -> 0x00112A80), so the number of polls per update depends on timing: the same game
  * polled twice per update in one run and once in another (phase 44). The update itself starts at 0x0012E5CC
- * (`jal 0x00138CD0`, the first call of the update path); replay_update_entry runs there:
+ * (`jal 0x00138CD0`, the first call of the update path); game_start.c calls replay_update there (REPLAY_BUILD),
+ * after its own start-of-game reset (item drop state, XTC, boss-cancel tracker):
  *   RECORD: stores both players' button words (+0x24C held, +0x24E pressed, +0x250, +0x252, +0x254) per update.
  *   PLAY:   writes the stored words back before the update runs.
  * During playback the pad reads return the recorded pad values of the next update (the shot code reads the pad
@@ -42,8 +43,6 @@ struct rp_state {
 } rp;
 #define RP_CP ((struct rp_cp (*)[CP_MAX])0x01FC0000u) /* experiment */
 
-void xtc_reset(void);
-void bl_enemy_reset(void);
 static u8 rp_active, rp_started; /* in a game; its first update has run */
 
 static void checkpoint(u32 which, u32 upd)
@@ -100,14 +99,6 @@ static void game_start(void)
 	clear_pool(0x0045A840u, 0xB4u, 192u, 0u);
 	clear_pool(PS2_BULLETS_BASE, PS2_BULLET_STRIDE, PS2_BULLET_COUNT, 1u);
 	clear_pool(0x00468340u, 0x3Cu, 532u, 0u); /* the pool after the bullets (0x3C records, effects) */
-	/* the graze test alternates sides each update and kept its phase from the previous game (xtc.c) */
-	xtc_reset();
-	bl_enemy_reset(); /* the boss-cancel kill tracker (last frame's HP per slot) */
-	/* the item drop state that the stage's item initialiser 0x00132640 zeroes (Practice's GAME START skips it) */
-	EE_RAM(u8, 0x00338E54u) = EE_RAM(u8, 0x00338E55u) = EE_RAM(u8, 0x00338E58u) = 0;
-	EE_RAM(u8, 0x00338E59u) = EE_RAM(u8, 0x00338E5Cu) = 0;
-	for (i = 0; i < 32u; i++)
-		EE_RAM(u8, 0x00495120u + i) = 0;
 	if (rp.mode == 0) {
 		rp.seed0 = EE_RAM(u32, SEED);
 		rp.frames0 = EE_RAM(u32, FRAMES);
@@ -321,52 +312,4 @@ __asm__(
 	"	lq $ra,0x00($sp)\n"
 	"	jr $ra\n"
 	"	addiu $sp,$sp,0xC0\n"
-	/* Replaces `jal 0x00138CD0` at 0x0012E5CC: ra (0x0012E5D4) is set by our jal and kept for the tail call.
-	 * Saves the callee-saved registers and the argument / result / temporary registers too. */
-	".globl replay_update_entry\n"
-	"replay_update_entry:\n"
-	"	addiu $sp,$sp,-0x150\n"
-	"	sq $ra,0x00($sp)\n"
-	"	sq $s0,0x10($sp)\n"
-	"	sq $s1,0x20($sp)\n"
-	"	sq $s2,0x30($sp)\n"
-	"	sq $s3,0x40($sp)\n"
-	"	sq $s4,0x50($sp)\n"
-	"	sq $s5,0x60($sp)\n"
-	"	sq $s6,0x70($sp)\n"
-	"	sq $s7,0x80($sp)\n"
-	"	sq $fp,0x90($sp)\n"
-	"	sq $gp,0xA0($sp)\n"
-	"	sq $a0,0xB0($sp)\n"
-	"	sq $a1,0xC0($sp)\n"
-	"	sq $a2,0xD0($sp)\n"
-	"	sq $a3,0xE0($sp)\n"
-	"	sq $v0,0xF0($sp)\n"
-	"	sq $v1,0x100($sp)\n"
-	"	sq $t0,0x110($sp)\n"
-	"	sq $t1,0x120($sp)\n"
-	"	jal replay_update\n"
-	"	sq $t2,0x130($sp)\n"
-	"	lq $t2,0x130($sp)\n"
-	"	lq $t1,0x120($sp)\n"
-	"	lq $t0,0x110($sp)\n"
-	"	lq $v1,0x100($sp)\n"
-	"	lq $v0,0xF0($sp)\n"
-	"	lq $a3,0xE0($sp)\n"
-	"	lq $a2,0xD0($sp)\n"
-	"	lq $a1,0xC0($sp)\n"
-	"	lq $a0,0xB0($sp)\n"
-	"	lq $gp,0xA0($sp)\n"
-	"	lq $fp,0x90($sp)\n"
-	"	lq $s7,0x80($sp)\n"
-	"	lq $s6,0x70($sp)\n"
-	"	lq $s5,0x60($sp)\n"
-	"	lq $s4,0x50($sp)\n"
-	"	lq $s3,0x40($sp)\n"
-	"	lq $s2,0x30($sp)\n"
-	"	lq $s1,0x20($sp)\n"
-	"	lq $s0,0x10($sp)\n"
-	"	lq $ra,0x00($sp)\n"
-	"	j 0x00138CD0\n"
-	"	addiu $sp,$sp,0x150\n"
 	".set pop\n");

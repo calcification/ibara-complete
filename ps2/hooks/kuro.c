@@ -37,6 +37,7 @@ u32 kuro_on;
 
 void video_frame(void);
 void xtc_reset(void);
+void game_start_frame(void);
 extern u32 opt_gauge;
 void opt_set(u32 on);
 static u32 arcade_gauge, kuro_gauge = 1u;
@@ -193,6 +194,7 @@ void kuro_frame(void)
 	if (EE_RAM(u32, MAIN_STATE) == 9u)
 		arcade_slowdown_reset_manual();
 #endif
+	game_start_frame();
 	const u8 attract = EE_RAM(u8, ATTRACT);
 	if (kuro_on && (EE_RAM(u32, FRONT_STATE) == 1u || (attract && !attract_last))) {
 		kuro_off_why = EE_RAM(u32, FRONT_STATE) << 8 | (u32)attract << 1 | 1u;
