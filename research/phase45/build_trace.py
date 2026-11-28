@@ -27,6 +27,8 @@ def main():
                       help="test early playback by delaying the recorded spawn")
     skew.add_argument("--withhold-playback-load", action="store_true",
                       help="test late playback by delaying native asset requests")
+    parser.add_argument("--late-trace", action="store_true",
+                        help="trace Noir Stage 1 graze, damage and RNG at updates 1000–1127")
     parser.add_argument("--bl-rom", type=Path)
     args = parser.parse_args()
     if args.symbols.exists() or args.output.exists():
@@ -37,6 +39,8 @@ def main():
         parser.error("--sync-controller requires --controller-trace and conflicts with --delay-controller")
     if (args.force_record_retries or args.withhold_playback_load) and not args.sync_controller:
         parser.error("asset timing test options require --sync-controller")
+    if args.late_trace and not args.sync_controller:
+        parser.error("--late-trace requires --sync-controller")
     if not hooks.have_toolchain():
         parser.error("the MIPS cross toolchain is required for this test build")
     profile = hooks.HOOKS["kuro"]
@@ -62,6 +66,18 @@ def main():
         profile["defines"].append("RP_CONTROLLER_WITHHOLD_LOAD")
     if args.delay_controller:
         profile["defines"].append("RP_CONTROLLER_ONE_UPDATE")
+    if args.late_trace:
+        profile["defines"].append("RP_LATE_TRACE")
+        profile["sources"] += ["replay_events.c", "replay_events_entry.S"]
+        profile["stubs"] = [*profile["stubs"], ("replay_late_finish_entry", 0x00115620, "replay_late_end")]
+        profile["sym_patches"] += [
+            (0x00111050, 0x0C0580C4, "jal", "replay_late_rng_entry"),
+            (0x0012E64C, 0x0C045588, "jal", "replay_late_finish_entry"),
+            *((site, 0x0C04DCAC, "jal", "replay_late_retail_graze_entry")
+              for site in (0x0012A92C, 0x0012ABD8)),
+            *((site, 0x0C049E2C, "jal", "replay_late_damage_entry")
+              for site in (0x0012AC04, 0x0012B254, 0x0012B578, 0x0012B8F4)),
+        ]
     with tempfile.TemporaryDirectory() as tmp:
         built = hooks.build_hook("kuro", Path(tmp), hooks.BAKE_BASE, hooks.BAKE_END)
     argv = [str(args.source), "--output", str(args.output)]

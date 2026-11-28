@@ -43,6 +43,14 @@ struct rp_state {
 } rp;
 #define RP_CP ((struct rp_cp (*)[CP_MAX])0x01FC0000u) /* experiment */
 
+#ifdef RP_LATE_TRACE
+_Static_assert(0x01B00000u + RP_LOG_MAX * sizeof(struct rp_upd) <= 0x01EC0000u,
+	       "replay input must fit before the late event trace");
+void replay_late_begin(u32 side, u32 update, u32 tick);
+void replay_late_clear(u32 side);
+void replay_late_end_game(void);
+#endif
+
 static u8 rp_active, rp_started; /* in a game; its first update has run */
 
 #ifdef RP_CONTROLLER_TRACE
@@ -263,6 +271,9 @@ static void game_start(void)
 	rp_started = 1;
 	if (rp.mode == 2u)
 		return;
+#ifdef RP_LATE_TRACE
+	replay_late_clear(rp.mode);
+#endif
 	/* no shot, item or bullet exists at a stage's first update, but items can survive RETURN MENU */
 	clear_pool(PS2_SHOTS_BASE, PS2_SHOT_STRIDE, 256u, 1u);
 	clear_pool(PS2_ITEMS_BASE, 0x58u, 256u, 1u);
@@ -311,6 +322,9 @@ static void game_start(void)
 
 static void game_end(void)
 {
+#ifdef RP_LATE_TRACE
+	replay_late_end_game();
+#endif
 	rp_active = rp_started = 0;
 	if (rp.mode == 2u)
 		rp.mode = 0;
@@ -432,6 +446,9 @@ void replay_update(void)
 #ifdef RP_CONTROLLER_TRACE
 		trace_controller(0, rp.n_upd);
 #endif
+#ifdef RP_LATE_TRACE
+		replay_late_begin(0, rp.n_upd, tick);
+#endif
 		if (SNAP_N(rp.n_upd))
 			snap(0, (rp.n_upd - RP_SNAP_AT) / 50u);
 		checkpoint(0, rp.n_upd++);
@@ -455,6 +472,9 @@ void replay_update(void)
 #endif
 #ifdef RP_CONTROLLER_TRACE
 	trace_controller(1, rp.play_upd);
+#endif
+#ifdef RP_LATE_TRACE
+	replay_late_begin(1, rp.play_upd, tick);
 #endif
 	if (SNAP_N(rp.play_upd))
 		snap(1, (rp.play_upd - RP_SNAP_AT) / 50u);
