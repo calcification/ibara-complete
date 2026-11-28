@@ -145,3 +145,9 @@ Each Noir run takes about 5 minutes; batches of 4–6 in the background work wel
    +0x98 counter one step apart) and what decides its update. Log that site's inputs per update in both runs.
 2. Check state outside main RAM: scratchpad RAM (0x70000000) and anything the IOP / sound side feeds back.
 3. Late slip: snapshot just before update 1,065 in a run that slips (`RP_SNAP_WIDE`; about 1 in 4 runs).
+
+**Update (Codex, phase 45):** the early slip is asset residency. The stage-1 type-76 factory (0x00163350, called from
+the script command at 0x00115600) retries until resources 0x346 / 0x372 / 0x385 are resident, so its success update
+follows disc and texture-upload timing. A test-only playback hold (`RP_CONTROLLER_SYNC`, in game_start.c / replay.c)
+runs the render-only path until the recorded spawn's assets are ready; every controlled pair then matches.
+[Phase 45](../phase45/README.md).

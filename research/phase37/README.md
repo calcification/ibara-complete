@@ -90,3 +90,16 @@ against BL's 4,053); the first core needs no change.
 
 Compare the core's own hit area / collision settings, then trace which part each player hit lands on (Codex's
 `research/phase31/bl_contacts.lua`).
+
+## Correction (28 November): neither "smaller difference" is real
+
+* **HP ≤ 14 rule.** The PS2 damage function has it too: 0x00127A1C tests HP < 15 and 0x00127B18 refuses damage when
+  (part flags & caller's mask & 0x8000) is set, as BL's 0C0A8F5A. In both games every caller passes the shot's flags
+  word as the mask (BL 0C06E3FA, 0C06E790, 0C06EA20, 0C06EEE8, 0C0A902E). The part constructors that set bit 15 in BL
+  (0xC0008000, 0xC0008014, 0xC1008100, 0xC1008110, 0xD3008100, 0xD3008104) set the same words on the PS2 (functions
+  mapped through research/phase12). The one difference, the rose's linked part (BL 0xD300C100, PS2 0xD3004100), never
+  meets the test: damage to a linked part (flag 0x4000) goes to its parent, whose flags are the ones tested.
+* **Stage-6 part HP.** Type 74's part-record table (PS2 0x00246400, BL 0C1D91D4) is identical, score and base HP, for
+  every entry (0x12–0x18: 50; 0x29: 30), and spawn scaling matches (0x10 / 0x11 start at 71 in both). The "start HP"
+  above (40/37 vs 27, 23 vs 13) is the first 8-frame sample, taken before the pods were matched: the PS2 runs fired
+  piercing type-3 shots, so those parts were already damaged when first sampled. No change.
