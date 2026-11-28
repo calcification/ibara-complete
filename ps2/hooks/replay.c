@@ -45,6 +45,65 @@ struct rp_state {
 
 static u8 rp_active, rp_started; /* in a game; its first update has run */
 
+#ifdef RP_CONTROLLER_TRACE
+#define RP_TRACE_FRAMES 1200u
+
+struct controller_trace {
+	u32 scroll, step, cursor, wait, position, animation, kind, active;
+	u32 calls, result, spawn_tick, spawn_scroll, spawn_seed, spawn_cursor;
+};
+
+/* Past the default snapshots (end 0x01AC0000); before the input log. */
+#define RP_TRACE ((volatile struct controller_trace (*)[RP_TRACE_FRAMES])0x01AC0000u)
+_Static_assert(2u * RP_TRACE_FRAMES * sizeof(struct controller_trace) <= 0x40000u,
+	       "controller traces must fit before the input log");
+
+static void trace_controller(u32 side, u32 update)
+{
+	const u32 slot = 0x0045A840u + 3u * 0xB4u;
+	volatile struct controller_trace *row;
+
+	if (update >= RP_TRACE_FRAMES)
+		return;
+	row = &RP_TRACE[side][update];
+	*row = (struct controller_trace){0};
+	row->scroll = EE_RAM(u32, 0x00338DD0u);
+	row->step = EE_RAM(u32, 0x00338DD8u);
+	row->cursor = EE_RAM(u32, 0x00338E00u);
+	row->wait = EE_RAM(u32, 0x00338DFCu);
+	row->active = EE_RAM(u32, slot) >> 31;
+	if (row->active) {
+		row->kind = EE_RAM(u32, slot + 4);
+		if (row->kind == 76u) {
+			row->position = EE_RAM(u32, slot + 0x24u);
+			row->animation = EE_RAM(u16, slot + 0x98u);
+		}
+	}
+}
+
+u32 replay_controller_create(void)
+{
+	const u32 side = rp.mode;
+	const u32 next = side == 0 ? rp.n_upd : rp.play_upd;
+	volatile struct controller_trace *row = 0;
+	u32 result;
+
+	if (rp_started && side < 2 && next > 0 && next <= RP_TRACE_FRAMES &&
+	    (side == 0 || next <= rp.n_upd)) {
+		row = &RP_TRACE[side][next - 1];
+		row->calls++;
+		row->spawn_tick = EE_RAM(u32, TICK);
+		row->spawn_scroll = EE_RAM(u32, 0x00338DD0u);
+		row->spawn_seed = EE_RAM(u32, SEED);
+		row->spawn_cursor = EE_RAM(u32, 0x00338E00u);
+	}
+	result = GAME_CALL0(0x00163350u);
+	if (row)
+		row->result = result;
+	return result;
+}
+#endif
+
 static void checkpoint(u32 which, u32 upd)
 {
 	struct rp_cp *c;
@@ -249,6 +308,9 @@ void replay_update(void)
 			for (i = 0; i < BTN_WORDS; i++)
 				RP_LOG[rp.n_upd].w[side][i] =
 					EE_RAM(u16, PS2_PLAYER_BASE + side * PS2_PLAYER_STRIDE + PS2_PLAYER_HELD + 2u * i);
+#ifdef RP_CONTROLLER_TRACE
+		trace_controller(0, rp.n_upd);
+#endif
 		if (SNAP_N(rp.n_upd))
 			snap(0, (rp.n_upd - RP_SNAP_AT) / 50u);
 		checkpoint(0, rp.n_upd++);
@@ -269,6 +331,9 @@ void replay_update(void)
 #ifdef RP_BUSY_LOG
 	if (rp.play_upd < 0x10000u)
 		EE_RAM(u8, 0x01A90000u + rp.play_upd) = (u8)EE_RAM(u32, 0x00339D90u);
+#endif
+#ifdef RP_CONTROLLER_TRACE
+	trace_controller(1, rp.play_upd);
 #endif
 	if (SNAP_N(rp.play_upd))
 		snap(1, (rp.play_upd - RP_SNAP_AT) / 50u);
