@@ -75,7 +75,7 @@ PCSX2 (release build):
   It lists `BISLPM-66301R<mode letter>*` (sceMcGetDir 0x00155748, added to mcfile.c) newest first, as
   "ＹＹ／ＭＭ／ＤＤ　ｈｈ：ｍｍ　ＳＴｎ　score" (the date from the save's name, stage and score from each file's
   header); up / down move, shot plays, bomb goes back. Messages: checking the card, no replays, no card, load failed.
-* Starting: the file is loaded into the replay buffer and checked (checksum, format 2); the player's Arcade
+* Starting: the file is loaded into the replay buffer and checked (checksum, supported format); the player's Arcade
   options and FIGHTER TYPE are kept and the recording's applied (restored when the playback ends). The menus are
   then driven as a player would: GAME START confirmed (one injected press on port 0 through the menus' pad reads),
   and in Arcade's NORMAL / HARDER / EXTENDED submenu (state 3) the recorded choice (0x00338F0C) confirmed. KURO's
@@ -103,3 +103,52 @@ PCSX2 (release build; the test card has the game's save with Tate on, so the scr
    options into the replay header.
 3. Practice and 2P runs (no end-of-run prompt yet for Practice).
 4. Delete a replay from the list (the PS2 browser can already).
+
+## Replay format 3 and Noir's target search cursor
+
+The Noir target selector at 0x00137DA0 uses a shared round-robin cursor
+at 0x00338B98. Playback restores the recorded cursor along with the seed
+and player state. The [controlled PCSX2 comparison](../replay_late/POD_CONTACT.md)
+isolated this field from the pod records themselves.
+
+Format 3 appends two 32-bit words to the format 2 header. The first
+stores the 16-bit cursor value and the second stores the initial stage
+tick. The stream encoding and the header prefix used by the REPLAY
+list are the same. A format 2 file keeps its original update indexing
+and uses cursor 0 on playback. Its original cursor cannot be recovered
+from the stream. The menu checks the actual loaded file length and
+checksum before applying the saved settings.
+
+A new normal Noir recording starts at the first Stage 1 update. The
+opening and ship confirmation run before replay input starts. The
+initial stage tick is restored at that boundary so the opening's
+length cannot shift the replay. Practice, Arcade and Arrange keep
+their existing entry point.
+
+For a PCSX2 diagnostic, bake the release profile with RPL_TRACE. This
+enables sampled checkpoints without replacing the recorder or replay
+menu. The test-only rpl_test_finish flag can request game-over teardown
+after the current recorded segment. Compare a state at the save prompt
+with one after the REPLAY menu's playback returns.
+
+    python3 research/phase47/report_replay.py record.p2s playback.p2s symbols.json
+
+### PCSX2 release-menu verification
+
+PCSX2 2.8.2 used the real save prompt, memory card, and Noir REPLAY
+menu. The diagnostic kept the player alive for the longer runs and
+requested native game-over teardown at the end of each recording.
+
+| Saved recording | Playback result |
+| --- | --- |
+| Format 2, 3,109 updates | Loaded with cursor 0 and consumed the full stream. |
+| Format 3, 3,150 updates | Played after another game. Restored cursor 17 from a live value of 93 and consumed the full stream. |
+| Format 3, 9,233 updates, through Stage 2 | Restored cursor 17, consumed the full stream, and returned to REPLAY. The final stage and stage tick matched. |
+
+All three runs had zero stream decode errors. Both format 3 runs first
+showed an RNG mismatch at sampled update 720, while the score and stage
+tick still matched. The short run differed at 81 of 105 checkpoints and
+the long run at 284 of 308. Both ended with score and RNG mismatches.
+Stage 2 was first observed at update 8100 in the recording and 8070 in
+playback, with samples every 30 updates. The first mismatch was already
+in Stage 1. The cause of that remaining mismatch is still unconfirmed.

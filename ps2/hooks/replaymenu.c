@@ -38,7 +38,7 @@ u32 mc_loaded(void);
 void mc_tick(void);
 u8 *rpl_buffer(void);
 u32 rpl_buffer_max(void);
-u32 rpl_play_loaded(void);
+u32 rpl_play_loaded(u32 size);
 extern u32 kuro_on;
 
 const char *rm_label[5];
@@ -304,7 +304,7 @@ void rm_frame(void)
 	case R_LOAD:
 		if (mc_busy())
 			return;
-		if (mc_done() && rpl_play_loaded()) {
+		if (mc_done() && rpl_play_loaded(mc_loaded())) {
 			st = R_START;
 			wait = 0;
 		} else {

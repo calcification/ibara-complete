@@ -28,7 +28,7 @@ SOURCE_MD5 = "6ba671b5d23155b8254b6f4cefc90ae2"
 MAX_DATA_RUN = 24576  # our own hook image (code + the select screen's layout tables for both players, ~17 KB runs); retail code is copied
 MAX_DATA_TOTAL = 64 * 1024
 KEY = 16          # bytes per index key
-MIN_COPY = 24     # shortest match taken as a COPY
+MIN_COPY = 22  # short retail matches keep the replay hooks within the literal budget
 OP_COPY, OP_DATA = 0, 1
 
 

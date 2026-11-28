@@ -14,6 +14,8 @@
 #define SEED       0x00337D08u
 #define FRAMES     0x00338CDCu
 #define GROUP_ID   0x00338E4Cu
+#define TARGET_CURSOR 0x00338B98u /* shared round-robin enemy search in 0x00137DA0 */
+#define TARGET_COUNT 192u
 #define SCENE      0x00338E9Cu
 #define TICK       0x00338EA0u
 #define RANK       0x00338EB4u
@@ -23,7 +25,7 @@
 #define FIELDS     18u /* 2 ports x (current, pressed, repeat), 2 players x 5 words, rank change (2 halves) */
 
 #define RPL_MAGIC  0x42464249u /* "IBFB" */
-#define RPL_FORMAT 2u           /* replay file format; bump when the stream or header changes */
+#define RPL_FORMAT 3u           /* format 2 has the same prefix and no cursor or initial stage tick */
 #define RPL_BUF    ((u8 *)0x01700000u) /* header + stream; RAM unused in the frontend and in games */
 #define RPL_MAX    0x00700000u
 
@@ -37,7 +39,9 @@ struct rpl_head {
 	u32 fighter[2];    /* CONFIG > FIGHTER TYPE per side (the ship; Noir's select screen writes it) */
 	u32 seed0, frames0, group0[2], rank0[4];
 	u32 players0[2u * PS2_PLAYER_STRIDE / 4u];
+	u32 target_cursor, tick0;
 };
+#define RPL_FORMAT2_SIZE __builtin_offsetof(struct rpl_head, target_cursor)
 
 enum { RPL_OFF, RPL_REC, RPL_PLAY };
 u32 rpl_mode = RPL_REC;      /* what the next game does */
@@ -147,6 +151,16 @@ static u32 adler(const u8 *p, u32 n)
 	return b << 16 | a;
 }
 
+static u32 stage_one_start(void)
+{
+	/* Noir's opening and select can consume different numbers of updates.
+	 * Normal format-3 runs start on the first Stage 1 update. Format 2
+	 * retains its original input indexing. Practice can start elsewhere. */
+	if (rpl_mode == RPL_PLAY)
+		return HEAD->version == RPL_FORMAT && HEAD->mode == 2u;
+	return kuro_on && !EE_RAM(u32, 0x00338FA4u);
+}
+
 static void game_start(void)
 {
 	struct rpl_head *h = HEAD;
@@ -168,6 +182,8 @@ static void game_start(void)
 		h->head_size = sizeof(*h);
 		h->seed0 = EE_RAM(u32, SEED);
 		h->frames0 = EE_RAM(u32, FRAMES);
+		h->target_cursor = EE_RAM(u16, TARGET_CURSOR);
+		h->tick0 = EE_RAM(u32, TICK);
 		h->group0[0] = EE_RAM(u32, GROUP_ID);
 		h->group0[1] = EE_RAM(u32, GROUP_ID + 4u);
 		for (i = 0; i < 4u; i++)
@@ -190,6 +206,10 @@ static void game_start(void)
 	} else if (cur == RPL_PLAY) {
 		EE_RAM(u32, SEED) = h->seed0;
 		EE_RAM(u32, FRAMES) = h->frames0;
+		/* Format 2 lacks a cursor. Use the cold-start value as a stable fallback. */
+		EE_RAM(u16, TARGET_CURSOR) = h->version == RPL_FORMAT ? (u16)h->target_cursor : 0u;
+		if (h->version == RPL_FORMAT && h->mode == 2u)
+			EE_RAM(u32, TICK) = h->tick0;
 		EE_RAM(u32, GROUP_ID) = h->group0[0];
 		EE_RAM(u32, GROUP_ID + 4u) = h->group0[1];
 		for (i = 0; i < 4u; i++)
@@ -230,11 +250,23 @@ static void game_end(void)
 }
 
 /* 1 if the buffer holds a complete recording that passes its checksum */
+static __attribute__((optimize("Os"))) u32 valid_replay(u32 size)
+{
+	const struct rpl_head *h = HEAD;
+	const u32 legacy = h->version == 2u;
+	const u32 header = legacy ? RPL_FORMAT2_SIZE : sizeof(*h);
+
+	return size >= header && h->magic == RPL_MAGIC && h->head_size == header &&
+	       h->length == size - header &&
+	       (legacy || (h->version == RPL_FORMAT && h->target_cursor < TARGET_COUNT)) &&
+	       h->sum == adler(RPL_BUF + 8, size - 8u);
+}
+
 u32 rpl_valid(void)
 {
 	const struct rpl_head *h = HEAD;
-	return h->magic == RPL_MAGIC && h->version == RPL_FORMAT && h->head_size == sizeof(*h) && h->length <= RPL_MAX - sizeof(*h) &&
-	       h->sum == adler(RPL_BUF + 8, h->head_size + h->length - 8u);
+	return h->head_size <= RPL_MAX && h->length <= RPL_MAX - h->head_size &&
+	       valid_replay(h->head_size + h->length);
 }
 u32 rpl_size(void) { return HEAD->head_size + HEAD->length; }
 u8 *rpl_buffer(void) { return RPL_BUF; }
@@ -242,11 +274,11 @@ u32 rpl_buffer_max(void) { return RPL_MAX; }
 
 /* After a replay is loaded into the buffer: check it, keep the player's settings, apply the recording's, and play it
  * in the next game. 0 if the file is not a valid replay. */
-u32 rpl_play_loaded(void)
+u32 rpl_play_loaded(u32 size)
 {
 	const struct rpl_head *h = HEAD;
 	u32 i;
-	if (!rpl_valid())
+	if (size > RPL_MAX || !valid_replay(size))
 		return 0;
 	for (i = 0; i < 6u; i++) {
 		user_arcade[i] = *arcade_setting(i);
@@ -361,6 +393,10 @@ u32 rpl_pad(u32 port, u32 buttons)
 	return buttons;
 }
 
+#ifdef RPL_TRACE
+volatile u32 rpl_test_finish; /* PCSX2 fixture: finish a recording before the next update */
+#endif
+
 /* the start of each game update (game_start.c, after its start-of-game reset) */
 void rpl_update(void)
 {
@@ -368,11 +404,28 @@ void rpl_update(void)
 	u32 i, mask;
 	if (!active)
 		return;
-	if (!started)
+#ifdef RPL_TRACE
+	if (started && cur == RPL_REC && rpl_test_finish) {
+		rpl_test_finish = 0;
+		game_end();
+		EE_RAM(u32, 0x00338B30u) = 3u; /* normal game-over teardown at 0x0012E898 */
+		return;
+	}
+#endif
+	if (!started) {
+		if (stage_one_start()) {
+			if (EE_RAM(u8, SCENE) != 2u)
+				return;
+			void xtc_reset(void);
+			void bl_enemy_reset(void);
+			xtc_reset();
+			bl_enemy_reset();
+		}
 		game_start();
-	else
+	} else {
 		EE_RAM(u32, FRAMES) += 1u;
-#ifdef RPL_TEST
+	}
+#if defined(RPL_TEST) || defined(RPL_TRACE)
 	{ /* TEST: checkpoints (update, score, seed, scene << 24 | tick) every 30 updates; record at 0x01EA0000, play 0x01EB0000 */
 		const u32 u = cur == RPL_REC ? HEAD->updates : rpl_stat[0];
 		if ((cur == RPL_REC || cur == RPL_PLAY) && u % 30u == 0 && u / 30u < 1000u) {
