@@ -99,6 +99,7 @@ static void game_start(void)
 	clear_pool(PS2_ITEMS_BASE, 0x58u, 256u, 1u);
 	clear_pool(0x0045A840u, 0xB4u, 192u, 0u);
 	clear_pool(PS2_BULLETS_BASE, PS2_BULLET_STRIDE, PS2_BULLET_COUNT, 1u);
+	clear_pool(0x00468340u, 0x3Cu, 532u, 0u); /* the pool after the bullets (0x3C records, effects) */
 	/* the graze test alternates sides each update and kept its phase from the previous game (xtc.c) */
 	xtc_reset();
 	bl_enemy_reset(); /* the boss-cancel kill tracker (last frame's HP per slot) */
@@ -178,7 +179,19 @@ u32 replay_pad(u32 port, u32 buttons)
 #ifndef RP_SNAP_AT
 #define RP_SNAP_AT 925u
 #endif
-#ifdef RP_SNAP_FULL
+#if defined(RP_SNAP_LOW)
+static void snap(u32 which, u32 n)
+{
+	u32 *dst = (u32 *)(0x01660000u + which * 0x00120000u);
+	u32 i;
+	(void)n;
+	for (i = 0; i < 0x00100000u / 4u; i++)
+		dst[i] = ((const u32 *)0x00200000u)[i];
+	for (i = 0; i < 0x00020000u / 4u; i++)
+		dst[0x00100000u / 4u + i] = ((const u32 *)0x01F00000u)[i];
+}
+#define SNAP_N(u) ((u) == RP_SNAP_AT)
+#elif defined(RP_SNAP_FULL)
 static void snap(u32 which, u32 n)
 {
 	u32 *dst = (u32 *)(0x01660000u + which * 0x00200000u);
