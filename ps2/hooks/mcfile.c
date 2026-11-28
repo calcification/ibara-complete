@@ -44,7 +44,8 @@
 #define CHUNK 0x4000u /* bytes per read / write command (one per frame) */
 #define WORK  ((u8 *)0x01E80000u) /* read-back and icon.sys buffer, 64-byte aligned; unused RAM in the frontend and in games */
 
-#define DIR "/BISLPM-66301KURO"
+/* Each replay is its own save (folder BISLPM-66301R<date>), so it can be copied to and from PCSX2 or another card
+ * on its own; settings and scores live in BISLPM-66301KURO. The caller names the folder and the browser title. */
 
 typedef s32 (*fn3)(s32, s32, s32);
 typedef s32 (*fn4)(s32, s32, s32, s32);
@@ -60,7 +61,9 @@ struct mc_job {
 	s32 type, free, format;
 	const u8 *src;
 	u8 *dst;
-	char path[64], tmp[64], name[32];
+	char dir[40], path[80], tmp[80], name[32], isys[80], ico[80];
+	const u8 *title; /* Shift-JIS browser title (two lines, break after title_break bytes), 0-terminated, <= 68 bytes */
+	u32 title_break;
 };
 static struct mc_job job;
 u32 mc_log[4]; /* last error, steps run, writes, verifies (debug) */
@@ -114,24 +117,36 @@ s32 mc_error(void) { return job.state == ST_FAIL ? job.error : 0; }
 u32 mc_done(void) { return job.state == ST_DONE; }
 u32 mc_loaded(void) { return job.size; }
 
-static u32 start(const char *name)
+static u32 start(const char *dir, const char *name)
 {
 	if (mc_busy() || EE_RAM(u32, GAME_MC_STATE) == 3u)
 		return 0;
 	job.waiting = job.pos = 0;
 	job.error = 0;
-	join(job.path, DIR "/", name);
+	join(job.dir, "/", dir);
+	join(job.path, job.dir, "/");
+	{
+		char *p = job.path;
+		while (*p)
+			p++;
+		join(p, name, "");
+	}
+	join(job.isys, job.dir, "/icon.sys");
+	join(job.ico, job.dir, "/ibara.ico");
 	join(job.tmp, job.path, ".TMP");
 	join(job.name, name, "");
 	return 1;
 }
 
-/* Saves size bytes from src as DIR/name. src must stay unchanged until mc_done() or mc_error(). */
-u32 mc_save(const char *name, const void *src, u32 size)
+/* Saves size bytes from src as /dir/name; a new folder gets icon.sys with the given Shift-JIS title (line break after
+ * title_break bytes) and the game's icon. src and title must stay unchanged until mc_done() or mc_error(). */
+u32 mc_save(const char *dir, const char *name, const void *src, u32 size, const u8 *title, u32 title_break)
 {
-	if (!start(name))
+	if (!start(dir, name))
 		return 0;
 	job.src = (const u8 *)src;
+	job.title = title;
+	job.title_break = title_break;
 	job.size = size;
 	job.state = ST_INFO;
 	return 1;
@@ -139,9 +154,9 @@ u32 mc_save(const char *name, const void *src, u32 size)
 
 /* Loads DIR/name (or its verified NAME.TMP if a save was cut before the swap) into dst, up to max bytes;
  * mc_loaded() gives the size read. The caller checks the contents (header, checksum). */
-u32 mc_load(const char *name, void *dst, u32 max)
+u32 mc_load(const char *dir, const char *name, void *dst, u32 max)
 {
-	if (!start(name))
+	if (!start(dir, name))
 		return 0;
 	job.dst = (u8 *)dst;
 	job.max = max;
@@ -152,15 +167,14 @@ u32 mc_load(const char *name, void *dst, u32 max)
 
 static void icon_sys(void)
 {
-	/* the game's icon.sys with the title "イバラ" / "ＫＵＲＯ　ＲＥＰＬＡＹ" (Shift-JIS, line break after 3 chars) */
-	static const u8 title[] = {0x83, 0x43, 0x83, 0x6F, 0x83, 0x89, 0x82, 0x6A, 0x82, 0x74, 0x82, 0x71, 0x82, 0x6E,
-				   0x81, 0x40, 0x82, 0x71, 0x82, 0x64, 0x82, 0x6F, 0x82, 0x6B, 0x82, 0x60, 0x82, 0x78, 0};
-	u32 i;
+	u32 i, end = 0;
 	for (i = 0; i < ICON_SYS_SIZE; i++)
-		WORK[i] = EE_RAM(u8, ICON_SYS_TEMPLATE + i);
+		WORK[i] = EE_RAM(u8, ICON_SYS_TEMPLATE + i); /* the game's icon.sys (colours, lights, icon names) */
+	while (end < 67u && job.title[end])
+		end++;
 	for (i = 0; i < 68u; i++)
-		WORK[0xC0 + i] = i < sizeof(title) ? title[i] : 0;
-	WORK[6] = 6; /* line break at byte 6 (after イバラ) */
+		WORK[0xC0 + i] = i < end ? job.title[i] : 0;
+	WORK[6] = (u8)job.title_break; /* second line starts here */
 	WORK[7] = 0;
 }
 
@@ -198,7 +212,7 @@ void mc_tick(void)
 	case ST_MKDIR:
 		if (job.pos == 0) {
 			job.pos = 1;
-			issue(((fn3)MC_MKDIR)(0, 0, (s32)DIR));
+			issue(((fn3)MC_MKDIR)(0, 0, (s32)job.dir));
 			return;
 		}
 		job.pos = 0;
@@ -213,7 +227,7 @@ void mc_tick(void)
 	case ST_ICO_OPEN:
 		if (job.pos == 0) {
 			job.pos = 1;
-			issue(mc_open(job.state == ST_ISYS_OPEN ? DIR "/icon.sys" : DIR "/ibara.ico", MC_WRONLY | MC_CREAT));
+			issue(mc_open(job.state == ST_ISYS_OPEN ? job.isys : job.ico, MC_WRONLY | MC_CREAT));
 			return;
 		}
 		if (job.result < 0) {

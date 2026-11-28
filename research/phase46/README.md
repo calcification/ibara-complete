@@ -39,8 +39,8 @@ without ever touching the game's save. Code: `ps2/hooks/mcfile.c`. A test-only d
 * It starts only while the game's save manager is not running a job (0x00339D50 != 3). Only one libmc command may
   be outstanding and the game's card thread polls `sceMcSync` too. Callers must run jobs only where the game does
   not start card work (our own screens).
-* Folder `BISLPM-66301KURO` (memory card slot 1). On first creation it gets `icon.sys` (the game's template,
-  titled "イバラ / ＫＵＲＯ　ＲＥＰＬＡＹ") and the game's `ibara.ico`, so the PS2 browser shows it properly.
+* Folders chosen by the caller (memory card slot 1; see "One replay per save" below). A new folder gets `icon.sys`
+  (the game's template with the caller's title) and the game's `ibara.ico`, so the PS2 browser shows it properly.
 * **Saving NAME:** check the card (PS2 card, formatted, enough free space for a second copy plus icons) → make the
   folder → delete a stale `NAME.TMP` → write `NAME.TMP` in 16 KB commands → close → read it back and compare
   every byte → delete the old `NAME` → rename `NAME.TMP` to `NAME`.
@@ -91,6 +91,17 @@ open. The replay format carries a length and checksum, so a damaged file is reje
 | No memory card (slot disabled; the game's own "no card, start anyway?" → Yes) | save refused at the card check (−11), load fails (−12), the game carries on |
 | Unformatted card (all 0xFF) | save refused at the card check (not formatted), load fails (−2); nothing written |
 | Not enough space (a 9 MB file claimed) | refused by the space check (−1000) before anything is written; card unchanged |
+
+## One replay per save (28 November)
+
+Decision (user): each replay is its own save, so a single replay can be copied to USB as a `.psu` (wLaunchELF on
+a PS2), imported into PCSX2 (memory-card tools, or a folder memory card), or copied between cards with the console's
+own manager. `mc_save(dir, name, src, size, title, title_break)` / `mc_load(dir, name, dst, max)`:
+* replays: folder `BISLPM-66301R<YYMMDDhhmm>` (date and time recorded; imported replays never collide with yours),
+  browser title from mode, stage and score;
+* settings and Noir scores: one folder `BISLPM-66301KURO`.
+Each replay folder carries its own icon.sys and icon (about 35 KB). Test: the five jobs on a replay folder and the
+settings folder both succeed, the card is consistent, and each folder has its own title.
 
 ## Next
 

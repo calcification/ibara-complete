@@ -15,8 +15,8 @@
 #define DST ((u8 *)0x01D00000u)
 #define MAIN_STATE 0x00338B08u
 
-u32 mc_save(const char *name, const void *src, u32 size);
-u32 mc_load(const char *name, void *dst, u32 max);
+u32 mc_save(const char *dir, const char *name, const void *src, u32 size, const u8 *title, u32 title_break);
+u32 mc_load(const char *dir, const char *name, void *dst, u32 max);
 u32 mc_busy(void);
 s32 mc_error(void);
 u32 mc_done(void);
@@ -25,6 +25,11 @@ void mc_tick(void);
 
 u32 mc_test[32] = {0x5453434Du}; /* 'MCST', step, then 3 words per stage */
 static u32 frames, stage;
+#define TDIR "BISLPM-66301R2611281542"
+/* "イバラ ＫＵＲＯ" / "ＲＥＰＬＡＹ　ＴＥＳＴ" */
+static const u8 ttl[] = {0x83, 0x43, 0x83, 0x6F, 0x83, 0x89, 0x81, 0x40, 0x82, 0x6A, 0x82, 0x74, 0x82, 0x71, 0x82, 0x6E,
+			 0x82, 0x71, 0x82, 0x64, 0x82, 0x6F, 0x82, 0x6B, 0x82, 0x60, 0x82, 0x78, 0x81, 0x40, 0x82, 0x73,
+			 0x82, 0x64, 0x82, 0x72, 0x82, 0x73, 0};
 
 static __attribute__((unused)) void fill(u32 seed)
 {
@@ -65,7 +70,7 @@ void mc_test_frame(void)
 	mc_test[1] = stage;
 #ifdef MC_TEST_LOAD_ONLY
 	if (stage == 0)
-		mc_load("REPLAY1.DAT", DST, 0x00100000u);
+		mc_load(TDIR, "REPLAY1.DAT", DST, 0x00100000u);
 	else if (stage == 1)
 		record(0, compare(1u) << 16 | (compare(2u) & 0xFFFFu));
 	else
@@ -74,7 +79,7 @@ void mc_test_frame(void)
 #ifdef MC_TEST_FAKE_SIZE
 	/* more than the card holds: refused by the space check before anything is written */
 	if (stage == 0)
-		mc_save("BIG.DAT", SRC, MC_TEST_FAKE_SIZE);
+		mc_save(TDIR, "BIG.DAT", SRC, MC_TEST_FAKE_SIZE, ttl, 16u);
 	else if (stage == 1)
 		record(0, 0);
 	else
@@ -84,11 +89,11 @@ void mc_test_frame(void)
 #endif
 	/* jobs: 0 save pattern 1, 1 load, 2 save pattern 2 over it, 3 load, 4 save SETTINGS.DAT */
 	switch (stage) {
-	case 0: fill(1u); mc_save("REPLAY1.DAT", SRC, MC_TEST_SIZE); break;
-	case 1: record(0, 0); mc_load("REPLAY1.DAT", DST, 0x00100000u); break;
-	case 2: record(1, compare(1u)); fill(2u); mc_save("REPLAY1.DAT", SRC, MC_TEST_SIZE); break;
-	case 3: record(2, 0); mc_load("REPLAY1.DAT", DST, 0x00100000u); break;
-	case 4: record(3, compare(2u)); mc_save("SETTINGS.DAT", SRC, 4096u); break;
+	case 0: fill(1u); mc_save(TDIR, "REPLAY1.DAT", SRC, MC_TEST_SIZE, ttl, 16u); break;
+	case 1: record(0, 0); mc_load(TDIR, "REPLAY1.DAT", DST, 0x00100000u); break;
+	case 2: record(1, compare(1u)); fill(2u); mc_save(TDIR, "REPLAY1.DAT", SRC, MC_TEST_SIZE, ttl, 16u); break;
+	case 3: record(2, 0); mc_load(TDIR, "REPLAY1.DAT", DST, 0x00100000u); break;
+	case 4: record(3, compare(2u)); mc_save("BISLPM-66301KURO", "SETTINGS.DAT", SRC, 4096u, ttl, 16u); break;
 	case 5: record(4, 0); break;
 	default: return;
 	}
