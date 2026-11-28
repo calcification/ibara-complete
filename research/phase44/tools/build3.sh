@@ -5,11 +5,11 @@ cp ps2/hooks/replay.c $S/rp/replay.keep2; cp scripts/build_ee_hooks.py $S/rp/beh
 python3 - <<'PY'
 p='scripts/build_ee_hooks.py'
 s=open(p).read()
-a='"bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c"],'
-assert s.count(a)==1; s=s.replace(a,'"bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "replay.c"],')
+a='"bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c"],'
+assert s.count(a)==1; s=s.replace(a,'"bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c", "replay.c"],')
 b='"sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,'
 assert s.count(b)==1
-s=s.replace(b,'"sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES + [(0x00112B1C, 0x0C043774, "jal", "replay_pad_entry"), (0x00112B28, 0x0C043774, "jal", "replay_pad_entry")],')
+s=s.replace(b,'"sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,')
 c='"defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],'
 assert s.count(c)==1; s=s.replace(c,'"defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE", "REPLAY_BUILD"],')
 open(p,'w').write(s)

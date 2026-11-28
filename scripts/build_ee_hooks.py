@@ -443,6 +443,9 @@ KURO_PATCHES = [
     (0x0012E42C, 0x0C04A4D8, "jal", "frontend_rank_bar"),
     # K62: the first update of each game resets state that outlives a game (ps2/hooks/game_start.c, phase 44)
     (0x0012E5CC, 0x0C04E334, "jal", "game_update_entry"),
+    # replays (ps2/hooks/rpl.c, phase 47): both pad reads of 0x00112A80 (`jal 0x0010DDD0`, port in the delay slot)
+    (0x00112B1C, 0x0C043774, "jal", "rpl_pad_entry"),
+    (0x00112B28, 0x0C043774, "jal", "rpl_pad_entry"),
     # In Tate the first visible text column is 1. Start 1P at column 2 to leave a visible gutter.
     (0x0012CF2C, 0x0000302D, "raw", 0x24060002),  # Arcade 1P label
     (0x0012CDE4, 0x24060001, "raw", 0x24060002),  # Arrange 1P label
@@ -535,7 +538,7 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c"],
     "defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,

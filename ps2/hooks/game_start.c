@@ -20,6 +20,8 @@ void xtc_reset(void);
 void bl_enemy_reset(void);
 #ifdef REPLAY_BUILD
 void replay_update(void);
+#else
+void rpl_update(void);
 #endif
 
 static u8 gs_started;
@@ -30,9 +32,24 @@ void game_start_frame(void)
 		gs_started = 0;
 }
 
+/* every slot (all) or every inactive slot: objects keep fields their spawn code does not set (research/phase44) */
+static void clear_pool(u32 base, u32 stride, u32 count, u32 all)
+{
+	u32 i, w;
+	for (i = 0; i < count; i++, base += stride)
+		if (all || !(EE_RAM(u32, base) & 0x80000000u))
+			for (w = 0; w < stride; w += 4u)
+				EE_RAM(u32, base + w) = 0;
+}
+
 static void game_start_reset(void)
 {
 	u32 i;
+	/* no shot, item or bullet exists at a game's first update; items can survive RETURN MENU */
+	clear_pool(PS2_SHOTS_BASE, PS2_SHOT_STRIDE, 256u, 1u);
+	clear_pool(PS2_BULLETS_BASE, PS2_BULLET_STRIDE, PS2_BULLET_COUNT, 1u);
+	clear_pool(0x0045A840u, 0xB4u, 192u, 0u);   /* enemies: inactive slots */
+	clear_pool(0x00468340u, 0x3Cu, 532u, 0u);   /* the pool after the bullets (effects): inactive slots */
 	for (i = 0; i < ITEMS_COUNT; i++) /* as 0x00132640: every item slot's flags word */
 		EE_RAM(u32, PS2_ITEMS_BASE + i * ITEMS_STRIDE) = 0;
 	EE_RAM(u8, 0x00338E54u) = EE_RAM(u8, 0x00338E55u) = EE_RAM(u8, 0x00338E58u) = 0;
@@ -53,6 +70,8 @@ void game_update(void)
 	}
 #ifdef REPLAY_BUILD
 	replay_update();
+#else
+	rpl_update(); /* records every game; plays one back when asked */
 #endif
 }
 
