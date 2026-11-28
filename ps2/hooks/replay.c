@@ -51,6 +51,7 @@ static u8 rp_active, rp_started; /* in a game; its first update has run */
 struct controller_trace {
 	u32 scroll, step, cursor, wait, position, animation, kind, active;
 	u32 calls, result, spawn_tick, spawn_scroll, spawn_seed, spawn_cursor;
+	u32 resource_checks, resources_ready, pool_checks, pool_ready;
 };
 
 /* Past the default snapshots (end 0x01AC0000); before the input log. */
@@ -81,16 +82,23 @@ static void trace_controller(u32 side, u32 update)
 	}
 }
 
-u32 replay_controller_create(void)
+static volatile struct controller_trace *controller_event(void)
 {
 	const u32 side = rp.mode;
 	const u32 next = side == 0 ? rp.n_upd : rp.play_upd;
-	volatile struct controller_trace *row = 0;
+
+	if (!rp_started || side >= 2 || next == 0 || next > RP_TRACE_FRAMES ||
+	    (side == 1 && next > rp.n_upd))
+		return 0;
+	return &RP_TRACE[side][next - 1];
+}
+
+u32 replay_controller_create(void)
+{
+	volatile struct controller_trace *row = controller_event();
 	u32 result;
 
-	if (rp_started && side < 2 && next > 0 && next <= RP_TRACE_FRAMES &&
-	    (side == 0 || next <= rp.n_upd)) {
-		row = &RP_TRACE[side][next - 1];
+	if (row) {
 		row->calls++;
 		row->spawn_tick = EE_RAM(u32, TICK);
 		row->spawn_scroll = EE_RAM(u32, 0x00338DD0u);
@@ -100,6 +108,42 @@ u32 replay_controller_create(void)
 	result = GAME_CALL0(0x00163350u);
 	if (row)
 		row->result = result;
+	return result;
+}
+
+/* Positive-control build only: make the first successful playback resource
+ * check retry once, after the native check has done its normal work. */
+#ifdef RP_CONTROLLER_ONE_UPDATE
+static u32 controller_delayed;
+#endif
+
+u32 replay_controller_resources(u32 kind, u32 flags)
+{
+	const u32 result = ((u32 (*)(u32, u32))0x00135D70u)(kind, flags);
+	volatile struct controller_trace *row = controller_event();
+
+	if (row) {
+		row->resource_checks++;
+		row->resources_ready += result != 0;
+	}
+#ifdef RP_CONTROLLER_ONE_UPDATE
+	if (row && rp.mode == 1u && kind == 76u && result && !controller_delayed) {
+		controller_delayed = 1u;
+		return 0;
+	}
+#endif
+	return result;
+}
+
+u32 replay_controller_slots(u32 count)
+{
+	const u32 result = ((u32 (*)(u32))0x0012D280u)(count);
+	volatile struct controller_trace *row = controller_event();
+
+	if (row) {
+		row->pool_checks++;
+		row->pool_ready += result != 0;
+	}
 	return result;
 }
 #endif

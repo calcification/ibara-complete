@@ -12,10 +12,11 @@ from p2s_tools import load_ee
 CP_BASE = 0x01FC0000
 TRACE_BASE = 0x01AC0000
 CP = struct.Struct("<8I")
-TRACE = struct.Struct("<14I")
+TRACE = struct.Struct("<18I")
 TRACE_FIELDS = (
     "scroll", "step", "cursor", "wait", "position", "animation", "kind", "active",
     "calls", "result", "spawn_tick", "spawn_scroll", "spawn_seed", "spawn_cursor",
+    "resource_checks", "resources_ready", "pool_checks", "pool_ready",
 )
 
 
@@ -66,9 +67,19 @@ def main():
     parser.add_argument("state", type=Path)
     parser.add_argument("symbols", type=Path)
     parser.add_argument("--controller-trace", action="store_true")
+    parser.add_argument("--factory-events", action="store_true", help="include every retry in the report")
     args = parser.parse_args()
     rp = json.loads(args.symbols.read_text())["rp"]
-    print(json.dumps(analyze(load_ee(args.state), rp, args.controller_trace), indent=2))
+    report = analyze(load_ee(args.state), rp, args.controller_trace)
+    if args.controller_trace and not args.factory_events:
+        report["factory"] = [dict(
+            attempts=sum(event["calls"] for event in events),
+            first_attempt=events[0] if events else None,
+            first_success=next((event for event in events if event["result"]), None),
+            resource_failures=sum(e["resource_checks"] - e["resources_ready"] for e in events),
+            slot_failures=sum(e["pool_checks"] - e["pool_ready"] for e in events),
+        ) for events in report["factory"]]
+    print(json.dumps(report, indent=2))
 
 
 if __name__ == "__main__":

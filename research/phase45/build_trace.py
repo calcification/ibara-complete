@@ -18,10 +18,14 @@ def main():
     parser.add_argument("output", type=Path)
     parser.add_argument("--symbols", type=Path, required=True)
     parser.add_argument("--controller-trace", action="store_true")
+    parser.add_argument("--delay-controller", action="store_true",
+                        help="positive control: force one extra resource-check retry on playback")
     parser.add_argument("--bl-rom", type=Path)
     args = parser.parse_args()
     if args.symbols.exists() or args.output.exists():
         parser.error("choose new output paths")
+    if args.delay_controller and not args.controller_trace:
+        parser.error("--delay-controller requires --controller-trace")
     if not hooks.have_toolchain():
         parser.error("the MIPS cross toolchain is required for this test build")
     profile = hooks.HOOKS["kuro"]
@@ -34,7 +38,13 @@ def main():
     ]
     if args.controller_trace:
         profile["defines"].append("RP_CONTROLLER_TRACE")
-        profile["sym_patches"].append((0x00115600, 0x0C058CD4, "jal", "replay_controller_create"))
+        profile["sym_patches"] += [
+            (0x00115600, 0x0C058CD4, "jal", "replay_controller_create"),
+            (0x00163370, 0x0C04D75C, "jal", "replay_controller_resources"),
+            (0x00163398, 0x0C04B4A0, "jal", "replay_controller_slots"),
+        ]
+    if args.delay_controller:
+        profile["defines"].append("RP_CONTROLLER_ONE_UPDATE")
     with tempfile.TemporaryDirectory() as tmp:
         built = hooks.build_hook("kuro", Path(tmp), hooks.BAKE_BASE, hooks.BAKE_END)
     argv = [str(args.source), "--output", str(args.output)]
