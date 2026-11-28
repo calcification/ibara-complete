@@ -195,6 +195,12 @@ void kuro_frame(void)
 		arcade_slowdown_reset_manual();
 #endif
 	game_start_frame();
+#ifdef MC_TEST
+	{
+		void mc_test_frame(void);
+		mc_test_frame();
+	}
+#endif
 	const u8 attract = EE_RAM(u8, ATTRACT);
 	if (kuro_on && (EE_RAM(u32, FRONT_STATE) == 1u || (attract && !attract_last))) {
 		kuro_off_why = EE_RAM(u32, FRONT_STATE) << 8 | (u32)attract << 1 | 1u;
