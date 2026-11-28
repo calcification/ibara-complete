@@ -10,12 +10,12 @@ class LateEventTests(unittest.TestCase):
         self.write_trace(0)
         self.write_trace(1)
 
-    def write_trace(self, side, updates=None, dropped_at=None):
+    def write_trace(self, side, updates=None, dropped_at=None, first_update=START):
         updates = updates or {}
         base = BASE + side * SIDE_SIZE
         used = 0
         for i in range(ROWS):
-            update = START + i
+            update = first_update + i
             events = updates.get(update, ())
             WORDS.pack_into(self.mem, base + i * WORDS.size,
                             (2 << 24) | update, used, len(events), int(update == dropped_at))
@@ -45,10 +45,23 @@ class LateEventTests(unittest.TestCase):
         self.assertEqual(report["counts"][0]["rng"], 195)
         self.assertIsNone(report["first_event_difference"])
 
-    def test_reports_relocated_window(self):
+    def test_replays_captured_pod_contact_difference_in_relocated_window(self):
+        # The four record events and two playback events from the captured update.
+        common_rng = (1, 0x0019698C, 15, 0x5E345F94)
+        spark_rng = (1, 0x0013BCCC, 4, 0x91E3FA3D)
+        damage = (2, 0x0012B578, (1 << 8) | 3, (1 << 16) | 2)
+        xtc_test = (3, 1, 0, 0)
+        self.write_trace(0, {2559: (common_rng, spark_rng, damage, xtc_test)}, first_update=2464)
+        self.write_trace(1, {2559: (common_rng, xtc_test)}, first_update=2464)
         report = compare_events(self.mem, first_update=2464)
         self.assertEqual(report["window"], [2464, 2591])
-        self.assertIsNone(report["first_event_difference"])
+        first = report["first_event_difference"]
+        self.assertEqual((first["update"], first["ordinal"]), (2559, 1))
+        self.assertEqual(first["record"]["site"], "0x0013bccc")
+        self.assertEqual(first["playback"]["event"], "graze_test")
+        contact = report["first_by_kind"]["damage"]
+        self.assertEqual(contact["playback"], [])
+        self.assertEqual((contact["record"][0]["hp_before"], contact["record"][0]["hp_after"]), (2, 1))
 
     def test_rejects_dropped_events(self):
         self.write_trace(1, {1078: [(1, 0, 0, 0)] * MAX_EVENTS}, dropped_at=1078)
