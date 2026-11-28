@@ -446,6 +446,8 @@ KURO_PATCHES = [
     # replays (ps2/hooks/rpl.c, phase 47): both pad reads of 0x00112A80 (`jal 0x0010DDD0`, port in the delay slot)
     (0x00112B1C, 0x0C043774, "jal", "rpl_pad_entry"),
     (0x00112B28, 0x0C043774, "jal", "rpl_pad_entry"),
+    # K64: the end of a run offers to save its replay (ps2/hooks/endrun.c): state 8's call in the main state machine
+    (0x00113610, 0x0C04F560, "jal", "endrun_state8"),
     # In Tate the first visible text column is 1. Start 1P at column 2 to leave a visible gutter.
     (0x0012CF2C, 0x0000302D, "raw", 0x24060002),  # Arcade 1P label
     (0x0012CDE4, 0x24060001, "raw", 0x24060002),  # Arrange 1P label
@@ -489,8 +491,7 @@ BL_SHIP_PATCHES = [
     # Both stage-name writers use HUD row 37. Keep that space clear in KURO even without arcade art.
     (0x001155A8, 0x0C04F7A4, "raw", 0x00000000),
     (0x0012CEC0, 0x0C04F7A4, "raw", 0x00000000),
-    # Skip the retail ranking/initials state machine and its memory-card autosave after a KURO game.
-    (0x00113610, 0x0C04F560, "raw", 0x0000102D),
+    # (0x00113610: KURO skips the retail ranking / initials state and its autosave; now in endrun.c, which owns the site)
     # Arrange's seven-slot weapon stock bar uses the same player stock and selected-weapon fields as KURO.
     (0x001285EC, 0x106000D0, "raw", 0x00000000),
     (0x0012E434, 0x0C04A170, "jal", "kuro_weapon_bar"),
@@ -538,7 +539,7 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c", "mcfile.c", "endrun.c"],
     "defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,

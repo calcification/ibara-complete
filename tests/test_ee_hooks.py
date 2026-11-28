@@ -202,7 +202,10 @@ class BuildTests(unittest.TestCase):
         self.assertEqual(by_site[0x001CB36C], (0x10620042, 0x10620005))  # row 3 confirms EXIT
         self.assertEqual(by_site[0x001CB1AC], (0x14430010, 0x10000010))  # bypass shared slot screen
         self.assertEqual(by_site[0x002A90E0], (0x00301D50, b["syms"]["noir_start_help"]))
-        self.assertEqual(by_site[0x00113610], (hooks.jal(0x0013D580), 0x0000102D))
+        # state 8's call: no longer a KURO-only word; endrun.c owns it in every mode (KURO still skips state 8)
+        self.assertNotIn(0x00113610, by_site)
+        static = {site: new for site, _orig, new in b["sites"]}
+        self.assertEqual(static[0x00113610], hooks.jal(b["syms"]["endrun_state8"]))
         for site in (0x001155A8, 0x0012CEC0):
             self.assertEqual(by_site[site], (hooks.jal(0x0013DE90), 0))
         self.assertEqual(by_site[0x001285EC], (0x106000D0, 0))

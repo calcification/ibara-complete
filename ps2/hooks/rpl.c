@@ -40,6 +40,8 @@ struct rpl_head {
 enum { RPL_OFF, RPL_REC, RPL_PLAY };
 u32 rpl_mode = RPL_REC;      /* what the next game does */
 static u32 cur;              /* what this game does (latched at its start) */
+static u32 last_recorded;    /* the buffer holds a finished recording (not a playback) */
+extern u32 kuro_on;
 static u8 active, started;
 static u32 pos, run, play_left;
 static u16 prev[FIELDS], next[FIELDS], last_raw[2]; /* playback: next = the coming update, decoded ahead */
@@ -157,6 +159,8 @@ static void game_start(void)
 		for (i = 0; i < 2u * PS2_PLAYER_STRIDE / 4u; i++)
 			h->players0[i] = EE_RAM(u32, PS2_PLAYER_BASE + 4u * i);
 		h->stage = EE_RAM(u8, SCENE);
+		h->mode = (kuro_on ? 2u : EE_RAM(u32, 0x00338F44u) ? 1u : 0u) | (EE_RAM(u32, 0x00338FA4u) ? 0x100u : 0u);
+		last_recorded = 0;
 		pos = sizeof(*h);
 		run = 0;
 		rank_prev = EE_RAM(u32, RANK);
@@ -190,6 +194,7 @@ static void game_end(void)
 	if (cur == RPL_REC) {
 		flush_run();
 		h->length = pos - sizeof(*h);
+		last_recorded = 1;
 		h->sum = adler(RPL_BUF + 8, pos - 8u);
 	} else if (cur == RPL_PLAY) {
 		rpl_mode = RPL_REC; /* back to recording after a playback */
@@ -205,6 +210,20 @@ u32 rpl_valid(void)
 	       h->sum == adler(RPL_BUF + 8, h->head_size + h->length - 8u);
 }
 u32 rpl_size(void) { return HEAD->head_size + HEAD->length; }
+
+/* For the end-of-run prompt: 1 if the last game was recorded and long enough to offer; mode (0 Arcade, 1 Arrange,
+ * 2 Noir), the stage reached and the final score. */
+u32 rpl_offer_info(u32 *mode, u32 *stage, u32 *score)
+{
+	const struct rpl_head *h = HEAD;
+	if (mode) {
+		const u32 scene = h->end_tick >> 24; /* scene 2 is stage 1 */
+		*mode = h->mode & 0xFFu;
+		*stage = scene >= 2u ? scene - 1u : 1u;
+		*score = h->end_score;
+	}
+	return last_recorded && h->updates >= 600u;
+}
 const u8 *rpl_data(void) { return RPL_BUF; }
 
 /* each pad read (both ports): game start / end; frame counter per update; playback feeds the recorded pads */
@@ -215,6 +234,19 @@ u32 rpl_pad(u32 port, u32 buttons)
 {
 #ifdef REPLAY_BUILD
 	return replay_pad(port, buttons); /* research/phase44 harness builds */
+#endif
+#ifdef RPL_STATELOG
+	if (port == 0u) { /* TEST: (vsync count, main state, $gp-27968) at each change, at 0x01EC0000 */
+		static u32 last = 0xFFFFFFFFu, n, t;
+		const u32 st = EE_RAM(u32, MAIN_STATE) | (u32)EE_RAM(u8, ATTRACT) << 8 | EE_RAM(u32, 0x00338FB0u) << 16;
+		t++;
+		if (st != last && n < 1000u) {
+			EE_RAM(u32, 0x01EC0004u + n * 8u) = t;
+			EE_RAM(u32, 0x01EC0008u + n * 8u) = st;
+			EE_RAM(u32, 0x01EC0000u) = ++n;
+			last = st;
+		}
+	}
 #endif
 	if (port == 0u) {
 		const u32 in_game = EE_RAM(u32, MAIN_STATE) == 5u && !EE_RAM(u8, ATTRACT);

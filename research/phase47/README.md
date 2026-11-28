@@ -34,11 +34,37 @@ Release smoke test (PCSX2): attract demo, a Noir Practice game, RETURN MENU. Beh
 the frame counter (weapon item cycling and some flashes) now advances per game update, not per vsync, and unused
 object slots are cleared at a game's first update.
 
+## K64: the end of a run offers to save its replay (`ps2/hooks/endrun.c`)
+
+* Where: the main state machine (0x00113400) runs state 8 (game over / name entry, 0x0013D580) after every
+  finished game; when it returns 0 the game goes to the logos (state 1) and the title. Observed sequences: Arcade
+  game 5 → 8 → 1 → 2 → 3; attract the same with the attract flag (no prompt). The call at 0x00113610 now goes to
+  `endrun_state8`. It also carries KURO's old runtime word for that site (KURO skips state 8: no retail ranking or
+  autosave), so the site has one owner in every mode.
+* When: the last game was recorded (not a playback), at least 600 updates, checksum valid, not attract.
+* Look: the game's own memory card dialog (`0x001D05C0(message, cursor)`, the frontend's): message 11
+  ("セーブしますか？", はい / いいえ with the rose cursor) with its two text lines pointed at "リプレイをセーブしますか？"
+  and "（使用容量　ＮＮＮＫＢ）" while the prompt is up; then 14 (セーブしています), 15 (セーブが終了しました) or 17
+  (セーブに失敗しました; "空き容量が不足しています。" when the space check refuses). Each prompt frame is built like the
+  game's simple states: 0x00113390, 0x00112500, clear 0x001125B0(0), 0x00112A20, the dialog, 0x00112670(7, 7),
+  present 0x001117D0. KURO first loads resource group 1 (`0x00129F00(1)`, the font and panel; state 8 loads it in
+  the other modes) and waits for the loader.
+* Buttons as the game's dialogs: left / right (0x04 / 0x08) move, shot or bomb (0x10 / 0x20) confirm.
+* Size shown: replay file + icon + icon.sys, rounded up to KB, plus 3 KB for the folder entries.
+* Saved as `BISLPM-66301R<YYMMDDhhmm>/REPLAY.DAT` (clock 0x0010C530, the console's local time), browser title
+  "イバラ　リプレイ" / "<MODE>　ST<n>　<score>".
+
+PCSX2 (release build):
+* Arcade game over, unformatted card: prompt (39 KB for an 80-second run) → はい → セーブに失敗しました → logos.
+* Arcade game over, card with the game's save: はい → saving → saved. On the card: `BISLPM-66301R2611281542`
+  with icon.sys, icon and REPLAY.DAT (1,852 bytes, 2,503 updates, header and Adler-32 checksum valid); the file
+  system is consistent; the game's save is untouched; title イバラ　リプレイ / ＡＲＣＡＤＥ　ＳＴ１　１５５２０.
+* Noir game over: the font loads (NOW LOADING), prompt correct, いいえ → logos → title.
+* Not covered yet: Practice runs (they leave through RETURN MENU / the practice menu, not state 8), 2P.
+
 ## Next
 
-1. The end-of-run prompt ("リプレイをセーブしますか？", size in KB) in the game's own memory-card dialog
-   (panel 0x001CE830, text 0x001CEC40; message records like 0x002A9948), then saving with mcfile.c to
-   `BISLPM-66301R<date>`.
+1. ~~The end-of-run prompt~~ done (K64). Practice and 2P runs next.
 2. A REPLAY entry listing replay saves; playback with the mode drawn over the game (the name and version text
    at 1.0).
 3. Noir: bring Codex's asset-readiness hold into the release player.
