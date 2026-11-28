@@ -54,6 +54,11 @@ void replay_late_clear(u32 side);
 void replay_late_end_game(void);
 #endif
 
+#ifdef RP_POD_CONTACT
+void replay_contact_clear(u32 side);
+void replay_contact_step(u32 side, u32 update, u32 tick);
+#endif
+
 static u8 rp_active, rp_started; /* in a game; its first update has run */
 
 #ifdef RP_CONTROLLER_TRACE
@@ -318,6 +323,9 @@ static void game_start(void)
 #ifdef RP_LATE_TRACE
 	replay_late_clear(rp.mode);
 #endif
+#ifdef RP_POD_CONTACT
+	replay_contact_clear(rp.mode);
+#endif
 	/* no shot, item or bullet exists at a stage's first update, but items can survive RETURN MENU */
 	clear_pool(PS2_SHOTS_BASE, PS2_SHOT_STRIDE, 256u, 1u);
 	clear_pool(PS2_ITEMS_BASE, 0x58u, 256u, 1u);
@@ -424,7 +432,10 @@ u32 replay_pad(u32 port, u32 buttons)
 #ifndef RP_SNAP_AT
 #define RP_SNAP_AT 925u
 #endif
-#if defined(RP_SNAP_WIDE) /* 0x00280000-0x00480000 and the hook area 0x01F00000-0x01F20000 */
+#if defined(RP_POD_CONTACT)
+#define SNAP_N(u) 0
+#define snap(side, slot) ((void)0)
+#elif defined(RP_SNAP_WIDE) /* 0x00280000-0x00480000 and the hook area 0x01F00000-0x01F20000 */
 static void snap(u32 which, u32 n)
 {
 	u32 *dst = (u32 *)(0x01660000u + which * 0x00220000u);
@@ -514,6 +525,9 @@ void replay_update(void)
 #ifdef RP_LATE_TRACE
 		replay_late_begin(0, rp.n_upd, tick);
 #endif
+#ifdef RP_POD_CONTACT
+		replay_contact_step(0, rp.n_upd, tick);
+#endif
 		if (SNAP_N(rp.n_upd))
 			snap(0, (rp.n_upd - RP_SNAP_AT) / 50u);
 		checkpoint(0, rp.n_upd++);
@@ -540,6 +554,9 @@ void replay_update(void)
 #endif
 #ifdef RP_LATE_TRACE
 	replay_late_begin(1, rp.play_upd, tick);
+#endif
+#ifdef RP_POD_CONTACT
+	replay_contact_step(1, rp.play_upd, tick);
 #endif
 	if (SNAP_N(rp.play_upd))
 		snap(1, (rp.play_upd - RP_SNAP_AT) / 50u);

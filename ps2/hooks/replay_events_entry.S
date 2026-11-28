@@ -89,3 +89,29 @@ replay_late_retail_graze_entry:
 	RESTORE
 	j 0x001372B0
 	addiu $sp,$sp,0x120
+
+#ifdef RP_POD_CONTACT
+	.globl replay_contact_entry
+replay_contact_entry:
+	SAVE
+	jal replay_contact_sample
+	nop
+	RESTORE
+	j 0x0012B2D0
+	addiu $sp,$sp,0x120
+
+	.globl replay_contact_hit_entry
+replay_contact_hit_entry:
+	SAVE
+	sq $a0,0xB0($sp)
+	sq $a1,0xC0($sp)
+	sq $a2,0xD0($sp)
+	jal replay_contact_hit
+	move $a1,$s3
+	lq $a0,0xB0($sp)
+	lq $a1,0xC0($sp)
+	lq $a2,0xD0($sp)
+	RESTORE
+	j 0x0013BE10
+	addiu $sp,$sp,0x120
+#endif

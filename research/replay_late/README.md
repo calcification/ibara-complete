@@ -118,3 +118,5 @@ projectile pool starts at 0x0044D6C0 and uses 0x34-byte slots. The
 contact routine at 0x0012B2D0 walks this pool separately from the
 main shot pool. The 128-update trace around the original report
 continues to match in the observed pairs.
+
+The [pod contact follow-up](POD_CONTACT.md) isolates the target search cursor with a same-recording A/B test.

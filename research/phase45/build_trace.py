@@ -33,6 +33,8 @@ def main():
                         help="move the 128-update event window")
     parser.add_argument("--stage-one-entry", action="store_true",
                         help="start the test log at Stage 1 entry after the normal opening")
+    parser.add_argument("--pod-contact", action="store_true",
+                        help="sample pod projectiles and enemy slot 3 before collision")
     parser.add_argument("--bl-rom", type=Path)
     args = parser.parse_args()
     if args.symbols.exists() or args.output.exists():
@@ -49,6 +51,8 @@ def main():
         parser.error("--event-start requires --late-trace and a start within the 20,000-update input log")
     if args.stage_one_entry and not args.sync_controller:
         parser.error("--stage-one-entry requires --sync-controller")
+    if args.pod_contact and not (args.stage_one_entry and args.late_trace):
+        parser.error("--pod-contact requires --stage-one-entry and --late-trace")
     if not hooks.have_toolchain():
         parser.error("the MIPS cross toolchain is required for this test build")
     profile = hooks.HOOKS["kuro"]
@@ -90,6 +94,12 @@ def main():
               for site in (0x0012A92C, 0x0012ABD8)),
             *((site, 0x0C049E2C, "jal", "replay_late_damage_entry")
               for site in (0x0012AC04, 0x0012B254, 0x0012B578, 0x0012B8F4)),
+        ]
+    if args.pod_contact:
+        profile["defines"].append("RP_POD_CONTACT")
+        profile["sym_patches"] += [
+            (0x0012E61C, 0x0C04ACB4, "jal", "replay_contact_entry"),
+            (0x0012B520, 0x0C04EF84, "jal", "replay_contact_hit_entry"),
         ]
     with tempfile.TemporaryDirectory() as tmp:
         built = hooks.build_hook("kuro", Path(tmp), hooks.BAKE_BASE, hooks.BAKE_END)

@@ -17,7 +17,7 @@ ROWS = 128
 MAX_EVENTS = 8064
 WORDS = struct.Struct("<4I")
 SIDE_SIZE = (ROWS + MAX_EVENTS) * WORDS.size
-NAMES = {1: "rng", 2: "damage", 3: "graze_test", 4: "xtc_graze", 5: "retail_graze"}
+NAMES = {1: "rng", 2: "damage", 3: "graze_test", 4: "xtc_graze", 5: "retail_graze", 6: "pod_hit"}
 
 
 def signed(word):
@@ -38,6 +38,8 @@ def decode(event):
         out.update(side=(a & 0xFF) + 1, shot_held=(a >> 8) & 0xFF, pods=a >> 16, flags=f"{b:#010x}")
     elif name == "retail_graze":
         out.update(site=f"{a:#010x}", side=(b & 0xFF) + 1, slot=b >> 8, score=c)
+    elif name == "pod_hit":
+        out.update(shot_slot=a, enemy_slot=b, shot_kind=c)
     else:
         out.update(bullet=a & 0xFF, half_width=(a >> 8) & 0xFF, half_height=a >> 16,
                    dx=signed(b), dy=signed(c))

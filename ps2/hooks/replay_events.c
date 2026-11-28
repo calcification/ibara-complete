@@ -10,7 +10,7 @@
 #define ENEMY_BASE 0x0045A840u
 #define ENEMY_STRIDE 0xB4u
 
-enum event_kind { RANDOM = 1, DAMAGE, GRAZE_TEST, GRAZE, RETAIL_GRAZE };
+enum event_kind { RANDOM = 1, DAMAGE, GRAZE_TEST, GRAZE, RETAIL_GRAZE, POD_HIT };
 struct event { u32 kind, a, b, c; };
 struct event_row { u32 stage_tick, first, count, dropped; };
 struct event_trace {
@@ -122,3 +122,123 @@ void replay_late_retail_graze(u32 caller, u32 object, u32 side, u32 score)
 
 	emit(RETAIL_GRAZE, caller - 8u, side | (slot << 8), score);
 }
+
+#ifdef RP_POD_CONTACT
+#define CONTACT_BASE 0x01660000u
+#define CONTACT_FIRST 2000u
+#define CONTACT_ROWS 768u
+#define POD_BASE 0x0044C8A0u
+#define TARGET_CURSOR 0x00338B98u
+#define POD_SHOTS 0x0044D6C0u
+#define POD_SHOT_SIZE 0x34u
+#define CONTACT_CANDIDATES 8u
+#define CONTACT_ENEMIES 192u
+
+struct contact_row {
+	u32 present, tick, score;
+	u32 pods[3 * 0x30u / 4u], shots[48 * POD_SHOT_SIZE / 4u], enemy[ENEMY_STRIDE / 4u];
+};
+_Static_assert(sizeof(struct contact_row) == 2832u, "contact row layout");
+_Static_assert(CONTACT_BASE + 2u * CONTACT_ROWS * sizeof(struct contact_row) <= 0x01AC0000u,
+	       "pod contact trace must fit in the replay snapshot memory");
+#define CONTACT ((volatile struct contact_row (*)[CONTACT_ROWS])CONTACT_BASE)
+struct candidate {
+	u32 flags, kind, x, y;
+};
+struct candidate_row {
+	u32 update_plus_one;
+	struct candidate enemy[CONTACT_ENEMIES];
+};
+#define CANDIDATES_BASE (CONTACT_BASE + 2u * CONTACT_ROWS * sizeof(struct contact_row))
+#define CANDIDATES ((volatile struct candidate_row (*)[CONTACT_CANDIDATES])CANDIDATES_BASE)
+_Static_assert(CANDIDATES_BASE + 2u * CONTACT_CANDIDATES * sizeof(struct candidate_row) <= 0x01AC0000u,
+	       "candidate traces must fit before controller traces");
+
+static volatile struct contact_row *contact;
+static u32 contact_tick, contact_side, contact_update, candidate_count;
+static u32 recorded_pods[6u * 0x30u / 4u];
+static u16 recorded_target_cursor;
+volatile u32 replay_contact_restore_pods; /* bit 0: pod records, bit 1: target search cursor */
+
+static void copy_words(volatile u32 *dest, u32 source, u32 words)
+{
+	u32 i;
+	for (i = 0; i < words; i++)
+		dest[i] = EE_RAM(u32, source + 4u * i);
+}
+
+void replay_contact_step(u32 side, u32 update, u32 tick)
+{
+	contact = 0;
+	if (tick >> 24 != 2u)
+		return;
+	if (update == 0)
+		contact = &CONTACT[side][0];
+	else if (update - CONTACT_FIRST < CONTACT_ROWS - 1u)
+		contact = &CONTACT[side][update - CONTACT_FIRST + 1u];
+	contact_tick = tick;
+	contact_side = side;
+	contact_update = update;
+}
+
+void replay_contact_clear(u32 side)
+{
+	u32 i;
+	contact = 0;
+	candidate_count = 0;
+	for (i = 0; i < CONTACT_CANDIDATES; i++)
+		CANDIDATES[side][i].update_plus_one = 0;
+	for (i = 0; i < CONTACT_ROWS; i++)
+		CONTACT[side][i].present = 0;
+
+	if (side == 0) {
+		copy_words(recorded_pods, POD_BASE, sizeof(recorded_pods) / 4u);
+		recorded_target_cursor = EE_RAM(u16, TARGET_CURSOR);
+	} else {
+		if (replay_contact_restore_pods & 1u)
+			for (i = 0; i < sizeof(recorded_pods) / 4u; i++)
+				EE_RAM(u32, POD_BASE + 4u * i) = recorded_pods[i];
+		if (replay_contact_restore_pods & 2u)
+			EE_RAM(u16, TARGET_CURSOR) = recorded_target_cursor;
+	}
+}
+
+static void sample_candidates(void)
+{
+	volatile struct candidate_row *row;
+	u32 i;
+
+	if (candidate_count >= CONTACT_CANDIDATES ||
+	    !(EE_RAM(u32, POD_BASE) | EE_RAM(u32, POD_BASE + 0x30u) | EE_RAM(u32, POD_BASE + 0x60u)))
+		return;
+	row = &CANDIDATES[contact_side][candidate_count++];
+	for (i = 0; i < CONTACT_ENEMIES; i++) {
+		const u32 slot = ENEMY_BASE + i * ENEMY_STRIDE;
+		row->enemy[i] = (struct candidate){
+			EE_RAM(u32, slot), EE_RAM(u32, slot + 4u), EE_RAM(u32, slot + 0x24u), EE_RAM(u32, slot + 0x28u),
+		};
+	}
+	row->update_plus_one = contact_update + 1u;
+}
+
+void replay_contact_sample(void)
+{
+	volatile struct contact_row *row = contact;
+	if (!row)
+		return;
+	sample_candidates();
+	row->tick = contact_tick;
+	row->score = EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_SCORE);
+	copy_words(row->pods, POD_BASE, sizeof(row->pods) / 4u);
+	copy_words(row->shots, POD_SHOTS, sizeof(row->shots) / 4u);
+	copy_words(row->enemy, ENEMY_BASE + 3u * ENEMY_STRIDE, sizeof(row->enemy) / 4u);
+	row->present = 1u | ((u32)EE_RAM(u16, TARGET_CURSOR) << 16);
+}
+
+void replay_contact_hit(u32 shot, u32 enemy)
+{
+	if (current)
+		emit(POD_HIT, (shot - POD_SHOTS) / POD_SHOT_SIZE, (enemy - ENEMY_BASE) / ENEMY_STRIDE,
+		     EE_RAM(u32, shot + 4u));
+}
+#endif

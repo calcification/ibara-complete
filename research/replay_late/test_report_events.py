@@ -63,6 +63,14 @@ class LateEventTests(unittest.TestCase):
         self.assertEqual(contact["playback"], [])
         self.assertEqual((contact["record"][0]["hp_before"], contact["record"][0]["hp_after"]), (2, 1))
 
+    def test_reports_extra_pod_contact_at_the_captured_update(self):
+        self.write_trace(0, first_update=2470)
+        self.write_trace(1, {2515: [(6, 35, 8, 2)]}, first_update=2470)
+        report = compare_events(self.mem, first_update=2470)
+        self.assertEqual(report["first_event_difference"]["update"], 2515)
+        event = report["first_by_kind"]["pod_hit"]["playback"][0]
+        self.assertEqual((event["shot_slot"], event["enemy_slot"], event["shot_kind"]), (35, 8, 2))
+
     def test_rejects_dropped_events(self):
         self.write_trace(1, {1078: [(1, 0, 0, 0)] * MAX_EVENTS}, dropped_at=1078)
         with self.assertRaisesRegex(ValueError, "truncated trace at update 1078"):
