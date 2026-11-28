@@ -26,7 +26,7 @@ void mc_tick(void);
 u32 mc_test[32] = {0x5453434Du}; /* 'MCST', step, then 3 words per stage */
 static u32 frames, stage;
 
-static void fill(u32 seed)
+static __attribute__((unused)) void fill(u32 seed)
 {
 	u32 i, x = seed;
 	for (i = 0; i < MC_TEST_SIZE; i++) {
