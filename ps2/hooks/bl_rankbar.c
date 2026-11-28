@@ -274,6 +274,11 @@ static void bl_rank_bar(void)
 
 void frontend_rank_bar(void)
 {
+	{
+		void rpl_hud(void) __attribute__((weak));
+		if (rpl_hud)
+			rpl_hud(); /* "REPLAY  <MODE>" while a replay plays (rpl.c) */
+	}
 	if ((kuro_on && sel_active) || EE_RAM(u8, 0x00338E7Cu)) /* ship selection or attract demo */
 		return;
 	if (kuro_on)

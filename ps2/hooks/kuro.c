@@ -195,6 +195,10 @@ void kuro_frame(void)
 		arcade_slowdown_reset_manual();
 #endif
 	game_start_frame();
+	{
+		void rm_frame(void);
+		rm_frame(); /* REPLAY in the mode menus (replaymenu.c) */
+	}
 #ifdef MC_TEST
 	{
 		void mc_test_frame(void);

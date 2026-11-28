@@ -331,6 +331,18 @@ u32 sel_menu(void)
 	u32 done, secs, s, fade;
 	if (!sel_active)
 		return PAUSE_MENU();
+	{ /* a replay plays back: its recorded ships, confirmed at once (ps2/hooks/rpl.c) */
+		u32 f[2], rpl_play_fighters(u32 *f);
+		if (rpl_play_fighters(f)) {
+			for (s = 0; s < 2u; s++)
+				if (sel_on[s]) {
+					sel_kind[s] = f[s] >> 2 & 1u;
+					sel_type[s] = f[s] & 3u;
+				}
+			finish();
+			return 0;
+		}
+	}
 	for (s = 0; s < 2u && !out_c; s++) /* the free side joins with Start: starts on its CONFIG fighter type */
 		if (!sel_on[s] && !EE_RAM(u32, REC(s)) && (EE_RAM(u16, REC(s) + REC_INPUT) & 0x200u)) {
 			const u32 cfg = EE_RAM(u32, FIGHTER(s));

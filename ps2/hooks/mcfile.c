@@ -30,6 +30,7 @@
 #define MC_RENAME  0x00155EC0u
 #define MC_DELETE  0x00155B28u
 #define MC_SYNC    0x00155420u
+#define MC_GETDIR  0x00155748u /* sceMcGetDir(port, slot, pattern, mode, max, table): 64-byte entries, name at +0x20 */
 #define GAME_MC_STATE 0x00339D50u
 
 #define ICON_SYS_TEMPLATE 0x001D49B0u /* the game's icon.sys, 964 bytes */
@@ -53,7 +54,7 @@ typedef s32 (*fn5)(s32, s32, s32, s32, s32);
 
 enum { ST_IDLE, ST_INFO, ST_MKDIR, ST_ISYS_OPEN, ST_ISYS_WRITE, ST_ISYS_CLOSE, ST_ICO_OPEN, ST_ICO_WRITE, ST_ICO_CLOSE,
        ST_DEL_TMP, ST_OPEN_TMP, ST_WRITE, ST_CLOSE, ST_VOPEN, ST_VREAD, ST_VCLOSE, ST_DEL_OLD, ST_RENAME,
-       ST_LOPEN, ST_LOPEN_TMP, ST_LREAD, ST_LCLOSE, ST_DONE, ST_FAIL };
+       ST_LOPEN, ST_LOPEN_TMP, ST_LREAD, ST_LCLOSE, ST_DIR, ST_DONE, ST_FAIL };
 
 struct mc_job {
 	u32 state, waiting, pos, size, max, fd;
@@ -154,6 +155,22 @@ u32 mc_save(const char *dir, const char *name, const void *src, u32 size, const 
 
 /* Loads DIR/name (or its verified NAME.TMP if a save was cut before the swap) into dst, up to max bytes;
  * mc_loaded() gives the size read. The caller checks the contents (header, checksum). */
+/* Lists the entries matching pattern (e.g. "/BISLPM-66301R*") into table (max entries of 64 bytes, name at +0x20,
+ * 64-byte aligned); mc_loaded() gives the count. */
+u32 mc_list(const char *pattern, void *table, u32 max)
+{
+	if (mc_busy() || EE_RAM(u32, GAME_MC_STATE) == 3u)
+		return 0;
+	job.waiting = job.pos = 0;
+	job.error = 0;
+	join(job.path, pattern, "");
+	job.dst = (u8 *)table;
+	job.max = max;
+	job.size = 0;
+	job.state = ST_DIR;
+	return 1;
+}
+
 u32 mc_load(const char *dir, const char *name, void *dst, u32 max)
 {
 	if (!start(dir, name))
@@ -353,6 +370,24 @@ void mc_tick(void)
 			fail();
 			return;
 		}
+		job.state = ST_DONE;
+		return;
+	case ST_DIR:
+		if (job.pos == 0) {
+			job.pos = 1;
+			issue(((s32(*)(s32, s32, s32, s32, s32, s32))MC_GETDIR)(0, 0, (s32)job.path, 0, (s32)job.max, (s32)job.dst));
+			return;
+		}
+		if (job.result < 0) {
+			if (job.result == -4) { /* nothing matches */
+				job.size = 0;
+				job.state = ST_DONE;
+				return;
+			}
+			fail();
+			return;
+		}
+		job.size = (u32)job.result;
 		job.state = ST_DONE;
 		return;
 	case ST_LOPEN:

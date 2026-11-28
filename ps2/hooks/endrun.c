@@ -45,7 +45,7 @@ enum { P_OFF, P_LOAD, P_ASK, P_SAVE, P_DONE, P_FAIL, P_END };
 #define LOADER_BUSY 0x00339D90u
 static u32 phase, cursor, wait, started_save;
 static u32 old_save[2], old_fail;
-static char dir[24];
+static char dir[28];
 static u8 title[72], line_size[40];
 static const u8 line_ask[] = "\x83\x8A\x83\x76\x83\x8C\x83\x43\x82\xF0\x83\x5A\x81\x5B\x83\x75\x82\xB5\x82\xDC\x82\xB7\x82\xA9\x81\x48"; /* リプレイをセーブしますか？ */
 static const u8 line_full[] = "\x8B\xF3\x82\xAB\x97\x65\x97\xCA\x82\xAA\x95\x73\x91\xAB\x82\xB5\x82\xC4\x82\xA2\x82\xDC\x82\xB7\x81\x42"; /* 空き容量が不足しています。 */
@@ -96,10 +96,11 @@ static void prepare(void)
 	const char *pre = "BISLPM-66301R";
 	u32 i;
 	rpl_offer_info(&mode, &stage, &score);
-	/* folder BISLPM-66301R<YYMMDDhhmm> */
+	/* folder BISLPM-66301R<mode letter A / R / N><YYMMDDhhmm>: each mode's REPLAY menu lists its own */
 	((void (*)(u8 *))CLOCK)(clock);
 	for (i = 0; pre[i]; i++)
 		dir[i] = pre[i];
+	dir[i++] = "ARN"[mode < 3u ? mode : 0];
 	two(dir + i, clock[6]);
 	two(dir + i + 2, clock[5]);
 	two(dir + i + 4, clock[4]);

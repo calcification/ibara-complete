@@ -62,9 +62,44 @@ PCSX2 (release build):
 * Noir game over: the font loads (NOW LOADING), prompt correct, いいえ → logos → title.
 * Not covered yet: Practice runs (they leave through RETURN MENU / the practice menu, not state 8), 2P.
 
+## K65: REPLAY in each mode's menu, and playback (`ps2/hooks/replaymenu.c`, `rpl.c`)
+
+* Menus: ARCADE / NOIR MODE (frontend state 2) and ARRANGE MODE (state 9) get a fifth row, REPLAY, above EXIT.
+  Arcade / Noir: labels and help from `rm_label` / `rm_help` (rows 0–2 copied from the game's tables every frame,
+  so KURO's runtime help word still applies), row count, wraps and the EXIT compare patched
+  (`REPLAY_MENU_PATCHES`). Arrange: label row 3 REPLAY, row 4 EXIT (the spare word 0x002A9058), its row patches
+  raised to 5 and its help from `rm_arr_desc` (`PRACTICE_MODE_PATCHES_REPLAY`; the standalone BLACK LABEL build
+  keeps 4 rows). The menus' own accept code ignores row 3; `rm_frame` answers it.
+* The list: the game's memory card dialog look (panel 0x001CE830, text 0x001CEC40) drawn before the frontend
+  frame's flush (0x001CA294 → `rm_flush`); the menus' pad reads (0x001C9438–0x001C9464) see nothing while it is up.
+  It lists `BISLPM-66301R<mode letter>*` (sceMcGetDir 0x00155748, added to mcfile.c) newest first, as
+  "ＹＹ／ＭＭ／ＤＤ　ｈｈ：ｍｍ　ＳＴｎ　score" (the date from the save's name, stage and score from each file's
+  header); up / down move, shot plays, bomb goes back. Messages: checking the card, no replays, no card, load failed.
+* Starting: the file is loaded into the replay buffer and checked (checksum, format 2); the player's Arcade
+  options and FIGHTER TYPE are kept and the recording's applied (restored when the playback ends). The menus are
+  then driven as a player would: GAME START confirmed (one injected press on port 0 through the menus' pad reads),
+  and in Arcade's NORMAL / HARDER / EXTENDED submenu (state 3) the recorded choice (0x00338F0C) confirmed. KURO's
+  select screen confirms the recorded ships at once (`bl_select.c`).
+* During playback: "REPLAY　<MODE>" on the HUD (the game's HUD text writer 0x00111460, called from the HUD pass in
+  `frontend_rank_bar`); START on the controller ends it. A Start that the recording does not hold is the player's:
+  the pad block is rebuilt from the controller every vsync and holds the recording only from an update's start.
+* Ending (START, or the end of the recording): as the pause menu's RETURN MENU. The pause byte (0x00338F10) opens
+  the main loop's pause-menu call, now a static site (0x0012E778 → `rpl_pause_menu`: KURO's `sel_menu`, or the
+  retail menu, or 1 = RETURN MENU for a playback). The frontend then comes back to the mode's menu, cursor on
+  REPLAY (not Mode Select). No save prompt after a playback.
+* Save names carry the mode: `BISLPM-66301RA…` Arcade, `RR…` Arrange, `RN…` Noir.
+
+PCSX2 (release build; the test card has the game's save with Tate on, so the screen was rotated):
+* Arcade: run with inputs → game over → saved (8,567 bytes); ARCADE MODE → REPLAY lists it; play: the recording's
+  2,809 updates matched to the end (score, seed, stage tick); back to ARCADE MODE on REPLAY; START mid-playback
+  ends it; bomb closes the list.
+* Noir: run saved (`RN…`); NOIR MODE → REPLAY lists only it; plays (ship select confirmed automatically).
+* Arrange: run saved (`RR…`); ARRANGE MODE → REPLAY lists only it; plays.
+
 ## Next
 
-1. ~~The end-of-run prompt~~ done (K64). Practice and 2P runs next.
-2. A REPLAY entry listing replay saves; playback with the mode drawn over the game (the name and version text
-   at 1.0).
-3. Noir: bring Codex's asset-readiness hold into the release player.
+1. Noir playback accuracy: bring Codex's stage-1 asset-readiness hold (phase 45) into the release player.
+2. Arrange's own CONFIG values (PLAYER STOCK, BOMB STOCK, EXTEND, CONTINUE; options.c) and the rank / slowdown
+   options into the replay header.
+3. Practice and 2P runs (no end-of-run prompt yet for Practice).
+4. Delete a replay from the list (the PS2 browser can already).

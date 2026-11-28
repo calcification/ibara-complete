@@ -430,6 +430,43 @@ if _HP.exists():
 # Instant KURO (ps2/hooks/kuro.c): the frontend executable carries the whole image; the Black Label words of
 # bl_mode (hook call sites, rule patches, part-HP tables) become a runtime table that kuro.c switches on entering and
 # leaving KURO. Video and the gameplay score margin apply in every mode of the frontend executable.
+# K65: REPLAY in the ARCADE / NOIR MODE menu (frontend state 2; ps2/hooks/replaymenu.c): 5 rows from rm_label /
+# rm_help (REPLAY row 3, EXIT row 4); the frontend's pad reads and its dialog call go through replaymenu.c
+REPLAY_MENU_PATCHES = [
+    (0x001CA974, 0x3C12002B, "hi", "rm_label"),
+    (0x001CA980, 0x26529020, "lo", "rm_label"),
+    (0x001CA9E0, 0x2A220004, "raw", 0x2A220005),  # draw 5 rows
+    (0x001CA928, 0x28410004, "raw", 0x28410005),  # cursor down wraps after row 4
+    (0x001CAA74, 0x24020003, "raw", 0x24020004),  # cursor up wraps to row 4
+    (0x001CAAB8, 0x24020003, "raw", 0x24020004),  # EXIT is row 4 (row 3 REPLAY is answered by rm_frame)
+    (0x001CA9F0, 0x3C02002B, "hi", "rm_help"),
+    (0x001CA9F4, 0x244290E0, "lo", "rm_help"),
+    (0x001CAA14, 0x3C02002B, "hi", "rm_help", 4),
+    (0x001CAA18, 0x244290E4, "lo", "rm_help", 4),
+    (0x001C9438, 0x0C043764, "jal", "rm_pad_repeat"),
+    (0x001C9444, 0x0C043764, "jal", "rm_pad_repeat"),
+    (0x001C9458, 0x0C04376C, "jal", "rm_pad_pressed"),
+    (0x001C9464, 0x0C04376C, "jal", "rm_pad_pressed"),
+    (0x001CA294, 0x0C04499C, "jal", "rm_flush"),  # the frontend frame's flush 0x00112670(7, anim): the list first
+    # the main loop's pause-menu call: KURO's select screen (sel_menu) or the retail menu, and the end of a playback
+    (0x0012E778, 0x0C04A384, "jal", "rpl_pause_menu"),
+]
+
+# K65 (replaymenu.c): ARRANGE MODE with REPLAY on row 3 and EXIT on row 4 (5 rows) in builds with replays
+_ARR_REPLAY = {
+    0x002A9054: (0x00000000, "word", "rm_replay_label"),
+    0x001CCB50: (0x2A220003, "raw", 0x2A220005),
+    0x001CCA98: (0x28410003, "raw", 0x28410005),
+    0x001CCA80: (0x00000000, "raw", 0x24040004),
+    0x001CCC14: (0x24020002, "raw", 0x24020004),
+    0x001CCB60: (0x3C02002B, "hi", "rm_arr_desc"),
+    0x001CCB64: (0x244293F0, "lo", "rm_arr_desc"),
+    0x001CCB84: (0x3C02002B, "hi", "rm_arr_desc", 4),
+    0x001CCB88: (0x244293F4, "lo", "rm_arr_desc", 4),
+}
+PRACTICE_MODE_PATCHES_REPLAY = [(a, *_ARR_REPLAY[a]) if a in _ARR_REPLAY else (a, *rest)
+                                for a, *rest in PRACTICE_MODE_PATCHES] + [(0x002A9058, 0x00000000, "word", 0x00301C50)]
+
 KURO_PATCHES = [
     # Mode Select's KURO row: the dispatcher (research/phase04 DISPATCH 0x001D42A0: li v0,row; bne v1,v0,skip;
     # lui a0 (delay slot); addiu a0 ...; LoadExecPS2) -> its first word after the delay slot jumps to kuro_enter_entry
@@ -539,16 +576,18 @@ HOOKS["kuro"] = {
     "title": "Instant KURO: one executable, Black Label switched at runtime (frontend executable)",
     "description": "Baked into the launcher's frontend executable; see ps2/hooks/kuro.c.",
     "sources": ["video.c", "options.c", "kuro.c", "xtc.c", "spawnlog.c", "bl_enemy.c", "bl_player.c",
-                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c", "mcfile.c", "endrun.c"],
+                "bl_ship.c", "bl_tex.c", "bl_rankbar.c", "bl_select.c", "bl_select_data.c", "bl_glow_data.c", "arcade_slowdown.c", "game_start.c", "rpl.c", "mcfile.c", "endrun.c", "replaymenu.c"],
     "defines": ["KURO_PRESENTATION", "ARCADE_SLOWDOWN_CONFIG", "SLOWDOWN_HARDWARE"],
     "stubs": [("video_entry", 0x0010E480, "frame_hook", "leaf"), ("xtc_entry", 0x0012AC60, "xtc_frame")],
     "sites": [(VIDEO_SITE, 0x0C043920, "video_entry")] + VIDEO_APPLY_SITES,
-    "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES + KURO_PATCHES,
+    "sym_patches": RANK_OPTION_PATCHES + PRACTICE_MODE_PATCHES_REPLAY + KURO_PATCHES + REPLAY_MENU_PATCHES,
     # Validate the retail branches even though they are swapped only at runtime.
     "patches": [(0x0012E1E4, 0x144000F9, 0x144000F9), (0x0012E47C, 0x14400022, 0x14400022)],
     "dynamic": {
         "sites": [(0x0012E62C, 0x0C04AB18, "xtc_entry")],
-        "sym_patches": BL_SYM_PATCHES + BL_SHIP_PATCHES + NOIR_MENU_PATCHES,
+        # the pause-menu call 0x0012E778 is a static site here (rpl_pause_menu, REPLAY_MENU_PATCHES): it runs sel_menu
+        # in KURO itself, and ends a replay playback in every mode
+        "sym_patches": [x for x in BL_SYM_PATCHES + BL_SHIP_PATCHES + NOIR_MENU_PATCHES if x[0] != 0x0012E778],
         "jumps": HOOKS["bl_mode"]["jumps"],
         "patches": HOOKS["bl_mode"]["patches"] + HOOKS["bl_mode"]["patches_extra"] + [
             (0x002A8E40, 0xD0000003, HEADER_UV),  # Redirect the Arcade header to NOIR MODE while KURO is active.

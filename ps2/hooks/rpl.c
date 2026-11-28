@@ -23,7 +23,7 @@
 #define FIELDS     18u /* 2 ports x (current, pressed, repeat), 2 players x 5 words, rank change (2 halves) */
 
 #define RPL_MAGIC  0x42464249u /* "IBFB" */
-#define RPL_FORMAT 1u           /* replay file format; bump when the stream or header changes */
+#define RPL_FORMAT 2u           /* replay file format; bump when the stream or header changes */
 #define RPL_BUF    ((u8 *)0x01700000u) /* header + stream; RAM unused in the frontend and in games */
 #define RPL_MAX    0x00700000u
 
@@ -32,7 +32,9 @@ struct rpl_head {
 	u32 length;        /* stream bytes after the header */
 	u32 updates;       /* updates recorded */
 	u32 mode;          /* bit 0..3: 0 Arcade, 1 Arrange, 2 Noir; bit 8: Practice */
-	u32 stage, end_score, end_seed, end_tick, reserved[5];
+	u32 stage, end_score, end_seed, end_tick, difficulty; /* Arcade GAME START: 0 NORMAL, 1 HARDER, 2 EXTENDED */
+	u8 arcade[8];      /* Arcade CONTINUE and CONFIG (DIFFICULTY 1 / 2, EXTEND, PLAYER STOCK, BOMB STOCK) */
+	u32 fighter[2];    /* CONFIG > FIGHTER TYPE per side (the ship; Noir's select screen writes it) */
 	u32 seed0, frames0, group0[2], rank0[4];
 	u32 players0[2u * PS2_PLAYER_STRIDE / 4u];
 };
@@ -46,6 +48,18 @@ static u8 active, started;
 static u32 pos, run, play_left;
 static u16 prev[FIELDS], next[FIELDS], last_raw[2]; /* playback: next = the coming update, decoded ahead */
 static u32 rank_prev;
+static u32 play_pending;     /* a loaded replay waits for its game */
+static u8 user_arcade[8];
+static u32 user_fighter[2];
+#define ARCADE_CONTINUE 0x00338BECu
+#define ARCADE_CONFIG   0x00338BF4u
+#define FIGHTER_TYPE    0x004E5050u
+#define PAD_START       0x2000u /* Start in the pad block's current word */
+
+static volatile u8 *arcade_setting(u32 i)
+{
+	return (volatile u8 *)(i == 0 ? ARCADE_CONTINUE : ARCADE_CONFIG + 4u * (i - 1u));
+}
 u32 rpl_stat[8];             /* plays: updates, end mismatch, stream errors, (debug) */
 
 #define HEAD ((struct rpl_head *)RPL_BUF)
@@ -65,8 +79,10 @@ static void fields(u16 *f, u32 rank_change)
 	f[17] = (u16)(rank_change >> 16);
 }
 
+static u16 prev_applied; /* the current word applied for port 0 at this update */
 static void apply(const u16 *f)
 {
+	prev_applied = f[0];
 	u32 p, i;
 	for (p = 0; p < 2; p++) {
 		EE_RAM(u32, PADBLK + p * 0x50u + 0x0u) = f[p * 3 + 0];
@@ -159,6 +175,11 @@ static void game_start(void)
 		for (i = 0; i < 2u * PS2_PLAYER_STRIDE / 4u; i++)
 			h->players0[i] = EE_RAM(u32, PS2_PLAYER_BASE + 4u * i);
 		h->stage = EE_RAM(u8, SCENE);
+		for (i = 0; i < 6u; i++)
+			h->arcade[i] = *arcade_setting(i);
+		h->difficulty = EE_RAM(u8, 0x00338F0Cu); /* $gp-28132: the GAME START submenu's choice */
+		h->fighter[0] = EE_RAM(u32, FIGHTER_TYPE);
+		h->fighter[1] = EE_RAM(u32, FIGHTER_TYPE + 4u);
 		h->mode = (kuro_on ? 2u : EE_RAM(u32, 0x00338F44u) ? 1u : 0u) | (EE_RAM(u32, 0x00338FA4u) ? 0x100u : 0u);
 		last_recorded = 0;
 		pos = sizeof(*h);
@@ -197,7 +218,13 @@ static void game_end(void)
 		last_recorded = 1;
 		h->sum = adler(RPL_BUF + 8, pos - 8u);
 	} else if (cur == RPL_PLAY) {
-		rpl_mode = RPL_REC; /* back to recording after a playback */
+		u32 i;
+		rpl_mode = RPL_REC; /* back to recording after a playback, with the player's own settings */
+		play_pending = 0;
+		for (i = 0; i < 6u; i++)
+			*arcade_setting(i) = user_arcade[i];
+		EE_RAM(u32, FIGHTER_TYPE) = user_fighter[0];
+		EE_RAM(u32, FIGHTER_TYPE + 4u) = user_fighter[1];
 	}
 	cur = RPL_OFF;
 }
@@ -210,6 +237,71 @@ u32 rpl_valid(void)
 	       h->sum == adler(RPL_BUF + 8, h->head_size + h->length - 8u);
 }
 u32 rpl_size(void) { return HEAD->head_size + HEAD->length; }
+u8 *rpl_buffer(void) { return RPL_BUF; }
+u32 rpl_buffer_max(void) { return RPL_MAX; }
+
+/* After a replay is loaded into the buffer: check it, keep the player's settings, apply the recording's, and play it
+ * in the next game. 0 if the file is not a valid replay. */
+u32 rpl_play_loaded(void)
+{
+	const struct rpl_head *h = HEAD;
+	u32 i;
+	if (!rpl_valid())
+		return 0;
+	for (i = 0; i < 6u; i++) {
+		user_arcade[i] = *arcade_setting(i);
+		*arcade_setting(i) = h->arcade[i];
+	}
+	user_fighter[0] = EE_RAM(u32, FIGHTER_TYPE);
+	user_fighter[1] = EE_RAM(u32, FIGHTER_TYPE + 4u);
+	EE_RAM(u32, FIGHTER_TYPE) = h->fighter[0];
+	EE_RAM(u32, FIGHTER_TYPE + 4u) = h->fighter[1];
+	last_recorded = 0;
+	play_pending = 1;
+	rpl_mode = RPL_PLAY;
+	return 1;
+}
+
+u32 rpl_play_difficulty(void) { return HEAD->difficulty; }
+
+/* the in-game HUD pass (bl_rankbar.c frontend_rank_bar): "REPLAY  <MODE>" while a replay plays, with the game's HUD
+ * text writer 0x00111460(text, column, row, attributes) as its PRESS START */
+void rpl_hud(void)
+{
+	static const char *const label[] = {"REPLAY  ARCADE", "REPLAY  ARRANGE", "REPLAY  NOIR"};
+	if (cur == RPL_PLAY && started)
+		GAME_CALL4(0x00111460u, (u32)label[HEAD->mode & 3u], 8u, 3u, 0xC040C000u);
+}
+
+/* Noir's select screen during a playback: the recorded ship (kind * 4 + type) per side */
+u32 rpl_play_fighters(u32 *f)
+{
+	if (!play_pending)
+		return 0;
+	f[0] = HEAD->fighter[0];
+	f[1] = HEAD->fighter[1];
+	return 1;
+}
+
+/* A playback ends as the pause menu's RETURN MENU does: the pause byte opens the pause-menu call (0x0012E778,
+ * rpl_pause_menu), which answers 1 at once; the main loop then leaves the game for the mode's menu. */
+static u8 exit_req;
+#define PAUSE_BYTE 0x00338F10u /* $gp-28128 */
+static void exit_to_menu(void)
+{
+	exit_req = 1;
+	EE_RAM(u8, PAUSE_BYTE) = 1;
+}
+
+u32 sel_menu(void);
+u32 rpl_pause_menu(void)
+{
+	if (exit_req) {
+		exit_req = 0;
+		return 1; /* RETURN MENU */
+	}
+	return kuro_on ? sel_menu() : GAME_CALL0(0x00128E10u);
+}
 
 /* For the end-of-run prompt: 1 if the last game was recorded and long enough to offer; mode (0 Arcade, 1 Arrange,
  * 2 Noir), the stage reached and the final score. */
@@ -259,7 +351,14 @@ u32 rpl_pad(u32 port, u32 buttons)
 		return buttons;
 	if (port == 0u)
 		EE_RAM(u32, FRAMES) -= 1u; /* 0x00113390 counts vsyncs; during a game it counts updates */
-	return cur == RPL_PLAY ? last_raw[port] : buttons;
+	if (cur == RPL_PLAY) {
+		/* the pad block is rebuilt from the controller every vsync and holds the recording only from an update's
+		 * start to the next rebuild: Start that the recording does not have is the player's */
+		if (port == 0u && (buttons & PAD_START) && !(next[0] & PAD_START) && !(prev_applied & PAD_START))
+			exit_to_menu(); /* START on the controller ends the playback (the pad block holds the recording) */
+		return last_raw[port];
+	}
+	return buttons;
 }
 
 /* the start of each game update (game_start.c, after its start-of-game reset) */
@@ -328,6 +427,8 @@ void rpl_update(void)
 	apply(next);
 	if (play_left)
 		decode();
+	else
+		exit_to_menu(); /* the recording is over */
 }
 
 /* Replaces `jal 0x0010DDD0` at 0x00112B1C / 0x00112B28 (a0 = port, set in the delay slot): calls the original, then
