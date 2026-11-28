@@ -247,6 +247,9 @@ void replay_update(void)
 		RP_LOG[rp.n_upd].tick = tick;
 		RP_LOG[rp.n_upd].rank = EE_RAM(u32, RANK); /* Arcade rank creep runs per loop pass (timing) */
 		RP_LOG[rp.n_upd].frames = EE_RAM(u32, FRAMES); /* check only */
+#ifdef RP_BUSY_LOG
+		EE_RAM(u8, 0x01A80000u + rp.n_upd) = (u8)EE_RAM(u32, 0x00339D90u);
+#endif
 		RP_LOG[rp.n_upd].raw[0] = rp_raw[0];
 		RP_LOG[rp.n_upd].raw[1] = rp_raw[1];
 		for (i = 0; i < 40u; i++)
@@ -272,6 +275,10 @@ void replay_update(void)
 				EE_RAM(u16, PS2_PLAYER_BASE + side * PS2_PLAYER_STRIDE + PS2_PLAYER_HELD + 2u * i) =
 					RP_LOG[rp.play_upd].w[side][i];
 	}
+#ifdef RP_BUSY_LOG
+	if (rp.play_upd < 0x10000u)
+		EE_RAM(u8, 0x01A90000u + rp.play_upd) = (u8)EE_RAM(u32, 0x00339D90u);
+#endif
 	if (SNAP_N(rp.play_upd))
 		snap(1, (rp.play_upd - RP_SNAP_AT) / 50u);
 	checkpoint(1, rp.play_upd++);
