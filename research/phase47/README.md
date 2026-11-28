@@ -151,4 +151,5 @@ tick still matched. The short run differed at 81 of 105 checkpoints and
 the long run at 284 of 308. Both ended with score and RNG mismatches.
 Stage 2 was first observed at update 8100 in the recording and 8070 in
 playback, with samples every 30 updates. The first mismatch was already
-in Stage 1. The cause of that remaining mismatch is still unconfirmed.
+in Stage 1. The [per-update drift investigation](STAGE1_DRIFT.md)
+traces the mismatch back to a texture-queue wait.

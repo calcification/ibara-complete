@@ -102,11 +102,15 @@ __asm__(
 	"	sq $v1,0x100($sp)\n"
 	"	sq $t0,0x110($sp)\n"
 	"	sq $t1,0x120($sp)\n"
-#ifdef RP_CONTROLLER_SYNC
+#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
 	/* Pause before game_update consumes input. The native render-only path
 	 * gives the disc and texture loader time to finish the recorded spawn. */
 	"	sq $t2,0x130($sp)\n"
+#ifdef RPL_DRIFT_PROBE
+	"	jal rpl_drift_may_update\n"
+#else
 	"	jal replay_controller_may_update\n"
+#endif
 	"	nop\n"
 	"	beqz $v0,1f\n"
 	"	sw $v0,0x140($sp)\n"
@@ -137,14 +141,14 @@ __asm__(
 	"	lq $s1,0x20($sp)\n"
 	"	lq $s0,0x10($sp)\n"
 	"	lq $ra,0x00($sp)\n"
-#ifdef RP_CONTROLLER_SYNC
+#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
 	"	lw $t2,0x140($sp)\n"
 	"	beqz $t2,2f\n"
 	"	lq $t2,0x130($sp)\n"
 #endif
 	"	j 0x00138CD0\n"
 	"	addiu $sp,$sp,0x150\n"
-#ifdef RP_CONTROLLER_SYNC
+#if defined(RP_CONTROLLER_SYNC) || defined(RPL_DRIFT_PROBE)
 	"2:\n"
 	"	j 0x0012E1EC\n"
 	"	addiu $sp,$sp,0x150\n"

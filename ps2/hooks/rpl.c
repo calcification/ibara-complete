@@ -228,8 +228,24 @@ static void game_start(void)
 	}
 }
 
+#ifdef RPL_DRIFT_PROBE
+void drift_sample(u32 playback, u32 update, const u16 *input, u32 count);
+void drift_stop(void);
+u32 drift_gate_may_update(u32 update);
+
+u32 rpl_drift_may_update(void)
+{
+	if (!started || cur != RPL_PLAY || HEAD->mode != 2u || !play_left)
+		return 1u;
+	return drift_gate_may_update(rpl_stat[0] + 1u);
+}
+#endif
+
 static void game_end(void)
 {
+#ifdef RPL_DRIFT_PROBE
+	drift_stop();
+#endif
 	struct rpl_head *h = HEAD;
 	active = started = 0;
 	if (cur == RPL_REC) {
@@ -444,6 +460,9 @@ void rpl_update(void)
 		HEAD->end_seed = EE_RAM(u32, SEED);
 		HEAD->end_tick = (u32)EE_RAM(u8, SCENE) << 24 | (EE_RAM(u32, TICK) & 0xFFFFFFu);
 		fields(f, rank - rank_prev);
+#ifdef RPL_DRIFT_PROBE
+		drift_sample(0u, HEAD->updates, f, FIELDS);
+#endif
 		rank_prev = rank;
 		for (i = 0, mask = 0; i < FIELDS; i++)
 			if (f[i] != prev[i])
@@ -477,6 +496,9 @@ void rpl_update(void)
 			      (EE_RAM(u32, SEED) != h->end_seed) << 1 |
 			      (((u32)EE_RAM(u8, SCENE) << 24 | (EE_RAM(u32, TICK) & 0xFFFFFFu)) != h->end_tick) << 2;
 	}
+#ifdef RPL_DRIFT_PROBE
+	drift_sample(1u, rpl_stat[0] - 1u, next, FIELDS);
+#endif
 	apply(next);
 	if (play_left)
 		decode();
