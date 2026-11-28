@@ -40,6 +40,9 @@ struct rp_state {
 	u32 seed0, frames0, group0[4], first_miss; /* group0: enemy group counter and spawn serial (0x00338E4C-0x00338E53) */
 	u32 rank0[4]; /* 0x00338EAC-0x00338EBB: rank state set at game init (0x00338EB8 += rand(2) before the first update) */
 	u32 players0[2u * PS2_PLAYER_STRIDE / 4u]; /* both player records at the first update (ship, bomb, timers) */
+#ifdef RP_START_STAGE_ONE
+	u32 tick0;
+#endif
 } rp;
 #define RP_CP ((struct rp_cp (*)[CP_MAX])0x01FC0000u) /* experiment */
 
@@ -223,9 +226,50 @@ u32 replay_controller_slots(u32 count)
 }
 #endif
 
+#ifdef RP_START_STAGE_ONE
+struct stage_scores { u32 score, seed; };
+struct stage_divergence { u32 update, record, playback; };
+struct stage_replay_drift {
+	struct stage_divergence score, seed;
+} replay_stage_drift;
+
+#define RP_STAGE_SCORES_BASE 0x01FD6000u
+#define RP_STAGE_SCORES_MAX 12000u
+#define RP_STAGE_SCORES ((struct stage_scores *)RP_STAGE_SCORES_BASE)
+_Static_assert(0x01FC0000u + 2u * CP_MAX * sizeof(struct rp_cp) <= RP_STAGE_SCORES_BASE,
+	       "checkpoints must fit before the stage score log");
+_Static_assert(RP_STAGE_SCORES_BASE + RP_STAGE_SCORES_MAX * sizeof(struct stage_scores) <= 0x01FF0000u,
+	       "stage score log must leave room above the trace buffers");
+
+static void compare_stage_scores(u32 side, u32 update)
+{
+	const struct stage_scores now = {
+		EE_RAM(u32, PS2_PLAYER_BASE + PS2_PLAYER_SCORE), EE_RAM(u32, SEED),
+	};
+	struct stage_scores recorded;
+
+	if (update >= RP_STAGE_SCORES_MAX)
+		return;
+	if (side == 0) {
+		RP_STAGE_SCORES[update] = now;
+		return;
+	}
+	if (update >= rp.n_upd)
+		return;
+	recorded = RP_STAGE_SCORES[update];
+	if (replay_stage_drift.score.update == 0xFFFFFFFFu && recorded.score != now.score)
+		replay_stage_drift.score = (struct stage_divergence){update, recorded.score, now.score};
+	if (replay_stage_drift.seed.update == 0xFFFFFFFFu && recorded.seed != now.seed)
+		replay_stage_drift.seed = (struct stage_divergence){update, recorded.seed, now.seed};
+}
+#endif
+
 static void checkpoint(u32 which, u32 upd)
 {
 	struct rp_cp *c;
+#ifdef RP_START_STAGE_ONE
+	compare_stage_scores(which, upd);
+#endif
 	if ((upd >= 1200u && upd % 300u) || rp.cp_n[which] >= CP_MAX)
 		return;
 	c = &RP_CP[which][rp.cp_n[which]++];
@@ -287,7 +331,19 @@ static void game_start(void)
 	replay_controller_sync_stats.timeouts = 0;
 	replay_controller_sync_stats.cursor_misses = 0;
 #endif
+#ifdef RP_START_STAGE_ONE
+	/* The opening can run for a different number of updates on each entry. */
+	{
+		void xtc_reset(void);
+		void bl_enemy_reset(void);
+		xtc_reset();
+		bl_enemy_reset();
+	}
+#endif
 	if (rp.mode == 0) {
+#ifdef RP_START_STAGE_ONE
+		rp.tick0 = EE_RAM(u32, TICK);
+#endif
 #ifdef RP_CONTROLLER_SYNC
 		replay_controller_sync_stats.forced_record_retries = 0;
 #endif
@@ -304,6 +360,10 @@ static void game_start(void)
 #endif
 		rp.n_upd = rp.overflow = rp.cp_n[0] = 0;
 	} else {
+#ifdef RP_START_STAGE_ONE
+		EE_RAM(u32, TICK) = rp.tick0;
+		replay_stage_drift.score.update = replay_stage_drift.seed.update = 0xFFFFFFFFu;
+#endif
 		EE_RAM(u32, SEED) = rp.seed0;
 		EE_RAM(u32, FRAMES) = rp.frames0;
 		for (i = 0; i < 2u; i++)
@@ -414,16 +474,21 @@ static void snap(u32 which, u32 n)
 
 void replay_update(void)
 {
-	const u32 tick = (u32)EE_RAM(u8, SCENE) << 24 | (EE_RAM(u32, TICK) & 0xFFFFFFu);
-	u32 side, i;
+	u32 side, i, tick;
 	if (!rp_active)
 		return;
-	if (!rp_started)
-		game_start(); /* the first update: after the loading and the ship select screens */
-	else
+	if (!rp_started) {
+#ifdef RP_START_STAGE_ONE
+		if (EE_RAM(u8, SCENE) != 2u)
+			return;
+#endif
+		game_start();
+	} else {
 		EE_RAM(u32, FRAMES) += 1u;
+	}
 	if (rp.mode == 2u)
 		return;
+	tick = (u32)EE_RAM(u8, SCENE) << 24 | (EE_RAM(u32, TICK) & 0xFFFFFFu);
 	if (rp.mode == 0) {
 		if (rp.n_upd >= RP_LOG_MAX) {
 			rp.overflow++;

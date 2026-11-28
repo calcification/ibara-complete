@@ -29,6 +29,10 @@ def main():
                       help="test late playback by delaying native asset requests")
     parser.add_argument("--late-trace", action="store_true",
                         help="trace Noir Stage 1 graze, damage and RNG at updates 1000–1127")
+    parser.add_argument("--event-start", type=int, metavar="UPDATE",
+                        help="move the 128-update event window")
+    parser.add_argument("--stage-one-entry", action="store_true",
+                        help="start the test log at Stage 1 entry after the normal opening")
     parser.add_argument("--bl-rom", type=Path)
     args = parser.parse_args()
     if args.symbols.exists() or args.output.exists():
@@ -41,13 +45,18 @@ def main():
         parser.error("asset timing test options require --sync-controller")
     if args.late_trace and not args.sync_controller:
         parser.error("--late-trace requires --sync-controller")
+    if args.event_start is not None and (not args.late_trace or not 0 <= args.event_start <= 20000 - 128):
+        parser.error("--event-start requires --late-trace and a start within the 20,000-update input log")
+    if args.stage_one_entry and not args.sync_controller:
+        parser.error("--stage-one-entry requires --sync-controller")
     if not hooks.have_toolchain():
         parser.error("the MIPS cross toolchain is required for this test build")
     profile = hooks.HOOKS["kuro"]
     profile["sources"] = [*profile["sources"], "replay.c"]
     profile["defines"] = [*profile["defines"], "REPLAY_BUILD", "RP_FIRST_MODE=2u", "RP_SNAP_AT=400u"]
+    # The fixture owns these pad reads when the release recorder is present.
     profile["sym_patches"] = [
-        *profile["sym_patches"],
+        *(patch for patch in profile["sym_patches"] if patch[0] not in (0x00112B1C, 0x00112B28)),
         (0x00112B1C, 0x0C043774, "jal", "replay_pad_entry"),
         (0x00112B28, 0x0C043774, "jal", "replay_pad_entry"),
     ]
@@ -60,6 +69,8 @@ def main():
         ]
     if args.sync_controller:
         profile["defines"].append("RP_CONTROLLER_SYNC")
+    if args.stage_one_entry:
+        profile["defines"].append("RP_START_STAGE_ONE")
     if args.force_record_retries:
         profile["defines"].append(f"RP_CONTROLLER_RECORD_RETRIES={args.force_record_retries}u")
     if args.withhold_playback_load:
@@ -68,6 +79,8 @@ def main():
         profile["defines"].append("RP_CONTROLLER_ONE_UPDATE")
     if args.late_trace:
         profile["defines"].append("RP_LATE_TRACE")
+        if args.event_start is not None:
+            profile["defines"].append(f"RP_EVENT_START={args.event_start}u")
         profile["sources"] += ["replay_events.c", "replay_events_entry.S"]
         profile["stubs"] = [*profile["stubs"], ("replay_late_finish_entry", 0x00115620, "replay_late_end")]
         profile["sym_patches"] += [

@@ -44,7 +44,7 @@ def decode(event):
     return out
 
 
-def read_side(mem, side):
+def read_side(mem, side, first_update=START):
     result = {}
     start = BASE + side * SIDE_SIZE
     event_base = start + ROWS * WORDS.size
@@ -54,18 +54,19 @@ def read_side(mem, side):
         if not tick:
             continue
         if first != used or count > MAX_EVENTS - used or dropped or tick >> 24 != 2:
-            raise ValueError(f"invalid or truncated trace at update {START + i}, side {side}")
+            raise ValueError(f"invalid or truncated trace at update {first_update + i}, side {side}")
         events = [WORDS.unpack_from(mem, event_base + j * WORDS.size) for j in range(first, first + count)]
         used += count
-        result[START + i] = (tick, events)
+        result[first_update + i] = (tick, events)
     return result
 
 
-def compare_events(mem):
-    a, b = read_side(mem, 0), read_side(mem, 1)
-    expected = set(range(START, START + ROWS))
+def compare_events(mem, first_update=START):
+    a, b = read_side(mem, 0, first_update), read_side(mem, 1, first_update)
+    end = first_update + ROWS - 1
+    expected = set(range(first_update, end + 1))
     if a.keys() != expected or b.keys() != expected:
-        raise ValueError("expected both full Stage 1 event traces through update 1127")
+        raise ValueError(f"expected both full Stage 1 event traces through update {end}")
     counts = []
     for side in (a, b):
         seen = Counter(NAMES[e[0] & 0xFFFF] for _, events in side.values() for e in events)
@@ -88,7 +89,7 @@ def compare_events(mem):
             if sig_a != sig_b and name not in first_by_kind:
                 first_by_kind[name] = dict(update=update, record=[decode(e) for e in sig_a],
                                            playback=[decode(e) for e in sig_b])
-    return dict(window=[START, START + ROWS - 1], counts=counts,
+    return dict(window=[first_update, end], counts=counts,
                 updates_with_event_differences=len({d["update"] for d in differences}),
                 first_event_difference=differences[0] if differences else None, first_by_kind=first_by_kind)
 
@@ -105,7 +106,9 @@ def main():
     try:
         mem = load_ee(args.state)
         checkpoints = analyze(mem, symbols["rp"], False)
-        report = dict(checkpoints, **compare_events(mem))
+        start_symbol = symbols.get("replay_late_window_start")
+        start = START if start_symbol is None else struct.unpack_from("<I", mem, start_symbol)[0]
+        report = dict(checkpoints, **compare_events(mem, start))
     except (ValueError, struct.error, KeyError) as exc:
         parser.error(str(exc))
     print(json.dumps(report, indent=2))

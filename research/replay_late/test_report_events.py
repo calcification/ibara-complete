@@ -45,6 +45,11 @@ class LateEventTests(unittest.TestCase):
         self.assertEqual(report["counts"][0]["rng"], 195)
         self.assertIsNone(report["first_event_difference"])
 
+    def test_reports_relocated_window(self):
+        report = compare_events(self.mem, first_update=2464)
+        self.assertEqual(report["window"], [2464, 2591])
+        self.assertIsNone(report["first_event_difference"])
+
     def test_rejects_dropped_events(self):
         self.write_trace(1, {1078: [(1, 0, 0, 0)] * MAX_EVENTS}, dropped_at=1078)
         with self.assertRaisesRegex(ValueError, "truncated trace at update 1078"):

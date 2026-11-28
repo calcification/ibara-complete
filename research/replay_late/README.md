@@ -71,3 +71,30 @@ apart. The first score and seed mismatch was at update 1,141.
 The pair had 286 timing misses and 172 mismatches among 1,226
 checkpoints. Its clocks had diverged before Stage 1, so it does
 not isolate a difference at the Stage 2 boundary.
+
+Add --stage-one-entry to the fixture to track a normal Noir Game Start
+from the first Stage 1 update. This option leaves the opening and ship
+selection on live input. It captures the Stage 1 clock at entry and
+restores it for playback. The reporter also compares score and seed
+at every update up to the first 12,000, in addition to the standard
+checkpoint samples.
+
+With the Stage 1 entry point on the K64 baseline, the first type-76
+attempt matched at update 413 and creation matched at 445. All ordered
+events in the late trace window matched, including 17 retail grazes.
+Across the 9,235-update run, the first sampled score and seed mismatch
+appeared at update 2,700. The first timing miss was at 8,173, and the
+recording entered Stage 2 at 8,530. The assisted pair reached Stage 2
+on both sides and had 22 mismatching checkpoints out of 1,227.
+
+The repeat with per-update checks reached Stage 2 again. Its first
+score and seed differences were both at update 2,522. Playback had
+45,150 points versus 45,130 in the recording, and its RNG seed was two
+advances ahead. The normal transition first differed in timing at
+update 8,070. All events in the original 1,000–1,127 window matched,
+including 23 retail bullet grazes. This puts the new gameplay drift
+well before the Stage 2 transition.
+
+Use --event-start 2464 to capture updates 2,464–2,591 with the same
+event reporters. The fixture writes its chosen window into EE RAM
+so the reporter resolves it from the matching capture and symbols.

@@ -1,7 +1,9 @@
-/* Diagnostic for Noir Stage 1 update 1000..1127. Added only by build_trace.py. */
+/* Ordered Noir Stage 1 events. Added only by build_trace.py. */
 #include "ibara_ps2.h"
 
-#define WINDOW_START 1000u
+#ifndef RP_EVENT_START
+#define RP_EVENT_START 1000u
+#endif
 #define WINDOW_COUNT 128u
 #define EVENTS_MAX 8064u
 #define EVENTS_BASE 0x01EC0000u
@@ -21,18 +23,21 @@ _Static_assert(EVENTS_BASE + 2u * sizeof(struct event_trace) <= 0x01F00000u,
 	       "late trace must fit between replay input and hooks");
 #define EVENTS ((volatile struct event_trace *)EVENTS_BASE)
 
+const volatile u32 replay_late_window_start = RP_EVENT_START;
+
 static volatile struct event_row *current;
 static volatile struct event *events;
 static u32 used, between_updates;
 
 void replay_late_begin(u32 side, u32 update, u32 tick)
 {
+	const u32 offset = update - replay_late_window_start;
 	current = 0;
 	between_updates = 0;
-	if (tick >> 24 != 2u || update - WINDOW_START >= WINDOW_COUNT)
+	if (tick >> 24 != 2u || offset >= WINDOW_COUNT)
 		return;
 	events = EVENTS[side].event;
-	current = &EVENTS[side].row[update - WINDOW_START];
+	current = &EVENTS[side].row[offset];
 	current->first = used;
 	current->count = current->dropped = 0;
 	current->stage_tick = tick;
