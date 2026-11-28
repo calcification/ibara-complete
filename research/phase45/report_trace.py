@@ -80,7 +80,7 @@ def verify_sync(report, scenario):
         return "type-76 factory outcomes differ or no creation was captured"
     if report["stage_clock"] or report["slot_3"]:
         return "stage clock or type-76 slot diverged"
-    if report["mismatches"] or report["tick_miss"]:
+    if report["mismatches"] or report["tick_miss"] or any(report.get("stage_first_drift", {}).values()):
         return "gameplay checkpoints or update timing diverged"
     return None
 
@@ -103,6 +103,13 @@ def main():
     if sync_addr is not None:
         sync = struct.unpack_from("<6I", mem, sync_addr)
         report["controller_sync"] = dict(zip(SYNC_FIELDS, sync))
+    stage_drift = syms.get("replay_stage_drift")
+    if stage_drift is not None:
+        report["stage_first_drift"] = {}
+        for index, field in enumerate(("score", "rng")):
+            update, record, playback = struct.unpack_from("<3I", mem, stage_drift + 12 * index)
+            report["stage_first_drift"][field] = (None if update == 0xFFFFFFFF else
+                                                 dict(update=update, record=record, playback=playback))
     if args.expect_controller_sync:
         report["sync_failure"] = verify_sync(report, args.expect_controller_sync)
     if "factory" in report and not args.factory_events:
